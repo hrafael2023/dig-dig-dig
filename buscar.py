@@ -14,6 +14,7 @@ import argparse
 import datetime as dt
 import html
 import json
+import re
 import sys
 import urllib.parse
 from pathlib import Path
@@ -141,7 +142,7 @@ def logar_shopee(pagina, usuario, senha):
     pagina.goto("https://shopee.com.br/buyer/login", wait_until="domcontentloaded", timeout=60000)
     pagina.fill('input[name="loginKey"]', usuario, timeout=20000)
     pagina.fill('input[name="password"]', senha)
-    pagina.get_by_role("button", name="ENTRAR", exact=True).click()
+    pagina.press('input[name="password"]', "Enter")
     pagina.wait_for_timeout(8000)
     return not pede_login(pagina)
 
@@ -168,6 +169,38 @@ def coletar(pagina, url):
     return nome, itens
 
 
+def valor(preco):
+    """'R$ 1.234,56' -> '1234.56' (vazio se não houver preço)."""
+    m = re.search(r"R\$\s*([\d.]+(?:,\d+)?)", preco or "")
+    return m.group(1).replace(".", "").replace(",", ".") if m else ""
+
+
+# Filtro por site e ordenação por preço no relatório. Com "Por site" os
+# discos ficam agrupados; ordenando por preço viram uma lista única.
+JS_RELATORIO = """
+const filtro = document.getElementById('filtro-site'), ordem = document.getElementById('ordem');
+const secoes = document.getElementById('secoes'), lista = document.getElementById('lista');
+const cards = [...document.querySelectorAll('#secoes .card')];
+function atualizar() {
+  const site = filtro.value, dir = ordem.value;
+  if (!dir) {
+    lista.hidden = true; lista.replaceChildren(); secoes.hidden = false;
+    secoes.querySelectorAll('section').forEach(s => s.hidden = !!site && s.dataset.site !== site);
+    return;
+  }
+  const preco = c => c.dataset.preco === '' ? null : parseFloat(c.dataset.preco);
+  const escolhidos = cards.filter(c => !site || c.dataset.site === site).sort((a, b) => {
+    const pa = preco(a), pb = preco(b);
+    if (pa === null) return 1; if (pb === null) return -1;  // sem preço vai pro fim
+    return dir === 'asc' ? pa - pb : pb - pa;
+  });
+  lista.replaceChildren(...escolhidos.map(c => c.cloneNode(true)));
+  secoes.hidden = true; lista.hidden = false;
+}
+if (filtro) { filtro.onchange = ordem.onchange = atualizar; }
+"""
+
+
 def gerar_html(hoje, novos, erros, total_vistos):
     por_site = {}
     for item in novos:
@@ -175,18 +208,25 @@ def gerar_html(hoje, novos, erros, total_vistos):
 
     def card(i):
         foto = f'<img src="{html.escape(i["foto"])}" loading="lazy" alt="">' if i.get("foto") else '<div class="sem-foto">♪</div>'
-        return (f'<a class="card" href="{html.escape(i["link"])}" target="_blank" rel="noopener">{foto}'
-                f'<div class="info"><div class="titulo">{html.escape(i["titulo"])}</div>'
+        return (f'<a class="card" href="{html.escape(i["link"])}" target="_blank" rel="noopener" '
+                f'data-site="{html.escape(i["site"])}" data-preco="{valor(i.get("preco"))}">{foto}'
+                f'<div class="info"><div class="site">{html.escape(i["site"])}</div>'
+                f'<div class="titulo">{html.escape(i["titulo"])}</div>'
                 f'<div class="preco">{html.escape(i.get("preco") or "")}</div>'
                 f'<div class="extra">{html.escape(i.get("extra") or "")}'
                 f'{" · busca: " + html.escape(i["termo"]) if i.get("termo") else ""}</div></div></a>')
 
     secoes = "".join(
-        f'<section><h2>{html.escape(site)} <span>{len(itens)}</span></h2>'
+        f'<section data-site="{html.escape(site)}"><h2>{html.escape(site)} <span>{len(itens)}</span></h2>'
         f'<div class="grade">{"".join(card(i) for i in itens)}</div></section>'
         for site, itens in sorted(por_site.items()))
     if not novos:
         secoes = '<p class="vazio">Nenhum disco novo desde a última busca.</p>'
+    opcoes = "".join(f'<option>{html.escape(site)}</option>' for site in sorted(por_site))
+    controles = (f'<div class="controles"><label>Site <select id="filtro-site"><option value="">Todos</option>{opcoes}</select></label>'
+                 '<label>Ordenar <select id="ordem"><option value="">Por site</option>'
+                 '<option value="asc">Menor preço</option><option value="desc">Maior preço</option></select></label></div>'
+                 '<div id="lista" class="grade" hidden></div>') if novos else ""
     avisos = "".join(f"<li>{html.escape(e)}</li>" for e in erros)
     avisos = f'<ul class="avisos">{avisos}</ul>' if avisos else ""
 
@@ -214,11 +254,17 @@ h2 span {{ background:var(--ac); color:#fff; border-radius:99px; padding:1px 9px
 .extra {{ color:var(--mut); font-size:12px; margin-top:2px; }}
 .avisos {{ background:#fff3cd; color:#664d03; border-radius:8px; padding:10px 10px 10px 28px; }}
 .vazio {{ color:var(--mut); font-size:17px; }}
+.controles {{ display:flex; flex-wrap:wrap; gap:12px 20px; margin:8px 0 4px; }}
+.controles label {{ color:var(--mut); font-size:14px; display:flex; align-items:center; gap:8px; }}
+.controles select {{ font:inherit; color:var(--tx); background:var(--card); border:1px solid var(--bd); border-radius:8px; padding:6px 10px; }}
+#lista {{ margin-top:24px; }}
+.site {{ display:none; color:var(--mut); font-size:11px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; }}
+#lista .site {{ display:block; }}
 </style></head><body><main>
 <h1>Discos de vinil novos</h1>
 <div class="sub">{hoje:%d/%m/%Y %H:%M} · {len(novos)} novo(s) · {total_vistos} anúncios acompanhados</div>
-{avisos}{secoes}
-</main></body></html>"""
+{avisos}{controles}<div id="secoes">{secoes}</div>
+</main><script>{JS_RELATORIO}</script></body></html>"""
 
 
 def buscar():

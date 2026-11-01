@@ -20,5 +20,6 @@ https://sebodomessias.com.br/novidades/LP?Dias=1&cdTpCategoria=0&NPage=2
 https://estacaocultural.com.br/produtos/DISCO-DE-VINIL?filtro=novidade
 https://estacaocultural.com.br/produtos/DISCO-DE-VINIL?filtro=novidade&offset=30
 
-# Shopee — exige login (preencha credenciais.txt ou rode: python3 buscar.py --login)
-https://shopee.com.br/search?keyword={termo}&sortBy=ctime
+# Shopee — DESATIVADA: bloqueia login automático com captcha.
+# Para reativar, tire o # da linha abaixo e rode: python3 buscar.py --login
+# https://shopee.com.br/search?keyword={termo}&sortBy=ctime
