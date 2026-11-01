@@ -205,6 +205,8 @@ def gerar_html(hoje, novos, erros, total_vistos):
     if novos:
         controles = ('<div class="controles">'
                      + teclas("site", "Site", [("", "Todos")] + [(s, s) for s in sorted(por_site)])
+                     + teclas("faixa", "Preço", [("", "Todos"), ("ate50", "Até R$ 50"),
+                                                 ("51a100", "R$ 51 a 100"), ("mais100", "Mais de R$ 101")])
                      + teclas("ordem", "Ordem", [("", "Por site"), ("asc", "Menor preço"), ("desc", "Maior preço")])
                      + '</div><div id="lista" class="grade" hidden></div>')
     else:

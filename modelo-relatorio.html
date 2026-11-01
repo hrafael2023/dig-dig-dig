@@ -55,6 +55,8 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+/* garante que o atributo hidden vença os display: flex/grid de .card e .grade */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
@@ -134,7 +136,7 @@ h2 span { color: var(--mut); font-weight: 400; }
 }
 #lista .site { display: block; }
 
-.vazio { margin: 96px 0; font: 400 28px/1.3 var(--serif); text-align: center; }
+.vazio { grid-column: 1 / -1; margin: 96px 0; font: 400 28px/1.3 var(--serif); text-align: center; }
 footer {
   margin-top: 120px; padding-top: 24px; border-top: 1px solid var(--line);
   display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
@@ -178,27 +180,38 @@ footer strong { color: var(--ink); font-weight: 600; font-stretch: 62%; font-var
 <footer><strong>Dig Dig Dig!</strong><span>{{SITES}}</span></footer>
 </main>
 <script>
-// Filtro por site e ordem por preço. "Por site" mantém os grupos;
-// ordenar por preço junta tudo numa lista única.
-const estado = { site: '', ordem: '' };
+// Filtros por site e faixa de preço, e ordem por preço. "Por site" mantém os
+// grupos; ordenar por preço junta tudo numa lista única.
+const estado = { site: '', faixa: '', ordem: '' };
 const secoes = document.getElementById('secoes'), lista = document.getElementById('lista');
 const cards = [...document.querySelectorAll('#secoes .card')];
 const preco = c => c.dataset.preco === '' ? null : parseFloat(c.dataset.preco);
+// Faixas sem buracos: centavos entre 50 e 51 caem em "51 a 100", e assim por diante.
+const FAIXAS = { ate50: p => p <= 50, '51a100': p => p > 50 && p <= 100, mais100: p => p > 100 };
+const passa = c => (!estado.site || c.dataset.site === estado.site)
+  && (!estado.faixa || (preco(c) !== null && FAIXAS[estado.faixa](preco(c))));
 
 function atualizar() {
-  const { site, ordem } = estado;
+  const { ordem } = estado;
   if (!ordem) {
     lista.hidden = true; lista.replaceChildren(); secoes.hidden = false;
-    secoes.querySelectorAll('section').forEach(s => s.hidden = !!site && s.dataset.site !== site);
+    cards.forEach(c => c.hidden = !passa(c));
+    secoes.querySelectorAll('section').forEach(s => {
+      const visiveis = s.querySelectorAll('.card:not([hidden])').length;
+      s.hidden = visiveis === 0;
+      s.querySelector('h2 span').textContent = String(visiveis).padStart(3, '0');
+    });
+    if (!cards.some(passa)) { lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>'; lista.hidden = false; }
     return;
   }
-  const escolhidos = cards.filter(c => !site || c.dataset.site === site).sort((a, b) => {
+  const escolhidos = cards.filter(passa).sort((a, b) => {
     const pa = preco(a), pb = preco(b);
     if (pa === null) return 1; if (pb === null) return -1;  // sem preço vai pro fim
     return ordem === 'asc' ? pa - pb : pb - pa;
   });
-  lista.replaceChildren(...escolhidos.map(c => c.cloneNode(true)));
+  lista.replaceChildren(...escolhidos.map(c => { const n = c.cloneNode(true); n.hidden = false; return n; }));
   secoes.hidden = true; lista.hidden = false;
+  if (!escolhidos.length) lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>';
 }
 
 // Tema: alterna entre claro e escuro e lembra a escolha neste navegador.
