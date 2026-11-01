@@ -81,6 +81,20 @@ JS_ESTACAO = """() => [...document.querySelectorAll('a.prods_destaque2')].map(a 
   };
 })"""
 
+JS_CASA_LARANJA = """() => [...document.querySelectorAll('.js-item-product')].map(c => {
+  const a = c.querySelector('a[href*="/produtos/"]');
+  const img = c.querySelector('img');
+  const de = c.querySelector('.js-compare-price-display')?.innerText.trim() || '';
+  const srcset = img?.getAttribute('data-srcset') || img?.getAttribute('srcset') || '';
+  return {
+    titulo: a?.getAttribute('title') || c.querySelector('.js-item-name')?.innerText.trim(),
+    preco: c.querySelector('.js-price-display')?.innerText.trim(),
+    link: a?.href,
+    foto: img && new URL(img.currentSrc || srcset.split(' ')[0] || img.src, location.href).href,
+    extra: de && de !== 'R$0,00' ? 'de ' + de : '',
+  };
+})"""
+
 # Leitor genérico para sites novos: qualquer link com foto e texto.
 JS_GENERICO = """() => [...document.querySelectorAll('a[href]')].filter(a => a.querySelector('img')).map(a => {
   const box = a.closest('li, article, [class*="card"], [class*="product"], [class*="item"]') || a;
@@ -97,6 +111,7 @@ SITES = {
     "sebodomessias.com.br": ("Sebo do Messias", JS_MESSIAS),
     "shopee.com.br": ("Shopee", JS_SHOPEE),
     "estacaocultural.com.br": ("Estação Cultural", JS_ESTACAO),
+    "sebocasalaranja.com.br": ("Sebo Casa Laranja", JS_CASA_LARANJA),
 }
 
 
@@ -197,6 +212,11 @@ def gerar_html(hoje, novos, erros, total_vistos):
                          f'{html.escape(t)}</button>' for v, t in opcoes)
         return f'<div class="grupo"><span>{rotulo}</span><div class="teclas" data-chave="{chave}">{botoes}</div></div>'
 
+    def menu(chave, rotulo, opcoes):
+        itens = "".join(f'<option value="{html.escape(v)}">{html.escape(t)}</option>' for v, t in opcoes)
+        return (f'<div class="grupo"><label for="menu-{chave}">{rotulo}</label>'
+                f'<select class="menu" id="menu-{chave}" data-chave="{chave}">{itens}</select></div>')
+
     secoes = "".join(
         f'<section data-site="{html.escape(site)}"><h2>{html.escape(site)} <span>{len(itens):03d}</span></h2>'
         f'<div class="grade">{"".join(card(i) for i in itens)}</div></section>'
@@ -204,7 +224,7 @@ def gerar_html(hoje, novos, erros, total_vistos):
     controles = ""
     if novos:
         controles = ('<div class="controles">'
-                     + teclas("site", "Site", [("", "Todos")] + [(s, s) for s in sorted(por_site)])
+                     + menu("site", "Site", [("", "Todos os sites")] + [(s, s) for s in sorted(por_site)])
                      + teclas("faixa", "Preço", [("", "Todos"), ("ate50", "Até R$ 50"),
                                                  ("51a100", "R$ 51 a 100"), ("mais100", "Mais de R$ 101")])
                      + teclas("ordem", "Ordem", [("", "Por site"), ("asc", "Menor preço"), ("desc", "Maior preço")])

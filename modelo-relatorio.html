@@ -96,7 +96,17 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
 /* Filtros: etiquetas retangulares, roxas quando ativas */
 .controles { display: flex; flex-wrap: wrap; gap: 16px 40px; margin: 40px 0 0; }
 .grupo { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.grupo > span { font-size: 13px; font-weight: 500; }
+.grupo > span, .grupo > label { font-size: 13px; font-weight: 500; }
+/* Menu de site: mesma etiqueta roxa, com seta desenhada */
+.menu {
+  font: 400 12px/1 var(--sans); letter-spacing: .04em; color: var(--on-accent); background-color: var(--accent);
+  border: 0; border-radius: 0; padding: 9px 32px 9px 12px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 15px center, right 11px center; background-size: 4px 4px; background-repeat: no-repeat;
+}
+.menu:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.menu option { color: var(--ink); background: var(--bg); }
 .teclas { display: flex; flex-wrap: wrap; gap: 6px; }
 .teclas button {
   font: 400 12px/1 var(--sans); letter-spacing: .04em; color: var(--tag-ink); background: var(--tag-bg);
@@ -228,6 +238,11 @@ document.getElementById('tema').addEventListener('click', () => {
 });
 sistemaEscuro.addEventListener('change', marcarTema);
 marcarTema();
+
+document.querySelectorAll('.menu').forEach(m => m.addEventListener('change', () => {
+  estado[m.dataset.chave] = m.value;
+  atualizar();
+}));
 
 document.querySelectorAll('.teclas').forEach(grupo => {
   grupo.addEventListener('click', e => {
