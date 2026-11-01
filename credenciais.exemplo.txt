@@ -1,0 +1,8 @@
+# Credenciais da Shopee para o buscador de vinil.
+#
+# Copie este arquivo para credenciais.txt e preencha depois do "=".
+# credenciais.txt fica fora do git (.gitignore) — nunca faça commit dele.
+#
+# usuario aceita telefone, nome de usuário ou e-mail.
+shopee_usuario=
+shopee_senha=

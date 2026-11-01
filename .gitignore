@@ -1,3 +1,4 @@
 .perfil-navegador/
 logs/
 __pycache__/
+credenciais.txt

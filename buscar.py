@@ -61,6 +61,24 @@ JS_SHOPEE = """() => [...document.querySelectorAll('a[href*="-i."]')].map(a => {
   };
 })"""
 
+JS_ESTACAO = """() => [...document.querySelectorAll('a.prods_destaque2')].map(a => {
+  const spans = [...a.querySelectorAll('span')].map(s => s.innerText.trim());
+  const img = a.querySelector('img');
+  const loja = spans.find(s => s.startsWith('Loja:')) || '';
+  return {
+    titulo: [spans[0], spans[1]].filter(Boolean).join(' — '),
+    preco: a.querySelector('strong:not(.feat strong)')?.innerText.trim()
+      || spans.find(s => s.startsWith('R$')) || '',
+    link: a.href,
+    // a foto fica em data-bg e, depois do lazy load, em style background-image
+    foto: img && new URL(img.dataset.bg
+      || (img.style.backgroundImage.match(/url\\(["']?(.*?)["']?\\)/) || [])[1]
+      || img.src, location.href).href,
+    extra: [spans.find(s => s.startsWith('Condição:')), loja.replace(/^Loja:\\s*(Sebo\\s*)?/, '')]
+      .filter(Boolean).join(' · '),
+  };
+})"""
+
 # Leitor genérico para sites novos: qualquer link com foto e texto.
 JS_GENERICO = """() => [...document.querySelectorAll('a[href]')].filter(a => a.querySelector('img')).map(a => {
   const box = a.closest('li, article, [class*="card"], [class*="product"], [class*="item"]') || a;
@@ -76,6 +94,7 @@ SITES = {
     "enjoei.com.br": ("Enjoei", JS_ENJOEI),
     "sebodomessias.com.br": ("Sebo do Messias", JS_MESSIAS),
     "shopee.com.br": ("Shopee", JS_SHOPEE),
+    "estacaocultural.com.br": ("Estação Cultural", JS_ESTACAO),
 }
 
 
@@ -104,11 +123,42 @@ def site_de(url):
     return host.removeprefix("www."), JS_GENERICO
 
 
+def ler_credenciais():
+    arquivo = PASTA / "credenciais.txt"
+    if not arquivo.exists():
+        return None, None
+    dados = dict(l.split("=", 1) for l in ler_lista("credenciais.txt") if "=" in l)
+    return dados.get("shopee_usuario", "").strip() or None, dados.get("shopee_senha", "").strip() or None
+
+
+def pede_login(pagina):
+    return "/verify/" in pagina.url or "/buyer/login" in pagina.url
+
+
+def logar_shopee(pagina, usuario, senha):
+    """Preenche o login da Shopee. Não resolve captcha nem código por SMS:
+    se a Shopee pedir verificação, é preciso logar à mão com --login."""
+    pagina.goto("https://shopee.com.br/buyer/login", wait_until="domcontentloaded", timeout=60000)
+    pagina.fill('input[name="loginKey"]', usuario, timeout=20000)
+    pagina.fill('input[name="password"]', senha)
+    pagina.get_by_role("button", name="ENTRAR", exact=True).click()
+    pagina.wait_for_timeout(8000)
+    return not pede_login(pagina)
+
+
 def coletar(pagina, url):
     pagina.goto(url, wait_until="domcontentloaded", timeout=60000)
     pagina.wait_for_timeout(3000)
-    if "/verify/" in pagina.url or "/buyer/login" in pagina.url:
-        raise RuntimeError("login necessário — rode: python3 buscar.py --login")
+    if pede_login(pagina):
+        usuario, senha = ler_credenciais()
+        if not (usuario and senha):
+            raise RuntimeError("login necessário — preencha credenciais.txt ou rode: python3 buscar.py --login")
+        if not logar_shopee(pagina, usuario, senha):
+            raise RuntimeError("a Shopee pediu verificação extra (captcha/código) — rode: python3 buscar.py --login")
+        pagina.goto(url, wait_until="domcontentloaded", timeout=60000)
+        pagina.wait_for_timeout(3000)
+        if pede_login(pagina):
+            raise RuntimeError("login não aceito — confira credenciais.txt ou rode: python3 buscar.py --login")
     # Rola a página para carregar fotos e itens preguiçosos.
     for _ in range(6):
         pagina.mouse.wheel(0, 2500)
@@ -217,7 +267,11 @@ def login():
             str(PERFIL), headless=False, user_agent=UA, locale="pt-BR")
         pagina = ctx.new_page()
         pagina.goto("https://shopee.com.br/buyer/login")
-        input("Faça login na janela que abriu e depois tecle Enter aqui... ")
+        usuario, senha = ler_credenciais()
+        if usuario and senha:
+            pagina.fill('input[name="loginKey"]', usuario, timeout=20000)
+            pagina.fill('input[name="password"]', senha)
+        input("Faça login na janela que abriu (complete a verificação, se houver) e tecle Enter aqui... ")
         ctx.close()
 
 

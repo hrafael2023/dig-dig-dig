@@ -16,5 +16,9 @@ https://www.enjoei.com.br/s?q={termo}&o=recent&dep=etc-e-tal&cat=etc-e-tal-music
 https://sebodomessias.com.br/novidades/LP?Dias=1&cdTpCategoria=0&NPage=1
 https://sebodomessias.com.br/novidades/LP?Dias=1&cdTpCategoria=0&NPage=2
 
-# Shopee — exige login (rode uma vez: python3 buscar.py --login)
+# Estação Cultural — categoria Disco de Vinil, mais recentes (2 primeiras páginas)
+https://estacaocultural.com.br/produtos/DISCO-DE-VINIL?filtro=novidade
+https://estacaocultural.com.br/produtos/DISCO-DE-VINIL?filtro=novidade&offset=30
+
+# Shopee — exige login (preencha credenciais.txt ou rode: python3 buscar.py --login)
 https://shopee.com.br/search?keyword={termo}&sortBy=ctime
