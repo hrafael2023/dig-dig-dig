@@ -185,7 +185,7 @@ def publicar(conteudo, hoje):
         if git("diff", "--cached", "--name-only", "--", *arquivos).stdout.strip():
             git("-c", "user.name=Dig Dig Dig!", "-c", "user.email=digdigdig@users.noreply.github.com",
                 "commit", "-m", f"Relatório de {hoje:%d/%m/%Y %H:%M}", "--", *arquivos)
-            git("push", "origin", "HEAD:main")
+        git("push", "origin", "HEAD:main")  # envia também commits de código ainda não enviados
         print(f"publicado → {pagina}", file=sys.stderr)
         return pagina
     except subprocess.CalledProcessError as e:
