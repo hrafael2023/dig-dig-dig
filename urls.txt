@@ -1,0 +1,20 @@
+# URLs de busca do buscador de vinil — uma por linha.
+# Linhas começando com # são ignoradas.
+#
+# {termo} é substituído por cada termo de termos.txt (uma busca por termo).
+# URLs sem {termo} são acessadas uma única vez, do jeito que estão.
+#
+# Para adicionar um site novo, basta colar a URL da página de resultados
+# (de preferência já ordenada por "mais recentes"). Sites sem leitor
+# específico usam um leitor genérico que pega links com foto.
+
+# Enjoei — mais recentes, só na categoria Música, Filmes e Séries
+# (sem a categoria, "lp" traz roupas tipo "vestido lp")
+https://www.enjoei.com.br/s?q={termo}&o=recent&dep=etc-e-tal&cat=etc-e-tal-musica-filmes-e-series
+
+# Sebo do Messias — LPs disponibilizados no último dia (2 primeiras páginas)
+https://sebodomessias.com.br/novidades/LP?Dias=1&cdTpCategoria=0&NPage=1
+https://sebodomessias.com.br/novidades/LP?Dias=1&cdTpCategoria=0&NPage=2
+
+# Shopee — exige login (rode uma vez: python3 buscar.py --login)
+https://shopee.com.br/search?keyword={termo}&sortBy=ctime

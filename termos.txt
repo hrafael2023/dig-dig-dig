@@ -1,0 +1,3 @@
+# Termos de busca — um por linha. Linhas com # são ignoradas.
+lp
+disco de vinil
