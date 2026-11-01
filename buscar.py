@@ -25,6 +25,7 @@ PASTA = Path(__file__).resolve().parent
 PERFIL = PASTA / ".perfil-navegador"
 VISTOS = PASTA / "vistos.json"
 RELATORIOS = PASTA / "relatorios"
+MODELO = PASTA / "modelo-relatorio.html"
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
 
@@ -175,96 +176,52 @@ def valor(preco):
     return m.group(1).replace(".", "").replace(",", ".") if m else ""
 
 
-# Filtro por site e ordenação por preço no relatório. Com "Por site" os
-# discos ficam agrupados; ordenando por preço viram uma lista única.
-JS_RELATORIO = """
-const filtro = document.getElementById('filtro-site'), ordem = document.getElementById('ordem');
-const secoes = document.getElementById('secoes'), lista = document.getElementById('lista');
-const cards = [...document.querySelectorAll('#secoes .card')];
-function atualizar() {
-  const site = filtro.value, dir = ordem.value;
-  if (!dir) {
-    lista.hidden = true; lista.replaceChildren(); secoes.hidden = false;
-    secoes.querySelectorAll('section').forEach(s => s.hidden = !!site && s.dataset.site !== site);
-    return;
-  }
-  const preco = c => c.dataset.preco === '' ? null : parseFloat(c.dataset.preco);
-  const escolhidos = cards.filter(c => !site || c.dataset.site === site).sort((a, b) => {
-    const pa = preco(a), pb = preco(b);
-    if (pa === null) return 1; if (pb === null) return -1;  // sem preço vai pro fim
-    return dir === 'asc' ? pa - pb : pb - pa;
-  });
-  lista.replaceChildren(...escolhidos.map(c => c.cloneNode(true)));
-  secoes.hidden = true; lista.hidden = false;
-}
-if (filtro) { filtro.onchange = ordem.onchange = atualizar; }
-"""
-
-
 def gerar_html(hoje, novos, erros, total_vistos):
     por_site = {}
     for item in novos:
         por_site.setdefault(item["site"], []).append(item)
 
     def card(i):
-        foto = f'<img src="{html.escape(i["foto"])}" loading="lazy" alt="">' if i.get("foto") else '<div class="sem-foto">♪</div>'
+        foto = f'<img src="{html.escape(i["foto"])}" loading="lazy" alt="">' if i.get("foto") else '<div class="sem-foto"></div>'
+        extra = i.get("extra") or ""
         return (f'<a class="card" href="{html.escape(i["link"])}" target="_blank" rel="noopener" '
-                f'data-site="{html.escape(i["site"])}" data-preco="{valor(i.get("preco"))}">{foto}'
+                f'data-site="{html.escape(i["site"])}" data-preco="{valor(i.get("preco"))}">'
+                f'<div class="capa">{foto}</div>'
                 f'<div class="info"><div class="site">{html.escape(i["site"])}</div>'
                 f'<div class="titulo">{html.escape(i["titulo"])}</div>'
                 f'<div class="preco">{html.escape(i.get("preco") or "")}</div>'
-                f'<div class="extra">{html.escape(i.get("extra") or "")}'
-                f'{" · busca: " + html.escape(i["termo"]) if i.get("termo") else ""}</div></div></a>')
+                f'<div class="extra">{html.escape(extra)}</div></div></a>')
+
+    def teclas(chave, rotulo, opcoes):
+        botoes = "".join(f'<button type="button" data-valor="{html.escape(v)}" aria-pressed="{str(not v).lower()}">'
+                         f'{html.escape(t)}</button>' for v, t in opcoes)
+        return f'<div class="grupo"><span>{rotulo}</span><div class="teclas" data-chave="{chave}">{botoes}</div></div>'
 
     secoes = "".join(
-        f'<section data-site="{html.escape(site)}"><h2>{html.escape(site)} <span>{len(itens)}</span></h2>'
+        f'<section data-site="{html.escape(site)}"><h2>{html.escape(site)} <span>{len(itens):03d}</span></h2>'
         f'<div class="grade">{"".join(card(i) for i in itens)}</div></section>'
         for site, itens in sorted(por_site.items()))
-    if not novos:
+    controles = ""
+    if novos:
+        controles = ('<div class="controles">'
+                     + teclas("site", "Site", [("", "Todos")] + [(s, s) for s in sorted(por_site)])
+                     + teclas("ordem", "Ordem", [("", "Por site"), ("asc", "Menor preço"), ("desc", "Maior preço")])
+                     + '</div><div id="lista" class="grade" hidden></div>')
+    else:
         secoes = '<p class="vazio">Nenhum disco novo desde a última busca.</p>'
-    opcoes = "".join(f'<option>{html.escape(site)}</option>' for site in sorted(por_site))
-    controles = (f'<div class="controles"><label>Site <select id="filtro-site"><option value="">Todos</option>{opcoes}</select></label>'
-                 '<label>Ordenar <select id="ordem"><option value="">Por site</option>'
-                 '<option value="asc">Menor preço</option><option value="desc">Maior preço</option></select></label></div>'
-                 '<div id="lista" class="grade" hidden></div>') if novos else ""
     avisos = "".join(f"<li>{html.escape(e)}</li>" for e in erros)
     avisos = f'<ul class="avisos">{avisos}</ul>' if avisos else ""
+    sites = sorted({site_de(u)[0] for u, _ in montar_buscas()})
 
-    return f"""<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vinil novo — {hoje:%d/%m/%Y}</title>
-<style>
-:root {{ --bg:#faf8f5; --card:#fff; --tx:#1d1b18; --mut:#77716a; --ac:#b4421f; --bd:#e7e2db; }}
-@media (prefers-color-scheme: dark) {{ :root {{ --bg:#16140f; --card:#211e18; --tx:#efe9e1; --mut:#a39b90; --ac:#f08a5d; --bd:#353028; }} }}
-* {{ box-sizing:border-box; }}
-body {{ margin:0; padding:24px 16px 48px; background:var(--bg); color:var(--tx); font:15px/1.4 -apple-system, system-ui, sans-serif; }}
-main {{ max-width:1200px; margin:0 auto; }}
-h1 {{ margin:0 0 4px; font-size:28px; }}
-.sub {{ color:var(--mut); margin-bottom:24px; }}
-h2 {{ font-size:19px; margin:32px 0 12px; border-bottom:1px solid var(--bd); padding-bottom:6px; }}
-h2 span {{ background:var(--ac); color:#fff; border-radius:99px; padding:1px 9px; font-size:13px; vertical-align:middle; }}
-.grade {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:14px; }}
-.card {{ background:var(--card); border:1px solid var(--bd); border-radius:10px; overflow:hidden; color:inherit; text-decoration:none; display:flex; flex-direction:column; }}
-.card:hover {{ border-color:var(--ac); }}
-.card img, .sem-foto {{ width:100%; aspect-ratio:1; object-fit:cover; background:var(--bd); display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--mut); }}
-.info {{ padding:8px 10px 10px; }}
-.titulo {{ font-weight:600; font-size:14px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }}
-.preco {{ color:var(--ac); font-weight:700; margin-top:4px; }}
-.extra {{ color:var(--mut); font-size:12px; margin-top:2px; }}
-.avisos {{ background:#fff3cd; color:#664d03; border-radius:8px; padding:10px 10px 10px 28px; }}
-.vazio {{ color:var(--mut); font-size:17px; }}
-.controles {{ display:flex; flex-wrap:wrap; gap:12px 20px; margin:8px 0 4px; }}
-.controles label {{ color:var(--mut); font-size:14px; display:flex; align-items:center; gap:8px; }}
-.controles select {{ font:inherit; color:var(--tx); background:var(--card); border:1px solid var(--bd); border-radius:8px; padding:6px 10px; }}
-#lista {{ margin-top:24px; }}
-.site {{ display:none; color:var(--mut); font-size:11px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; }}
-#lista .site {{ display:block; }}
-</style></head><body><main>
-<h1>Discos de vinil novos</h1>
-<div class="sub">{hoje:%d/%m/%Y %H:%M} · {len(novos)} novo(s) · {total_vistos} anúncios acompanhados</div>
-{avisos}{controles}<div id="secoes">{secoes}</div>
-</main><script>{JS_RELATORIO}</script></body></html>"""
+    pecas = {
+        "DATA": f"{hoje:%d.%m.%Y}", "HORA": f"{hoje:%H:%M}", "NOVOS": str(len(novos)),
+        "VISTOS": str(total_vistos), "AVISOS": avisos, "CONTROLES": controles,
+        "SECOES": secoes, "SITES": html.escape(" · ".join(sites)),
+    }
+    conteudo = MODELO.read_text(encoding="utf-8")
+    for chave, texto in pecas.items():
+        conteudo = conteudo.replace("{{" + chave + "}}", texto)
+    return conteudo
 
 
 def buscar():
