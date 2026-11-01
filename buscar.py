@@ -88,12 +88,19 @@ JS_CASA_LARANJA = """() => [...document.querySelectorAll('.js-item-product')].ma
   const a = c.querySelector('a[href*="/produtos/"]');
   const img = c.querySelector('img');
   const de = c.querySelector('.js-compare-price-display')?.innerText.trim() || '';
+  // fotos fora da tela ainda são um GIF provisório (lazy load): a URL real
+  // fica em data-srcset/srcset, com vários tamanhos; pega um de ~640px
   const srcset = img?.getAttribute('data-srcset') || img?.getAttribute('srcset') || '';
+  const tamanhos = srcset.split(',').map(s => s.trim().split(/\s+/))
+    .filter(([u]) => u).map(([u, w]) => [u, parseInt(w) || 0]);
+  const escolhido = tamanhos.find(([, w]) => w >= 600) || tamanhos[tamanhos.length - 1];
+  const real = [escolhido?.[0], img?.currentSrc, img?.getAttribute('src')]
+    .find(u => u && !u.startsWith('data:'));
   return {
     titulo: a?.getAttribute('title') || c.querySelector('.js-item-name')?.innerText.trim(),
     preco: c.querySelector('.js-price-display')?.innerText.trim(),
     link: a?.href,
-    foto: img && new URL(img.currentSrc || srcset.split(' ')[0] || img.src, location.href).href,
+    foto: real ? new URL(real, location.href).href : '',
     extra: de && de !== 'R$0,00' ? 'de ' + de : '',
   };
 })"""
