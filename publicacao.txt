@@ -1,5 +1,4 @@
 # Publicação do relatório no GitHub Pages, para abrir pelo celular.
-# Depois de gerar o relatório, o buscador envia ele como index.html para
-# este repositório público. Apague as duas linhas para parar de publicar.
-repositorio=https://github.com/hrafael2023/dig-dig-dig.git
+# Depois de gerar o relatório, o buscador commita ele como index.html neste
+# repositório e envia ao GitHub. Apague a linha abaixo para parar de publicar.
 pagina=https://hrafael2023.github.io/dig-dig-dig/

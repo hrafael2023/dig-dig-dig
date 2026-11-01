@@ -165,30 +165,27 @@ def ler_config(nome):
 
 
 def publicar(conteudo, hoje):
-    """Envia o relatório para o repositório do GitHub Pages (publicacao.txt)
-    e devolve o endereço público, ou None se não estiver configurado/falhar."""
-    cfg = ler_config("publicacao.txt")
-    repo, pagina = cfg.get("repositorio"), cfg.get("pagina")
-    if not (repo and pagina):
+    """Commita o relatório como index.html neste mesmo repositório (o GitHub
+    Pages serve a raiz) e envia ao GitHub. Devolve o endereço público, ou
+    None se publicacao.txt não tiver a página ou se o envio falhar."""
+    pagina = ler_config("publicacao.txt").get("pagina")
+    if not pagina:
         return None
-    clone = PASTA / ".publicacao"
     env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}  # nunca travar pedindo senha
-    git = lambda *a: subprocess.run(["git", "-C", str(clone), *a], check=True, env=env,
+    git = lambda *a: subprocess.run(["git", "-C", str(PASTA), *a], check=True, env=env,
                                     capture_output=True, text=True)
+    arquivos = ["index.html", ".nojekyll", "relatorios", "vistos.json"]
     try:
-        if not (clone / ".git").exists():
-            subprocess.run(["git", "clone", "--depth", "1", repo, str(clone)], check=True, env=env,
-                           capture_output=True, text=True)
-        else:
-            git("fetch", "--depth", "1", "origin")
-            git("reset", "--hard", "FETCH_HEAD")  # o buscador é o único que escreve lá
-        (clone / "index.html").write_text(conteudo, encoding="utf-8")
-        (clone / ".nojekyll").touch()  # serve o HTML como está, sem Jekyll
-        git("add", "index.html", ".nojekyll")
-        if git("status", "--porcelain").stdout.strip():
+        # traz o que houver de novo no GitHub; mudanças locais em andamento são preservadas
+        git("pull", "--rebase", "--autostash", "origin", "main")
+        (PASTA / "index.html").write_text(conteudo, encoding="utf-8")
+        (PASTA / ".nojekyll").touch()  # serve o HTML como está, sem Jekyll
+        git("add", "--", *arquivos)
+        # commita só os arquivos do relatório, nunca outras alterações em andamento
+        if git("diff", "--cached", "--name-only", "--", *arquivos).stdout.strip():
             git("-c", "user.name=Dig Dig Dig!", "-c", "user.email=digdigdig@users.noreply.github.com",
-                "commit", "-m", f"Relatório de {hoje:%d/%m/%Y %H:%M}")
-            git("push", "origin", "HEAD")
+                "commit", "-m", f"Relatório de {hoje:%d/%m/%Y %H:%M}", "--", *arquivos)
+            git("push", "origin", "HEAD:main")
         print(f"publicado → {pagina}", file=sys.stderr)
         return pagina
     except subprocess.CalledProcessError as e:
