@@ -1,6 +1,6 @@
 #!/bin/zsh
-# Agenda o buscador para rodar todo dia às 8h (LaunchAgent do macOS).
-# Se o Mac estiver dormindo às 8h, roda assim que acordar.
+# Agenda o buscador para rodar todo dia às 13h (LaunchAgent do macOS).
+# Se o Mac estiver dormindo às 13h, roda assim que acordar.
 # Para remover: ./instalar-agendamento.sh --remover
 set -e
 PASTA="${0:A:h}"
@@ -23,11 +23,11 @@ cat > "$PLIST" <<EOF
   </array>
   <key>WorkingDirectory</key><string>$PASTA</string>
   <key>StartCalendarInterval</key><dict>
-    <key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer>
+    <key>Hour</key><integer>13</integer><key>Minute</key><integer>0</integer>
   </dict>
   <key>StandardOutPath</key><string>$PASTA/logs/buscador.log</string>
   <key>StandardErrorPath</key><string>$PASTA/logs/buscador.log</string>
 </dict></plist>
 EOF
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
-echo "Agendado: todo dia às 8h → $PASTA/relatorios/"
+echo "Agendado: todo dia às 13h → $PASTA/relatorios/"

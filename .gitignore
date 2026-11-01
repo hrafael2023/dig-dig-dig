@@ -3,3 +3,5 @@ logs/
 __pycache__/
 credenciais.txt
 .teste/
+notificacao.txt
+.publicacao/

@@ -19,6 +19,9 @@
   --mut: #8a8a8a;
   --line: #e6e6e6;
   --bar: #f2f2f2;
+  /* um tom de fundo por site, para separar as seções no scroll */
+  --tom-0: #f4efe4; --tom-1: #e6efe9; --tom-2: #eceef8;
+  --tom-3: #f7ebe6; --tom-4: #f4f1d9; --tom-5: #e9eef0;
   --tag-bg: #f1ecff;
   --tag-ink: #6219ff;
   --accent: #6219ff;
@@ -35,6 +38,8 @@
     --mut: #8f8f8f;
     --line: #2c2c2c;
     --bar: #1f1f1f;
+    --tom-0: #201d17; --tom-1: #17211b; --tom-2: #1b1d28;
+    --tom-3: #271d1a; --tom-4: #24231a; --tom-5: #1b2023;
     --tag-bg: #241c3d;
     --tag-ink: #b59cff;
     --accent: #8b5cff;
@@ -48,6 +53,8 @@
   --mut: #8f8f8f;
   --line: #2c2c2c;
   --bar: #1f1f1f;
+  --tom-0: #201d17; --tom-1: #17211b; --tom-2: #1b1d28;
+  --tom-3: #271d1a; --tom-4: #24231a; --tom-5: #1b2023;
   --tag-bg: #241c3d;
   --tag-ink: #b59cff;
   --accent: #8b5cff;
@@ -116,12 +123,25 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
 .teclas button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 .teclas button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* Seções e grade editorial */
-h2 {
-  display: flex; align-items: baseline; gap: 10px;
-  margin: 56px 0 24px; font-size: 13px; font-weight: 500; letter-spacing: .02em;
+/* Seções: cada site é uma faixa de cor de ponta a ponta da tela, com o nome
+   do site preso no topo enquanto se rola — fica claro quando o site muda. */
+.tom-0 { --sec: var(--tom-0); } .tom-1 { --sec: var(--tom-1); } .tom-2 { --sec: var(--tom-2); }
+.tom-3 { --sec: var(--tom-3); } .tom-4 { --sec: var(--tom-4); } .tom-5 { --sec: var(--tom-5); }
+#secoes { margin-top: 56px; }
+#secoes section, #secoes h2 {
+  background: var(--sec);
+  /* fundo vaza até as bordas da janela sem criar rolagem lateral */
+  box-shadow: 0 0 0 100vmax var(--sec); clip-path: inset(0 -100vmax);
 }
-h2 span { color: var(--mut); font-weight: 400; }
+#secoes section { padding-bottom: 80px; }
+h2 {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 0 8px; padding: 28px 0 18px;
+  font-size: 34px; line-height: 1; font-weight: 600; letter-spacing: 0;
+  font-stretch: 62%; font-variation-settings: "wdth" 62;
+}
+h2 span { font: 400 13px var(--sans); letter-spacing: .03em; color: var(--mut); font-stretch: normal; font-variation-settings: normal; }
 .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 56px 32px; }
 #lista { margin-top: 56px; }
 
@@ -145,6 +165,8 @@ h2 span { color: var(--mut); font-weight: 400; }
   font-size: 12px; letter-spacing: .04em; color: var(--tag-ink); background: var(--tag-bg); padding: 6px 10px;
 }
 #lista .site { display: block; }
+/* na lista por preço, a etiqueta do site leva o tom da seção dele */
+.card[class*="tom-"] .site { background: var(--sec); color: var(--ink); }
 
 .vazio { grid-column: 1 / -1; margin: 96px 0; font: 400 28px/1.3 var(--serif); text-align: center; }
 footer {
@@ -160,7 +182,9 @@ footer strong { color: var(--ink); font-weight: 600; font-stretch: 62%; font-var
   .topo h1 { font-size: 44px; }
   .controles { margin-top: 28px; gap: 14px; }
   .grupo { gap: 10px; }
-  h2 { margin-top: 48px; }
+  #secoes { margin-top: 40px; }
+  #secoes section { padding-bottom: 56px; }
+  h2 { font-size: 28px; padding: 20px 0 14px; }
   .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 14px; }
   .titulo { font-size: 16px; }
   .info { padding-top: 10px; }

@@ -14,9 +14,12 @@ import argparse
 import datetime as dt
 import html
 import json
+import os
 import re
+import subprocess
 import sys
 import urllib.parse
+import urllib.request
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -148,6 +151,71 @@ def ler_credenciais():
     return dados.get("shopee_usuario", "").strip() or None, dados.get("shopee_senha", "").strip() or None
 
 
+def ler_config(nome):
+    if not (PASTA / nome).exists():
+        return {}
+    return {k.strip(): v.strip() for k, v in (l.split("=", 1) for l in ler_lista(nome) if "=" in l)}
+
+
+def publicar(conteudo, hoje):
+    """Envia o relatório para o repositório do GitHub Pages (publicacao.txt)
+    e devolve o endereço público, ou None se não estiver configurado/falhar."""
+    cfg = ler_config("publicacao.txt")
+    repo, pagina = cfg.get("repositorio"), cfg.get("pagina")
+    if not (repo and pagina):
+        return None
+    clone = PASTA / ".publicacao"
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}  # nunca travar pedindo senha
+    git = lambda *a: subprocess.run(["git", "-C", str(clone), *a], check=True, env=env,
+                                    capture_output=True, text=True)
+    try:
+        if not (clone / ".git").exists():
+            subprocess.run(["git", "clone", "--depth", "1", repo, str(clone)], check=True, env=env,
+                           capture_output=True, text=True)
+        else:
+            git("fetch", "--depth", "1", "origin")
+            git("reset", "--hard", "FETCH_HEAD")  # o buscador é o único que escreve lá
+        (clone / "index.html").write_text(conteudo, encoding="utf-8")
+        (clone / ".nojekyll").touch()  # serve o HTML como está, sem Jekyll
+        git("add", "index.html", ".nojekyll")
+        if git("status", "--porcelain").stdout.strip():
+            git("-c", "user.name=Dig Dig Dig!", "-c", "user.email=digdigdig@users.noreply.github.com",
+                "commit", "-m", f"Relatório de {hoje:%d/%m/%Y %H:%M}")
+            git("push", "origin", "HEAD")
+        print(f"publicado → {pagina}", file=sys.stderr)
+        return pagina
+    except subprocess.CalledProcessError as e:
+        print(f"falha ao publicar: {(e.stderr or e.stdout or str(e)).strip()}", file=sys.stderr)
+        return None
+
+
+def notificar(novos, erros, link=None):
+    """Avisa no celular pelo ntfy (https://ntfy.sh) que o relatório saiu;
+    tocar no aviso abre a página publicada, se houver.
+    O canal fica em notificacao.txt; sem o arquivo, não faz nada."""
+    dados = ler_config("notificacao.txt")
+    topico = dados.get("ntfy_topico", "")
+    if not topico:
+        return
+    servidor = dados.get("ntfy_servidor", "https://ntfy.sh").rstrip("/")
+    sites = sorted({i["site"] for i in novos})
+    texto = (f"{len(novos)} disco(s) novo(s) em {', '.join(sites)}." if novos
+             else "Nenhum disco novo hoje.")
+    if erros:
+        texto += f" {len(erros)} aviso(s) no relatório."
+    pedido = urllib.request.Request(
+        # título vai na URL: cabeçalhos HTTP não levam acentos
+        f"{servidor}/{urllib.parse.quote(topico)}?"
+        + urllib.parse.urlencode({"title": "Dig Dig Dig! · relatório pronto", "tags": "cd",
+                                  **({"click": link} if link else {})}),
+        data=texto.encode("utf-8"), method="POST")
+    try:
+        urllib.request.urlopen(pedido, timeout=20).close()
+        print("notificação enviada", file=sys.stderr)
+    except Exception as e:
+        print(f"falha ao notificar: {e}", file=sys.stderr)
+
+
 def pede_login(pagina):
     return "/verify/" in pagina.url or "/buyer/login" in pagina.url
 
@@ -195,11 +263,14 @@ def gerar_html(hoje, novos, erros, total_vistos):
     por_site = {}
     for item in novos:
         por_site.setdefault(item["site"], []).append(item)
+    sites = sorted({site_de(u)[0] for u, _ in montar_buscas()} | set(por_site))
+    # cada site tem sempre o mesmo tom de fundo (pela posição na lista de sites)
+    tom = lambda site: f"tom-{sites.index(site) % 6}"
 
     def card(i):
         foto = f'<img src="{html.escape(i["foto"])}" loading="lazy" alt="">' if i.get("foto") else '<div class="sem-foto"></div>'
         extra = i.get("extra") or ""
-        return (f'<a class="card" href="{html.escape(i["link"])}" target="_blank" rel="noopener" '
+        return (f'<a class="card {tom(i["site"])}" href="{html.escape(i["link"])}" target="_blank" rel="noopener" '
                 f'data-site="{html.escape(i["site"])}" data-preco="{valor(i.get("preco"))}">'
                 f'<div class="capa">{foto}</div>'
                 f'<div class="info"><div class="site">{html.escape(i["site"])}</div>'
@@ -218,7 +289,7 @@ def gerar_html(hoje, novos, erros, total_vistos):
                 f'<select class="menu" id="menu-{chave}" data-chave="{chave}">{itens}</select></div>')
 
     secoes = "".join(
-        f'<section data-site="{html.escape(site)}"><h2>{html.escape(site)} <span>{len(itens):03d}</span></h2>'
+        f'<section class="{tom(site)}" data-site="{html.escape(site)}"><h2>{html.escape(site)} <span>{len(itens):03d}</span></h2>'
         f'<div class="grade">{"".join(card(i) for i in itens)}</div></section>'
         for site, itens in sorted(por_site.items()))
     controles = ""
@@ -233,8 +304,6 @@ def gerar_html(hoje, novos, erros, total_vistos):
         secoes = '<p class="vazio">Nenhum disco novo desde a última busca.</p>'
     avisos = "".join(f"<li>{html.escape(e)}</li>" for e in erros)
     avisos = f'<ul class="avisos">{avisos}</ul>' if avisos else ""
-    sites = sorted({site_de(u)[0] for u, _ in montar_buscas()})
-
     pecas = {
         "DATA": f"{hoje:%d.%m.%Y}", "HORA": f"{hoje:%H:%M}", "NOVOS": str(len(novos)),
         "VISTOS": str(total_vistos), "AVISOS": avisos, "CONTROLES": controles,
@@ -283,6 +352,8 @@ def buscar():
     destino.write_text(conteudo, encoding="utf-8")
     (RELATORIOS / "ultimo.html").write_text(conteudo, encoding="utf-8")
     print(f"{len(novos)} novos → {destino}", file=sys.stderr)
+    link = publicar(conteudo, agora)
+    notificar(novos, [e for e in erros if not e.startswith("Primeira execução")], link)
     return destino
 
 

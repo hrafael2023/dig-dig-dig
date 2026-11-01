@@ -1,0 +1,5 @@
+# Aviso no celular quando o relatório do Dig Dig Dig! fica pronto.
+# Copie para notificacao.txt, invente um tópico difícil de adivinhar,
+# instale o app ntfy (iPhone ou Android) e assine esse tópico.
+ntfy_topico=
+ntfy_servidor=https://ntfy.sh
