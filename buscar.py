@@ -312,6 +312,7 @@ def gerar_html(hoje, novos, erros, total_vistos):
         "DATA": f"{hoje:%d.%m.%Y}", "HORA": f"{hoje:%H:%M}", "NOVOS": str(len(novos)),
         "VISTOS": str(total_vistos), "AVISOS": avisos, "CONTROLES": controles,
         "SECOES": secoes, "SITES": html.escape(" · ".join(sites)),
+        "GATILHO": html.escape(ler_config("publicacao.txt").get("gatilho", "")),
     }
     conteudo = MODELO.read_text(encoding="utf-8")
     for chave, texto in pecas.items():

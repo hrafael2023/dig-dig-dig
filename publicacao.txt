@@ -2,3 +2,8 @@
 # Depois de gerar o relatório, o buscador commita ele como index.html neste
 # repositório e envia ao GitHub. Apague a linha abaixo para parar de publicar.
 pagina=https://hrafael2023.github.io/dig-dig-dig/
+
+# Tópico do ntfy que dispara a busca: o botão Dig da página publica "dig"
+# nele e o servidor do Mac (servidor.py) escuta. Fica visível na página pública;
+# o Mac aceita no máximo uma busca a cada 10 minutos vinda daqui.
+gatilho=digdigdig-dig-828d73e13000

@@ -214,7 +214,7 @@ footer strong { color: var(--ink); font-weight: 600; font-stretch: 62%; font-var
 
 <header class="topo">
   <h1>Dig Dig Dig!</h1>
-  <button type="button" class="dig" id="dig" hidden>Dig</button>
+  <button type="button" class="dig" id="dig" data-gatilho="{{GATILHO}}" hidden>Dig</button>
 </header>
 
 <div class="barra">
@@ -299,38 +299,112 @@ document.querySelectorAll('.teclas').forEach(grupo => {
   });
 });
 
-// Botão Dig: só existe quando a página vem do servidor local (servidor.py),
-// que responde em "estado"; no GitHub Pages esse endereço não existe e o botão fica escondido.
-const dig = document.getElementById('dig');
-function mostrarDig(e) {
+// Botão Dig. Na página do servidor local (servidor.py, que responde em "estado"),
+// fala direto com ele. Na página publicada, manda "dig" para o tópico do ntfy que
+// o Mac escuta e acompanha pelo mesmo tópico os avisos inicio / fim:ok / fim:falha.
+const dig = document.getElementById('dig'), gatilho = dig.dataset.gatilho;
+const ntfy = 'https://ntfy.sh/' + encodeURIComponent(gatilho);
+const pausa = ms => new Promise(ok => setTimeout(ok, ms));
+function mostrarDig(texto, {ocupado = false, erro = false, dica = ''} = {}) {
   dig.hidden = false;
-  dig.disabled = e.rodando;
-  dig.classList.toggle('erro', e.ok === false && !e.rodando);
-  dig.textContent = e.rodando ? 'Cavando…' : e.ok === false ? 'Falhou' : 'Dig';
-  dig.title = e.ok === false && !e.rodando ? 'A última busca falhou — veja logs/buscador.log' : '';
+  dig.disabled = ocupado;
+  dig.classList.toggle('erro', erro);
+  dig.textContent = texto;
+  dig.title = dica;
 }
+
+// --- página local ---
 async function lerEstado() {
   const r = await fetch('estado', {cache: 'no-store'});
   if (!r.ok) throw new Error(r.status);
   return r.json();
 }
-async function acompanhar() {
-  let e = await lerEstado();
-  mostrarDig(e);
-  while (e.rodando) {
-    await new Promise(ok => setTimeout(ok, 3000));
-    e = await lerEstado();
-  }
-  return e;
+function mostrarEstado(e) {
+  if (e.rodando) mostrarDig('Cavando…', {ocupado: true});
+  else if (e.ok === false) mostrarDig('Falhou', {erro: true, dica: 'A última busca falhou — veja logs/buscador.log'});
+  else mostrarDig('Dig');
 }
-lerEstado().then(e => { mostrarDig(e); if (e.rodando) acompanhar().then(f => f.ok && location.reload()); }).catch(() => {});
+async function acompanharLocal() {
+  let e = await lerEstado();
+  mostrarEstado(e);
+  while (e.rodando) { await pausa(3000); e = await lerEstado(); mostrarEstado(e); }
+  if (e.ok) location.reload();
+}
+
+// --- página publicada ---
+async function avisosDesde(desde) {
+  const r = await fetch(`${ntfy}/json?poll=1&since=${desde}`, {cache: 'no-store'});
+  const texto = await r.text();
+  return texto.split('\n').filter(Boolean).map(l => JSON.parse(l)).filter(m => m.event === 'message');
+}
+async function esperarPublicacao() {
+  // o GitHub leva cerca de 1 minuto para pôr no ar a página nova
+  mostrarDig('Publicando…', {ocupado: true});
+  const atual = document.querySelector('.barra').textContent;
+  for (let i = 0; i < 40; i++) {
+    await pausa(6000);
+    try {
+      const html = await (await fetch(location.pathname + '?t=' + Date.now(), {cache: 'no-store'})).text();
+      const nova = new DOMParser().parseFromString(html, 'text/html').querySelector('.barra');
+      if (nova && nova.textContent !== atual) return location.reload();
+    } catch (err) {}
+  }
+  location.reload();
+}
+async function acompanharOnline(desde) {
+  const limite = Date.now() + 15 * 60 * 1000;
+  let comecou = false;
+  while (Date.now() < limite) {
+    let avisos = [];
+    try { avisos = await avisosDesde(desde); } catch (err) {}
+    const ultimo = avisos.map(m => m.message).filter(m => m !== 'dig').pop();
+    if (ultimo === 'fim:ok') return esperarPublicacao();
+    if (ultimo === 'fim:falha') return mostrarDig('Falhou', {erro: true, dica: 'A busca falhou no Mac — veja logs/buscador.log'});
+    if (ultimo === 'recente') {
+      mostrarDig('Já cavou', {ocupado: true, dica: 'Teve busca há menos de 10 minutos'});
+      await pausa(4000);
+      return mostrarDig('Dig');
+    }
+    if (ultimo === 'inicio') { comecou = true; mostrarDig('Cavando…', {ocupado: true}); }
+    else if (!comecou && Date.now() - desde * 1000 > 60000)
+      mostrarDig('Na fila', {ocupado: true, dica: 'O Mac parece desligado ou dormindo; a busca roda quando ele acordar'});
+    await pausa(5000);
+  }
+  mostrarDig('Dig');
+}
+async function cavarOnline() {
+  const desde = Math.floor(Date.now() / 1000) - 2;
+  mostrarDig('Chamando…', {ocupado: true});
+  try {
+    await fetch(ntfy, {method: 'POST', body: 'dig'});
+  } catch (err) {
+    return mostrarDig('Falhou', {erro: true, dica: 'Não consegui falar com o ntfy'});
+  }
+  acompanharOnline(desde);
+}
+
+let local = false;
+lerEstado().then(e => {
+  local = true;
+  mostrarEstado(e);
+  if (e.rodando) acompanharLocal();
+}).catch(async () => {
+  if (!gatilho) return;
+  mostrarDig('Dig');
+  // se já houver uma busca em andamento (pedida de outro aparelho), acompanha
+  try {
+    const desde = Math.floor(Date.now() / 1000) - 15 * 60;
+    const ultimo = (await avisosDesde(desde)).map(m => m.message).filter(m => m === 'inicio' || m.startsWith('fim:')).pop();
+    if (ultimo === 'inicio') acompanharOnline(desde);
+  } catch (err) {}
+});
 dig.addEventListener('click', async () => {
-  mostrarDig({rodando: true});
+  if (!local) return cavarOnline();
+  mostrarDig('Cavando…', {ocupado: true});
   try {
     await fetch('dig', {method: 'POST', headers: {'X-Dig': '1'}});
-    const fim = await acompanhar();
-    if (fim.ok) location.reload();
-  } catch (err) { mostrarDig({rodando: false, ok: false}); }
+    await acompanharLocal();
+  } catch (err) { mostrarDig('Falhou', {erro: true}); }
 });
 </script>
 </body></html>
