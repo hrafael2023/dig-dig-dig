@@ -29,6 +29,7 @@ PERFIL = PASTA / ".perfil-navegador"
 VISTOS = PASTA / "vistos.json"
 RELATORIOS = PASTA / "relatorios"
 MODELO = PASTA / "modelo-relatorio.html"
+VERSAO = PASTA / "VERSAO"  # versão do código, mostrada no rodapé; sobe a cada commit de código
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
 
@@ -313,6 +314,7 @@ def gerar_html(hoje, novos, erros, total_vistos):
         "VISTOS": str(total_vistos), "AVISOS": avisos, "CONTROLES": controles,
         "SECOES": secoes, "SITES": html.escape(" · ".join(sites)),
         "GATILHO": html.escape(ler_config("publicacao.txt").get("gatilho", "")),
+        "VERSAO": html.escape(VERSAO.read_text().strip() if VERSAO.exists() else "?"),
     }
     conteudo = MODELO.read_text(encoding="utf-8")
     for chave, texto in pecas.items():

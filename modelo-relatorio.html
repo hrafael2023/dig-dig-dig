@@ -192,6 +192,7 @@ footer {
   font-size: 13px; color: var(--mut);
 }
 footer strong { color: var(--ink); font-weight: 600; font-stretch: 62%; font-variation-settings: "wdth" 62; font-size: 20px; letter-spacing: 0; }
+footer .versao { margin-left: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 700px) {
   main { padding: 0 16px 64px; }
@@ -232,7 +233,7 @@ footer strong { color: var(--ink); font-weight: 600; font-stretch: 62%; font-var
 {{AVISOS}}
 {{CONTROLES}}
 <div id="secoes">{{SECOES}}</div>
-<footer><strong>Dig Dig Dig!</strong><span>{{SITES}}</span></footer>
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v{{VERSAO}}</span></div><span>{{SITES}}</span></footer>
 </main>
 <script>
 // Filtros por site e faixa de preço, e ordem por preço. "Por site" mantém os
