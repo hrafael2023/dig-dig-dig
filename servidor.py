@@ -125,6 +125,8 @@ class Pedido(BaseHTTPRequestHandler):
             pagina = PASTA / caminho.lstrip("/")
             if pagina.exists():
                 return self.responder(200, pagina.read_bytes(), "text/html; charset=utf-8")
+        if caminho == "/busca.json" and (PASTA / "busca.json").exists():
+            return self.responder(200, (PASTA / "busca.json").read_bytes())
         self.responder(404, b"{}")
 
     def do_POST(self):

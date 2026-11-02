@@ -175,7 +175,7 @@ def publicar(conteudo, hoje):
     env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}  # nunca travar pedindo senha
     git = lambda *a: subprocess.run(["git", "-C", str(PASTA), *a], check=True, env=env,
                                     capture_output=True, text=True)
-    arquivos = ["index.html", "arquivo.html", ".nojekyll", "relatorios", "vistos.json"]
+    arquivos = ["index.html", "arquivo.html", "busca.json", ".nojekyll", "relatorios", "vistos.json"]
     try:
         # traz o que houver de novo no GitHub; mudanças locais em andamento são preservadas
         git("pull", "--rebase", "--autostash", "origin", "main")
@@ -353,6 +353,28 @@ def dados_do_dig(arquivo):
             "sites": [html.unescape(x) for x in sites], "arquivo": arquivo.name}
 
 
+CARTAO = re.compile(r'<a class="card[^"]*" href="([^"]*)"[^>]*data-site="([^"]*)"[^>]*>(.*?)</a>', re.S)
+
+
+def gerar_indice():
+    """Todos os discos de todos os Digs, para a busca da página do Arquivo
+    (busca.json). Cada disco aparece uma vez, com o Dig em que surgiu."""
+    discos = {}
+    digs = sorted(filter(None, map(dados_do_dig, RELATORIOS.glob("vinil-*.html"))), key=lambda x: x["quando"])
+    for dig in digs:
+        texto = (RELATORIOS / dig["arquivo"]).read_text(encoding="utf-8")
+        for link, site, miolo in CARTAO.findall(texto):
+            if link in discos:
+                continue
+            campo = lambda classe: html.unescape(re.sub(r"<[^>]+>", "", (re.search(
+                rf'<div class="{classe}">(.*?)</div>', miolo, re.S) or [None, ""])[1])).strip()
+            foto = re.search(r'<img src="([^"]*)"', miolo)
+            discos[link] = {"t": campo("titulo"), "p": campo("preco"), "s": html.unescape(site),
+                            "l": html.unescape(link), "f": html.unescape(foto[1]) if foto else "",
+                            "d": f'{dig["quando"]:%d.%m.%Y às %H:%M}', "a": f'relatorios/{dig["arquivo"]}'}
+    return json.dumps(list(reversed(discos.values())), ensure_ascii=False, separators=(",", ":"))
+
+
 def gerar_arquivo():
     """Página do Arquivo: todos os Digs anteriores ao atual, do mais novo ao mais antigo."""
     digs = sorted(filter(None, map(dados_do_dig, RELATORIOS.glob("vinil-*.html"))),
@@ -364,6 +386,7 @@ def gerar_arquivo():
         f'<span class="onde">{html.escape(" · ".join(x["sites"]))}</span></a></li>'
         for x in digs)
     lista = f'<ol class="lista-arquivo">{linhas}</ol>' if digs else '<p class="vazio">Nenhum Dig arquivado ainda.</p>'
+    busca = (MODELO.parent / "modelo-busca.html").read_text(encoding="utf-8")
     modelo = MODELO.read_text(encoding="utf-8")
     cabeca = modelo[:modelo.index("<body>")].replace("<title>Dig Dig Dig!</title>", "<title>Arquivo · Dig Dig Dig!</title>")
     versao = html.escape(VERSAO.read_text().strip() if VERSAO.exists() else "?")
@@ -371,7 +394,7 @@ def gerar_arquivo():
             '<header class="topo"><h1><a href="./" class="logo">Dig Dig Dig!</a></h1>'
             '<a class="link-topo" href="./">← Dig atual</a></header>\n'
             f'<div class="barra"><div><b>Arquivo</b><span class="mut">{len(digs)} Dig{"s" if len(digs) != 1 else ""} anteriores</span></div></div>\n'
-            + lista +
+            + busca.replace("{{LISTA}}", lista) +
             f'\n<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v{versao}</span></div></footer>\n'
             '</main></body></html>\n')
 
@@ -413,6 +436,7 @@ def buscar():
     destino.write_text(arquivar(conteudo), encoding="utf-8")
     (PASTA / "index.html").write_text(conteudo, encoding="utf-8")  # a página do servidor local
     (PASTA / "arquivo.html").write_text(gerar_arquivo(), encoding="utf-8")
+    (PASTA / "busca.json").write_text(gerar_indice(), encoding="utf-8")
     print(f"{len(novos)} novos → {destino}", file=sys.stderr)
     link = publicar(conteudo, agora)
     notificar(novos, [e for e in erros if not e.startswith("Primeira execução")], link)

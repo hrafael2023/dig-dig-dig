@@ -113,6 +113,18 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
 .lista-arquivo .quantos { font-weight: 600; font-size: 15px; }
 .lista-arquivo .onde { color: var(--mut); font-size: 13px; }
 
+/* Busca no Arquivo */
+.busca { margin-top: 40px; }
+.busca label { display: block; font-size: 13px; color: var(--mut); margin-bottom: 8px; }
+.busca input {
+  width: 100%; padding: 12px 0; border: 0; border-bottom: 2px solid var(--ink); border-radius: 0;
+  background: transparent; color: var(--ink); outline: none; -webkit-appearance: none; appearance: none;
+  font: 400 32px/1.2 var(--serif);
+}
+.busca input::placeholder { color: var(--mut); }
+.busca input:focus { border-bottom-color: var(--accent); }
+#resultados .contagem { margin: 24px 0 32px; font-size: 13px; color: var(--mut); }
+
 /* Barra de status, como a "The Nice Feed" */
 .barra {
   display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px;
@@ -222,6 +234,7 @@ footer .versao { margin-left: 8px; font-size: 12px; font-variant-numeric: tabula
   .lista-arquivo a { grid-template-columns: 1fr auto; padding: 18px 0; }
   .lista-arquivo .quando { font-size: 28px; }
   .lista-arquivo .onde { grid-column: 1 / -1; }
+  .busca input { font-size: 24px; }
   .barra .lado { justify-content: space-between; }
   .dig { min-width: 56px; height: 36px; padding: 0 12px; font-size: 14px; }
   .controles { margin-top: 28px; gap: 14px; }
@@ -238,6 +251,65 @@ footer .versao { margin-left: 8px; font-size: 12px; font-variant-numeric: tabula
 </style></head><body><main>
 <header class="topo"><h1><a href="./" class="logo">Dig Dig Dig!</a></h1><a class="link-topo" href="./">← Dig atual</a></header>
 <div class="barra"><div><b>Arquivo</b><span class="mut">5 Digs anteriores</span></div></div>
-<ol class="lista-arquivo"><li><a href="relatorios/vinil-2026-11-02-1252.html"><span class="quando">02.11.2026<small>12:52</small></span><span class="quantos">36 discos</span><span class="onde">Enjoei · Sebo Casa Laranja</span></a></li><li><a href="relatorios/vinil-2026-11-02-1104.html"><span class="quando">02.11.2026<small>11:04</small></span><span class="quantos">44 discos</span><span class="onde">Enjoei · Sebo do Messias</span></a></li><li><a href="relatorios/vinil-2026-11-02-1020.html"><span class="quando">02.11.2026<small>10:20</small></span><span class="quantos">34 discos</span><span class="onde">Enjoei</span></a></li><li><a href="relatorios/vinil-2026-11-02-1008.html"><span class="quando">02.11.2026<small>10:08</small></span><span class="quantos">38 discos</span><span class="onde">Enjoei · Sebo Casa Laranja</span></a></li><li><a href="relatorios/vinil-2026-11-01-1912.html"><span class="quando">01.11.2026<small>19:12</small></span><span class="quantos">102 discos</span><span class="onde">Enjoei · Sebo Casa Laranja</span></a></li></ol>
-<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.1</span></div></footer>
+<!-- Parte da página do Arquivo: busca em todos os Digs (busca.json) e a lista de Digs. -->
+<form class="busca" role="search" onsubmit="return false">
+  <label for="q">Buscar em todos os Digs</label>
+  <input type="search" id="q" placeholder="Artista, disco, gênero…" autocomplete="off" spellcheck="false">
+</form>
+<div id="resultados" hidden>
+  <p class="contagem" aria-live="polite"></p>
+  <div class="grade"></div>
+</div>
+<div id="digs"><ol class="lista-arquivo"><li><a href="relatorios/vinil-2026-11-02-1252.html"><span class="quando">02.11.2026<small>12:52</small></span><span class="quantos">36 discos</span><span class="onde">Enjoei · Sebo Casa Laranja</span></a></li><li><a href="relatorios/vinil-2026-11-02-1104.html"><span class="quando">02.11.2026<small>11:04</small></span><span class="quantos">44 discos</span><span class="onde">Enjoei · Sebo do Messias</span></a></li><li><a href="relatorios/vinil-2026-11-02-1020.html"><span class="quando">02.11.2026<small>10:20</small></span><span class="quantos">34 discos</span><span class="onde">Enjoei</span></a></li><li><a href="relatorios/vinil-2026-11-02-1008.html"><span class="quando">02.11.2026<small>10:08</small></span><span class="quantos">38 discos</span><span class="onde">Enjoei · Sebo Casa Laranja</span></a></li><li><a href="relatorios/vinil-2026-11-01-1912.html"><span class="quando">01.11.2026<small>19:12</small></span><span class="quantos">102 discos</span><span class="onde">Enjoei · Sebo Casa Laranja</span></a></li></ol></div>
+<script>
+// Busca sem diferenciar acentos e maiúsculas; todas as palavras precisam aparecer.
+const normal = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const campo = document.getElementById('q'), resultados = document.getElementById('resultados');
+const grade = resultados.querySelector('.grade'), contagem = resultados.querySelector('.contagem');
+const digs = document.getElementById('digs');
+const MAXIMO = 120;
+let discos = null;
+
+function cartao(d) {
+  const a = document.createElement('a');
+  a.className = 'card'; a.href = d.l; a.target = '_blank'; a.rel = 'noopener';
+  const capa = document.createElement('div'); capa.className = 'capa';
+  if (d.f) { const img = document.createElement('img'); img.src = d.f; img.loading = 'lazy'; img.alt = ''; capa.append(img); }
+  const info = document.createElement('div'); info.className = 'info';
+  for (const [classe, texto] of [['site', d.s], ['titulo', d.t], ['preco', d.p], ['extra', 'Dig de ' + d.d]]) {
+    const div = document.createElement('div'); div.className = classe; div.textContent = texto; info.append(div);
+  }
+  a.append(capa, info);
+  return a;
+}
+
+async function buscar() {
+  const termos = normal(campo.value).split(/\s+/).filter(Boolean);
+  const url = new URL(location.href);
+  termos.length ? url.searchParams.set('q', campo.value) : url.searchParams.delete('q');
+  history.replaceState(null, '', url);
+  resultados.hidden = !termos.length;
+  digs.hidden = !!termos.length;
+  if (!termos.length) return;
+  if (!discos) {
+    contagem.textContent = 'Carregando…';
+    try {
+      discos = (await (await fetch('busca.json', {cache: 'no-store'})).json())
+        .map(d => ({...d, chave: normal([d.t, d.s, d.p].join(' '))}));
+    } catch (e) { contagem.textContent = 'Não consegui carregar a busca.'; return; }
+  }
+  const achados = discos.filter(d => termos.every(t => d.chave.includes(t)));
+  contagem.textContent = achados.length
+    ? `${achados.length} disco${achados.length > 1 ? 's' : ''}` + (achados.length > MAXIMO ? ` · mostrando os ${MAXIMO} mais recentes` : '')
+    : 'Nenhum disco encontrado.';
+  grade.replaceChildren(...achados.slice(0, MAXIMO).map(cartao));
+}
+
+let espera;
+campo.addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(buscar, 150); });
+const inicial = new URL(location.href).searchParams.get('q');
+if (inicial) { campo.value = inicial; buscar(); }
+</script>
+
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.2</span></div></footer>
 </main></body></html>

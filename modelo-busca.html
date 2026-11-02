@@ -1,0 +1,59 @@
+<!-- Parte da página do Arquivo: busca em todos os Digs (busca.json) e a lista de Digs. -->
+<form class="busca" role="search" onsubmit="return false">
+  <label for="q">Buscar em todos os Digs</label>
+  <input type="search" id="q" placeholder="Artista, disco, gênero…" autocomplete="off" spellcheck="false">
+</form>
+<div id="resultados" hidden>
+  <p class="contagem" aria-live="polite"></p>
+  <div class="grade"></div>
+</div>
+<div id="digs">{{LISTA}}</div>
+<script>
+// Busca sem diferenciar acentos e maiúsculas; todas as palavras precisam aparecer.
+const normal = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const campo = document.getElementById('q'), resultados = document.getElementById('resultados');
+const grade = resultados.querySelector('.grade'), contagem = resultados.querySelector('.contagem');
+const digs = document.getElementById('digs');
+const MAXIMO = 120;
+let discos = null;
+
+function cartao(d) {
+  const a = document.createElement('a');
+  a.className = 'card'; a.href = d.l; a.target = '_blank'; a.rel = 'noopener';
+  const capa = document.createElement('div'); capa.className = 'capa';
+  if (d.f) { const img = document.createElement('img'); img.src = d.f; img.loading = 'lazy'; img.alt = ''; capa.append(img); }
+  const info = document.createElement('div'); info.className = 'info';
+  for (const [classe, texto] of [['site', d.s], ['titulo', d.t], ['preco', d.p], ['extra', 'Dig de ' + d.d]]) {
+    const div = document.createElement('div'); div.className = classe; div.textContent = texto; info.append(div);
+  }
+  a.append(capa, info);
+  return a;
+}
+
+async function buscar() {
+  const termos = normal(campo.value).split(/\s+/).filter(Boolean);
+  const url = new URL(location.href);
+  termos.length ? url.searchParams.set('q', campo.value) : url.searchParams.delete('q');
+  history.replaceState(null, '', url);
+  resultados.hidden = !termos.length;
+  digs.hidden = !!termos.length;
+  if (!termos.length) return;
+  if (!discos) {
+    contagem.textContent = 'Carregando…';
+    try {
+      discos = (await (await fetch('busca.json', {cache: 'no-store'})).json())
+        .map(d => ({...d, chave: normal([d.t, d.s, d.p].join(' '))}));
+    } catch (e) { contagem.textContent = 'Não consegui carregar a busca.'; return; }
+  }
+  const achados = discos.filter(d => termos.every(t => d.chave.includes(t)));
+  contagem.textContent = achados.length
+    ? `${achados.length} disco${achados.length > 1 ? 's' : ''}` + (achados.length > MAXIMO ? ` · mostrando os ${MAXIMO} mais recentes` : '')
+    : 'Nenhum disco encontrado.';
+  grade.replaceChildren(...achados.slice(0, MAXIMO).map(cartao));
+}
+
+let espera;
+campo.addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(buscar, 150); });
+const inicial = new URL(location.href).searchParams.get('q');
+if (inicial) { campo.value = inicial; buscar(); }
+</script>

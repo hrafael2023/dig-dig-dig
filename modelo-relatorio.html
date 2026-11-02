@@ -113,6 +113,18 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
 .lista-arquivo .quantos { font-weight: 600; font-size: 15px; }
 .lista-arquivo .onde { color: var(--mut); font-size: 13px; }
 
+/* Busca no Arquivo */
+.busca { margin-top: 40px; }
+.busca label { display: block; font-size: 13px; color: var(--mut); margin-bottom: 8px; }
+.busca input {
+  width: 100%; padding: 12px 0; border: 0; border-bottom: 2px solid var(--ink); border-radius: 0;
+  background: transparent; color: var(--ink); outline: none; -webkit-appearance: none; appearance: none;
+  font: 400 32px/1.2 var(--serif);
+}
+.busca input::placeholder { color: var(--mut); }
+.busca input:focus { border-bottom-color: var(--accent); }
+#resultados .contagem { margin: 24px 0 32px; font-size: 13px; color: var(--mut); }
+
 /* Barra de status, como a "The Nice Feed" */
 .barra {
   display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px;
@@ -222,6 +234,7 @@ footer .versao { margin-left: 8px; font-size: 12px; font-variant-numeric: tabula
   .lista-arquivo a { grid-template-columns: 1fr auto; padding: 18px 0; }
   .lista-arquivo .quando { font-size: 28px; }
   .lista-arquivo .onde { grid-column: 1 / -1; }
+  .busca input { font-size: 24px; }
   .barra .lado { justify-content: space-between; }
   .dig { min-width: 56px; height: 36px; padding: 0 12px; font-size: 14px; }
   .controles { margin-top: 28px; gap: 14px; }
