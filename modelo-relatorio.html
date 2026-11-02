@@ -26,6 +26,8 @@
   --tag-ink: #6219ff;
   --accent: #6219ff;
   --on-accent: #ffffff;
+  --dig: rgb(22, 19, 15);
+  --on-dig: #ffffff;
   --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --serif: "Newsreader", Georgia, serif;
   color-scheme: light;
@@ -44,6 +46,8 @@
     --tag-ink: #b59cff;
     --accent: #8b5cff;
     --on-accent: #ffffff;
+    --dig: #ece8e1;
+    --on-dig: rgb(22, 19, 15);
     color-scheme: dark;
   }
 }
@@ -59,6 +63,8 @@
   --tag-ink: #b59cff;
   --accent: #8b5cff;
   --on-accent: #ffffff;
+  --dig: #ece8e1;
+  --on-dig: rgb(22, 19, 15);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -71,31 +77,21 @@ body {
 }
 main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
 
-/* Cabeçalho: só o logo, centralizado, com o botão de tema à direita */
-.topo { position: relative; display: flex; justify-content: center; align-items: center; padding: 36px 0 28px; }
+/* Cabeçalho: logo à esquerda, botão Dig à direita */
+.topo { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 36px 0 28px; }
 .topo h1 {
   margin: 0; font-size: 64px; line-height: .9; font-weight: 600;
   font-stretch: 62%; font-variation-settings: "wdth" 62; letter-spacing: -.01em;
 }
-.tema {
-  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-  width: 40px; height: 40px; border: 0; padding: 0; border-radius: 50%; cursor: pointer;
-  background: transparent; color: var(--ink); display: grid; place-items: center;
-}
-.tema:hover { background: var(--bar); }
-.tema:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.tema svg { width: 22px; height: 22px; transition: transform .3s; }
-:root[data-tema-efetivo="dark"] .tema svg { transform: rotate(180deg); }
-/* Botão Dig, à esquerda: aparece só na página do servidor local do Mac */
+/* Botão Dig: aparece só na página do servidor local do Mac */
 .dig {
-  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-  min-width: 72px; height: 40px; padding: 0 18px; border: 0; border-radius: 999px; cursor: pointer;
-  background: var(--accent); color: var(--on-accent);
+  flex: none; min-width: 72px; height: 40px; padding: 0 18px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--dig); color: var(--on-dig);
   font: 600 15px/1 var(--sans); letter-spacing: .02em;
 }
-.dig:hover { filter: brightness(1.12); }
-.dig:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.dig:disabled { cursor: progress; background: var(--tag-bg); color: var(--tag-ink); }
+.dig:hover { opacity: .85; }
+.dig:focus-visible { outline: 2px solid var(--dig); outline-offset: 3px; }
+.dig:disabled { cursor: progress; opacity: 1; background: var(--tag-bg); color: var(--tag-ink); }
 .dig.erro { background: #c4302b; color: #fff; }
 
 /* Barra de status, como a "The Nice Feed" */
@@ -105,6 +101,16 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
 }
 .barra .mut { color: var(--mut); font-weight: 400; margin-left: 8px; }
 .barra b { font-weight: 500; color: var(--accent); }
+.barra .lado { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+/* Botão de tema, dentro da barra cinza */
+.tema {
+  width: 30px; height: 30px; margin: -6px -8px -6px 0; border: 0; padding: 0; border-radius: 50%; cursor: pointer;
+  background: transparent; color: var(--ink); display: grid; place-items: center;
+}
+.tema:hover { background: var(--line); }
+.tema:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tema svg { width: 18px; height: 18px; transition: transform .3s; }
+:root[data-tema-efetivo="dark"] .tema svg { transform: rotate(180deg); }
 
 /* Avisos */
 .avisos { list-style: none; margin: 12px 0 0; padding: 0; font-size: 13px; color: var(--mut); }
@@ -191,6 +197,7 @@ footer strong { color: var(--ink); font-weight: 600; font-stretch: 62%; font-var
   main { padding: 0 16px 64px; }
   .topo { padding: 24px 0 20px; }
   .topo h1 { font-size: 44px; }
+  .barra .lado { justify-content: space-between; }
   .dig { min-width: 56px; height: 36px; padding: 0 12px; font-size: 14px; }
   .controles { margin-top: 28px; gap: 14px; }
   .grupo { gap: 10px; }
@@ -206,19 +213,20 @@ footer strong { color: var(--ink); font-weight: 600; font-stretch: 62%; font-var
 </style></head><body><main>
 
 <header class="topo">
-  <button type="button" class="dig" id="dig" hidden>Dig</button>
   <h1>Dig Dig Dig!</h1>
-  <button type="button" class="tema" id="tema" aria-label="Alternar tema claro/escuro">
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <path d="M10 2a8 8 0 0 1 0 16z" fill="currentColor"/>
-    </svg>
-  </button>
+  <button type="button" class="dig" id="dig" hidden>Dig</button>
 </header>
 
 <div class="barra">
   <div><b>{{NOVOS}} novos</b><span class="mut">Atualizado em {{DATA}} às {{HORA}}</span></div>
-  <div>{{VISTOS}} acompanhados</div>
+  <div class="lado"><span>{{VISTOS}} acompanhados</span>
+    <button type="button" class="tema" id="tema" aria-label="Alternar tema claro/escuro">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 2a8 8 0 0 1 0 16z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
 </div>
 
 {{AVISOS}}
