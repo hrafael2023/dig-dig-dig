@@ -178,7 +178,7 @@ def publicar(conteudo, hoje):
     try:
         # traz o que houver de novo no GitHub; mudanças locais em andamento são preservadas
         git("pull", "--rebase", "--autostash", "origin", "main")
-        (PASTA / "index.html").write_text(conteudo, encoding="utf-8")
+        (PASTA / "index.html").write_text(conteudo, encoding="utf-8")  # o pull pode tê-lo trocado
         (PASTA / ".nojekyll").touch()  # serve o HTML como está, sem Jekyll
         git("add", "--", *arquivos)
         # commita só os arquivos do relatório, nunca outras alterações em andamento
@@ -355,6 +355,7 @@ def buscar():
     conteudo = gerar_html(agora, novos, erros, len(vistos))
     destino.write_text(conteudo, encoding="utf-8")
     (RELATORIOS / "ultimo.html").write_text(conteudo, encoding="utf-8")
+    (PASTA / "index.html").write_text(conteudo, encoding="utf-8")  # a página do servidor local
     print(f"{len(novos)} novos → {destino}", file=sys.stderr)
     link = publicar(conteudo, agora)
     notificar(novos, [e for e in erros if not e.startswith("Primeira execução")], link)
