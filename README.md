@@ -8,8 +8,10 @@ no celular pelo ntfy.
 - `buscar.py` — o buscador (`python3 buscar.py`)
 - `urls.txt` / `termos.txt` — sites e termos de busca
 - `modelo-relatorio.html` — visual do relatório
-- `servidor.py` — página local em http://127.0.0.1:8777 com o botão **Dig**,
-  que dispara a busca (só funciona no Mac; no celular a página não tem o botão)
+- `servidor.py` — roda no Mac e dispara a busca quando o botão **Dig** é
+  apertado: na página local (http://127.0.0.1:8777) ou na publicada, que chama
+  o Mac pelo tópico ntfy `gatilho=` de `publicacao.txt` (no máximo uma busca a
+  cada 10 minutos por esse caminho). O Mac precisa estar ligado.
 - `instalar-servidor.sh` — deixa o servidor sempre ligado no macOS
 - `credenciais.exemplo.txt`, `notificacao.exemplo.txt` — modelos dos arquivos
   privados (os reais ficam fora do git)
