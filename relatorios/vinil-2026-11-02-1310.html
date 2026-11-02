@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dig Dig Dig!</title>
+<script>
+  // aplica o tema escolhido antes de pintar a página, para não piscar
+  try { const t = localStorage.getItem("digdigdig.tema"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='22' fill='%232b2b2b'/%3E%3Ccircle cx='24' cy='24' r='8' fill='%236219ff'/%3E%3Ccircle cx='24' cy='24' r='2' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
+<style>
+/* Dig Dig Dig! — inspirado no It's Nice That: página branca e editorial,
+   grotesca com leve espaçamento, logo condensado, imagens retas e etiquetas roxas. */
+:root {
+  --bg: #ffffff;
+  --ink: #2b2b2b;
+  --mut: #8a8a8a;
+  --line: #e6e6e6;
+  --bar: #f2f2f2;
+  /* um tom de fundo por site, para separar as seções no scroll */
+  --tom-0: #f4efe4; --tom-1: #e6efe9; --tom-2: #eceef8;
+  --tom-3: #f7ebe6; --tom-4: #f4f1d9; --tom-5: #e9eef0;
+  --tag-bg: #f1ecff;
+  --tag-ink: #6219ff;
+  --accent: #6219ff;
+  --on-accent: #ffffff;
+  --dig: rgb(22, 19, 15);
+  --on-dig: #ffffff;
+  --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --serif: "Newsreader", Georgia, serif;
+  color-scheme: light;
+}
+/* Escuro: segue o sistema, a menos que o botão de tema tenha escolhido outro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141414;
+    --ink: #ececec;
+    --mut: #8f8f8f;
+    --line: #2c2c2c;
+    --bar: #1f1f1f;
+    --tom-0: #201d17; --tom-1: #17211b; --tom-2: #1b1d28;
+    --tom-3: #271d1a; --tom-4: #24231a; --tom-5: #1b2023;
+    --tag-bg: #241c3d;
+    --tag-ink: #b59cff;
+    --accent: #8b5cff;
+    --on-accent: #ffffff;
+    --dig: #ece8e1;
+    --on-dig: rgb(22, 19, 15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141414;
+  --ink: #ececec;
+  --mut: #8f8f8f;
+  --line: #2c2c2c;
+  --bar: #1f1f1f;
+  --tom-0: #201d17; --tom-1: #17211b; --tom-2: #1b1d28;
+  --tom-3: #271d1a; --tom-4: #24231a; --tom-5: #1b2023;
+  --tag-bg: #241c3d;
+  --tag-ink: #b59cff;
+  --accent: #8b5cff;
+  --on-accent: #ffffff;
+  --dig: #ece8e1;
+  --on-dig: rgb(22, 19, 15);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+/* garante que o atributo hidden vença os display: flex/grid de .card e .grade */
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 16px/1.5 var(--sans); letter-spacing: .01em; -webkit-font-smoothing: antialiased;
+}
+main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
+
+/* Cabeçalho: logo à esquerda, botão Dig à direita */
+.topo { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 36px 0 28px; }
+.topo h1 {
+  margin: 0; font-size: 64px; line-height: .9; font-weight: 600;
+  font-stretch: 62%; font-variation-settings: "wdth" 62; letter-spacing: -.01em;
+}
+/* Ações à direita do logo: link do Arquivo e botão Dig */
+.acoes { display: flex; align-items: center; gap: 20px; flex: none; }
+.link-topo { color: var(--ink); text-decoration: none; font-size: 15px; font-weight: 500; }
+.link-topo:hover { text-decoration: underline; text-underline-offset: 3px; }
+.topo .logo { color: inherit; text-decoration: none; }
+/* Botão Dig */
+.dig {
+  flex: none; min-width: 72px; height: 40px; padding: 0 18px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--dig); color: var(--on-dig);
+  font: 600 15px/1 var(--sans); letter-spacing: .02em;
+}
+.dig:hover { opacity: .85; }
+.dig:focus-visible { outline: 2px solid var(--dig); outline-offset: 3px; }
+.dig:disabled { cursor: progress; opacity: 1; background: var(--tag-bg); color: var(--tag-ink); }
+.dig.erro { background: #c4302b; color: #fff; }
+
+/* Arquivo: um Dig por linha, como um índice */
+.lista-arquivo { list-style: none; margin: 40px 0 0; padding: 0; border-bottom: 1px solid var(--line); }
+.lista-arquivo a {
+  display: grid; grid-template-columns: 220px 120px 1fr; align-items: baseline; gap: 4px 24px;
+  padding: 22px 0; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none;
+}
+.lista-arquivo a:hover .quando { color: var(--accent); }
+.lista-arquivo .quando {
+  font-size: 36px; line-height: 1; font-weight: 600; font-stretch: 62%; font-variation-settings: "wdth" 62;
+}
+.lista-arquivo .quando small { margin-left: 10px; font-size: 18px; font-weight: 400; color: var(--mut); }
+.lista-arquivo .quantos { font-weight: 600; font-size: 15px; }
+.lista-arquivo .onde { color: var(--mut); font-size: 13px; }
+
+/* Barra de status, como a "The Nice Feed" */
+.barra {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px;
+  background: var(--bar); padding: 14px 18px; font-size: 13px; font-weight: 500;
+}
+.barra .mut { color: var(--mut); font-weight: 400; margin-left: 8px; }
+.barra b { font-weight: 500; color: var(--accent); }
+.barra .lado { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+/* Botão de tema, dentro da barra cinza */
+.tema {
+  width: 30px; height: 30px; margin: -6px -8px -6px 0; border: 0; padding: 0; border-radius: 50%; cursor: pointer;
+  background: transparent; color: var(--ink); display: grid; place-items: center;
+}
+.tema:hover { background: var(--line); }
+.tema:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tema svg { width: 18px; height: 18px; transition: transform .3s; }
+:root[data-tema-efetivo="dark"] .tema svg { transform: rotate(180deg); }
+
+/* Avisos */
+.avisos { list-style: none; margin: 12px 0 0; padding: 0; font-size: 13px; color: var(--mut); }
+.avisos li { padding: 4px 0; }
+.avisos li::before { content: "→ "; color: var(--accent); }
+
+/* Filtros: etiquetas retangulares, roxas quando ativas */
+.controles { display: flex; flex-wrap: wrap; gap: 16px 40px; margin: 40px 0 0; }
+.grupo { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.grupo > span, .grupo > label { font-size: 13px; font-weight: 500; }
+/* Menu de site: mesma etiqueta roxa, com seta desenhada */
+.menu {
+  font: 400 12px/1 var(--sans); letter-spacing: .04em; color: var(--on-accent); background-color: var(--accent);
+  border: 0; border-radius: 0; padding: 9px 32px 9px 12px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 15px center, right 11px center; background-size: 4px 4px; background-repeat: no-repeat;
+}
+.menu:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.menu option { color: var(--ink); background: var(--bg); }
+.teclas { display: flex; flex-wrap: wrap; gap: 6px; }
+.teclas button {
+  font: 400 12px/1 var(--sans); letter-spacing: .04em; color: var(--tag-ink); background: var(--tag-bg);
+  border: 0; border-radius: 0; padding: 9px 12px; cursor: pointer;
+}
+.teclas button:hover { box-shadow: inset 0 0 0 1px var(--tag-ink); }
+.teclas button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.teclas button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Seções: cada site é uma faixa de cor de ponta a ponta da tela, com o nome
+   do site preso no topo enquanto se rola — fica claro quando o site muda. */
+.tom-0 { --sec: var(--tom-0); } .tom-1 { --sec: var(--tom-1); } .tom-2 { --sec: var(--tom-2); }
+.tom-3 { --sec: var(--tom-3); } .tom-4 { --sec: var(--tom-4); } .tom-5 { --sec: var(--tom-5); }
+#secoes { margin-top: 56px; }
+#secoes section, #secoes h2 {
+  background: var(--sec);
+  /* fundo vaza até as bordas da janela sem criar rolagem lateral */
+  box-shadow: 0 0 0 100vmax var(--sec); clip-path: inset(0 -100vmax);
+}
+#secoes section { padding-bottom: 80px; }
+h2 {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 0 8px; padding: 28px 0 18px;
+  font-size: 34px; line-height: 1; font-weight: 600; letter-spacing: 0;
+  font-stretch: 62%; font-variation-settings: "wdth" 62;
+}
+h2 span { font: 400 13px var(--sans); letter-spacing: .03em; color: var(--mut); font-stretch: normal; font-variation-settings: normal; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 56px 32px; }
+#lista { margin-top: 56px; }
+
+.card { color: inherit; text-decoration: none; display: flex; flex-direction: column; }
+.capa { position: relative; aspect-ratio: 1; background: var(--bar); overflow: hidden; }
+.capa img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.card:hover .capa img { transform: scale(1.03); }
+.sem-foto { position: absolute; inset: 0; display: grid; place-items: center; }
+.sem-foto::before { content: ""; width: 44%; aspect-ratio: 1; border-radius: 50%; background: var(--ink); opacity: .85; }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.info { padding-top: 16px; display: flex; flex-direction: column; }
+.titulo {
+  order: 1; font-size: 20px; line-height: 1.3; letter-spacing: .02em; font-weight: 400;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.card:hover .titulo { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.preco { order: 2; font-size: 16px; font-weight: 600; color: var(--ink); margin-top: 10px; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.extra { order: 3; font-size: 13px; color: var(--mut); letter-spacing: .03em; }
+.site {
+  display: none; order: 4; align-self: flex-start; margin-top: 12px;
+  font-size: 12px; letter-spacing: .04em; color: var(--tag-ink); background: var(--tag-bg); padding: 6px 10px;
+}
+#lista .site { display: block; }
+/* na lista por preço, a etiqueta do site leva o tom da seção dele */
+.card[class*="tom-"] .site { background: var(--sec); color: var(--ink); }
+
+.vazio { grid-column: 1 / -1; margin: 96px 0; font: 400 28px/1.3 var(--serif); text-align: center; }
+footer {
+  margin-top: 120px; padding-top: 24px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  font-size: 13px; color: var(--mut);
+}
+footer strong { color: var(--ink); font-weight: 600; font-stretch: 62%; font-variation-settings: "wdth" 62; font-size: 20px; letter-spacing: 0; }
+footer .versao { margin-left: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 700px) {
+  main { padding: 0 16px 64px; }
+  .topo { padding: 24px 0 20px; }
+  .topo h1 { font-size: 44px; }
+  .acoes { gap: 14px; }
+  .link-topo { font-size: 14px; }
+  .lista-arquivo a { grid-template-columns: 1fr auto; padding: 18px 0; }
+  .lista-arquivo .quando { font-size: 28px; }
+  .lista-arquivo .onde { grid-column: 1 / -1; }
+  .barra .lado { justify-content: space-between; }
+  .dig { min-width: 56px; height: 36px; padding: 0 12px; font-size: 14px; }
+  .controles { margin-top: 28px; gap: 14px; }
+  .grupo { gap: 10px; }
+  #secoes { margin-top: 40px; }
+  #secoes section { padding-bottom: 56px; }
+  h2 { font-size: 28px; padding: 20px 0 14px; }
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 14px; }
+  .titulo { font-size: 16px; }
+  .info { padding-top: 10px; }
+  .preco { margin-top: 6px; font-size: 14px; }
+  .extra { font-size: 12px; }
+}
+</style><style>.dig{display:none!important}.topo .tema{display:none}.topo{justify-content:space-between}.arquivo-nav{margin-left:auto;font-size:15px;font-weight:500;color:inherit;text-decoration:none}.arquivo-nav:hover{text-decoration:underline}</style></head><body><main>
+
+<header class="topo">
+  <h1>Dig Dig Dig!</h1>
+  <nav class="acoes"><a class="link-topo" href="../arquivo.html">← Arquivo</a><button type="button" class="dig" id="dig" data-gatilho="" hidden>Dig</button></nav>
+</header>
+
+<div class="barra">
+  <div><b>35 novos</b><span class="mut">Atualizado em 02.11.2026 às 13:10</span></div>
+  <div class="lado"><span>600 acompanhados</span>
+    <button type="button" class="tema" id="tema" aria-label="Alternar tema claro/escuro">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 2a8 8 0 0 1 0 16z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+
+<div class="controles"><div class="grupo"><label for="menu-site">Site</label><select class="menu" id="menu-site" data-chave="site"><option value="">Todos os sites</option><option value="Enjoei">Enjoei</option></select></div><div class="grupo"><span>Preço</span><div class="teclas" data-chave="faixa"><button type="button" data-valor="" aria-pressed="true">Todos</button><button type="button" data-valor="ate50" aria-pressed="false">Até R$ 50</button><button type="button" data-valor="51a100" aria-pressed="false">R$ 51 a 100</button><button type="button" data-valor="mais100" aria-pressed="false">Mais de R$ 101</button></div></div><div class="grupo"><span>Ordem</span><div class="teclas" data-chave="ordem"><button type="button" data-valor="" aria-pressed="true">Por site</button><button type="button" data-valor="asc" aria-pressed="false">Menor preço</button><button type="button" data-valor="desc" aria-pressed="false">Maior preço</button></div></div></div><div id="lista" class="grade" hidden></div>
+<div id="secoes"><section class="tom-0" data-site="Enjoei"><h2>Enjoei <span>035</span></h2><div class="grade"><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-the-bible-eureka-153401967" target="_blank" rel="noopener" data-site="Enjoei" data-preco="61"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTk2MzI1My8wOTRhMDkzZDdjZTgzZmM1MjEzNDYzNTlmYTgwNjI5OC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp the bible eureka</div><div class="preco">R$ 61</div><div class="extra">de R$ 65</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-explosao-from-britain-volume-2-153400671" target="_blank" rel="noopener" data-site="Enjoei" data-preco="32"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTk2MzI1My8yMTA1Nzc0MzE0YjE2Y2NlOGI1ZjMyZGFiNWU0NDJhNi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil explosão from britain volume 2</div><div class="preco">R$ 32</div><div class="extra">de R$ 35</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-pearl-jam-ten-153932171" target="_blank" rel="noopener" data-site="Enjoei" data-preco="259"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMzU0NzkzNy9iNjlhNTc3MzI0NmMzMTI5ZDRjMzdkY2FmOGRhMmU2MS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil pearl jam ten</div><div class="preco">R$ 259</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-emerson-lake-amp-palmer-trilogy-153017499" target="_blank" rel="noopener" data-site="Enjoei" data-preco="200"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzAwNTg4MS8yZGMyZGJmNjkxOGM3NWI3ODA5NDlkY2FhMDgwNzdhZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil emerson lake &amp; palmer trilogy</div><div class="preco">R$ 200</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-o-melhor-de-jose-augusto-154041086" target="_blank" rel="noopener" data-site="Enjoei" data-preco="15"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC80YzM4OWIzYmVkNDhmZWFmODUxYjllYjQ1NWFkZmZhOS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil o melhor de josé augusto</div><div class="preco">R$ 15</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-clara-nunes-153225527" target="_blank" rel="noopener" data-site="Enjoei" data-preco="69"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMTU5MTM4NS8yZTRiOWFjY2E0Mjk2M2ZkNmRhNDA3ZjdlNTgxMTZmYS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil clara nunes</div><div class="preco">R$ 69</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lote-3-discos-vinil-lp-carlos-santos-vol-4-5-7-154031287" target="_blank" rel="noopener" data-site="Enjoei" data-preco="15"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yODk2NzY5Mi8xYzY2YjY5NjI3MGYzODRiMDFjNGQxNmQyNzUxOGZkNS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lote 3 discos vinil lp carlos santos vol 4 5 7</div><div class="preco">R$ 15</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-hits-explosion-som-livre-153707839" target="_blank" rel="noopener" data-site="Enjoei" data-preco="37"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTQ0MjI0Ny83NjcxMjg2ZTBjOGM3MzcxYzY5NzFhNTlmNDQ5Y2IwMC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil hits explosion som livre</div><div class="preco">R$ 37</div><div class="extra">de R$ 39</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-jairzinho-amp-simony-153620832" target="_blank" rel="noopener" data-site="Enjoei" data-preco="14"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC82NTE0YjdhYzdmZTRkMWI2ZTIyMjVjMDc3YTZhZTNhNi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil jairzinho &amp; simony</div><div class="preco">R$ 14</div><div class="extra">de R$ 15</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-duplo-sandy-amp-junior-2001-lacrado-153684676" target="_blank" rel="noopener" data-site="Enjoei" data-preco="600"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMzE5NTQxNi9jMmRkOTI2NDZiN2U5YzAzMTI1MWJhMWU4NGM3NDIwYS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil duplo sandy &amp; junior 2001 lacrado</div><div class="preco">R$ 600</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-mf-doom-mm-food-20th-anniversary-edition-lacrado-154011943" target="_blank" rel="noopener" data-site="Enjoei" data-preco="420"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjY0MDcxNy9kNDNmZmZhZmZhNTE5NjllYzBjMjJmOWY5ZTc1OTcyYy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp mf doom mm..food 20th anniversary edition lacrado</div><div class="preco">R$ 420</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-nacional-de-pedra-153872911" target="_blank" rel="noopener" data-site="Enjoei" data-preco="15"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC8zNDgxZTc2ZjE2ZWU4YWYxMmIwYjJhMTJkZjQxNzE0MS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp nacional de pedra</div><div class="preco">R$ 15</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-voce-e-o-cantor-vol-8-karaoke-153862225" target="_blank" rel="noopener" data-site="Enjoei" data-preco="15"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC84ZGE1MTRjYTZkNjZiMTVmZjAzYWQ3NjA3MWYwNzUxNS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil você é o cantor vol 8 karaokê</div><div class="preco">R$ 15</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/deftones-lp-ruby-vermelho-151832819" target="_blank" rel="noopener" data-site="Enjoei" data-preco="234"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMTI3MDk3Mi84NjhlNGE1ZGY0ODUyZjQxMjQ4ZjM4NWYwZjAwODIxNS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">deftones lp ruby / vermelho</div><div class="preco">R$ 234</div><div class="extra">de R$ 250</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-ultraje-a-rigor-nos-vamos-invadir-sua-praia-153668626" target="_blank" rel="noopener" data-site="Enjoei" data-preco="150"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzAyMzA0Ny9mNWVmZGFmMGM2MGJlZjk4ODU4NTY1MmM0OTc3MzMzYi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil ultraje a rigor nós vamos invadir sua praia</div><div class="preco">R$ 150</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-al-di-meola-elegant-gypsy-153500685" target="_blank" rel="noopener" data-site="Enjoei" data-preco="190"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjE5ODA2Ny9mYjdjNWRmYWVmOGFjNjQ1NjA0ZmU5MjYxNGI2YjUwZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil al di meola elegant gypsy</div><div class="preco">R$ 190</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-black-flag-my-war-152207438" target="_blank" rel="noopener" data-site="Enjoei" data-preco="350"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy81MjUxOTUvNTcyYjdiZGY1YjlmZGYxNTk2Y2UzNWM0YTViOTE3OTguanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil black flag my war</div><div class="preco">R$ 350</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-banda-mel-forca-interior-1987-153714755" target="_blank" rel="noopener" data-site="Enjoei" data-preco="48"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMDEyNzY2My80ZjNiZmVmZGI4OGIxYjA3NTA3MDRkYmJmMTk4MzljZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp banda mel força interior 1987</div><div class="preco">R$ 48</div><div class="extra">de R$ 50</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-frank-sinatra-duets-153711128" target="_blank" rel="noopener" data-site="Enjoei" data-preco="100"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMDEyNzY2My9hMDA5MzY5MmY2NTRhODEzZGM0MmExMDU5MmVmYjBmNS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil frank sinatra duets</div><div class="preco">R$ 100</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-roberto-carlos-1973-cbs-153710192" target="_blank" rel="noopener" data-site="Enjoei" data-preco="48"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMDEyNzY2My8xODA4MzExODkyZGY3NWI2ZWI0MTM0ZmJlNjBkNWNlNC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil roberto carlos 1973 cbs</div><div class="preco">R$ 48</div><div class="extra">de R$ 50</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-a-turma-do-balao-magico-1984-152449650" target="_blank" rel="noopener" data-site="Enjoei" data-preco="52"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy81OTg5NjA3L2EwMjJhMzM1NTk5M2YwOWRmMjIyYWFkMmNmMTQ2ZDM5LmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil a turma do balão mágico 1984</div><div class="preco">R$ 52</div><div class="extra">de R$ 60</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-roberto-carlos-154040276" target="_blank" rel="noopener" data-site="Enjoei" data-preco="15"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC9mNGUwNDFhYjAzMzg3YzFjZGE2MDU5NTI4YjE4OGY2MC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil roberto carlos</div><div class="preco">R$ 15</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-toquinho-cantando-pequeno-perfil-152864901" target="_blank" rel="noopener" data-site="Enjoei" data-preco="70"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy83OTQ0MzU0L2IyMzg0OWFmYTM4NzBmY2I1MDMzMjU3NDMwZjYwZGY2LmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp toquinho cantando pequeno perfil</div><div class="preco">R$ 70</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-soul-ii-soul-club-classics-vol-one-153989226" target="_blank" rel="noopener" data-site="Enjoei" data-preco="290"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy81MDY2MDgzL2EyMGZlZjJkZmQxNjE3NTFjZDFhNGZmYTY5MzcxODJmLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil soul ii soul club classics vol one</div><div class="preco">R$ 290</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-trilha-sonora-novela-bambole-153264295" target="_blank" rel="noopener" data-site="Enjoei" data-preco="25"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMzk5OTA5MC9iZTIxOTBjYTRjZjdkZTIzMjRmZDMwOWVkNDgxNWIyMy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp trilha sonora novela bambolê</div><div class="preco">R$ 25</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-a-nova-turma-do-balao-magico-152284911" target="_blank" rel="noopener" data-site="Enjoei" data-preco="50"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MDUxNzUxNy9hYWU2ZGJkZDRhZTdkOTUxZWMxNDA4NDUwMzJiZGUwNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil a nova turma do balão mágico</div><div class="preco">R$ 50</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/1o-festival-universitario-de-mpb-lp-nacional-usado-varios-artistas-1968-mono-153417251" target="_blank" rel="noopener" data-site="Enjoei" data-preco="82"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTEyNjczNC83MmU5YjkwZDg4ZDA0OTU4ZjM0NGFhYmEwOTYyMTg3Ny5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">1o. festival universitário de mpb lp nacional usado vários artistas 1968 mono</div><div class="preco">R$ 82</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/compacto-vinil-os-incriveis-1970-rca-original-o-fenomeno-de-vendas-que-embalou-o-tri-do-brasil-151460213" target="_blank" rel="noopener" data-site="Enjoei" data-preco="15"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy83MjU3NDkvMzE5ZjEzN2E3OWZlNWI3NGUwM2Q4M2E2OGYyNDU3OGMuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">compacto vinil os incríveis (1970) rca original: o fenômeno de vendas que embalou o tri do brasil</div><div class="preco">R$ 15</div><div class="extra">de R$ 23</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-vinil-dionne-warwick-1979-154011291" target="_blank" rel="noopener" data-site="Enjoei" data-preco="100"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjY1MDAyMi8yYzNiNzcxYzhlOGMyODlmMjkwZDVlODAwOTBhZTUwNC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp vinil dionne warwick 1979</div><div class="preco">R$ 100</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-abel-ferreira-amp-filhos-152984600" target="_blank" rel="noopener" data-site="Enjoei" data-preco="39"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzMzODY3Ny80NzFkMWE4NTllMjhjNmU4NzNkN2E2ZTdmNGE0OWU3ZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil abel ferreira &amp; filhos</div><div class="preco">R$ 39</div><div class="extra">de R$ 49</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-jane-duboc-152874172" target="_blank" rel="noopener" data-site="Enjoei" data-preco="12"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC9kYTc3ZmIwZDcyOTgzYjM3NGJlNmYzZDI4MjNiMTViZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil jane duboc</div><div class="preco">R$ 12</div><div class="extra">de R$ 15</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-joyce-feminina-clube-do-vinil-152777111" target="_blank" rel="noopener" data-site="Enjoei" data-preco="145"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjQ2MTI5OS9iNDU0MGJmMzY5ZTE3MWZlMzViMmJkODY0NjNlMDYyZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp joyce feminina clube do vinil</div><div class="preco">R$ 145</div><div class="extra">de R$ 160</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-tangos-eternos-vol-2-cuban-tipical-orchestra-152725882" target="_blank" rel="noopener" data-site="Enjoei" data-preco="55"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zODE5MTgzNC82MTQyZjViZmU3MzNlYWFlMzZmN2FiZTlkYWJjNzliNC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil tangos eternos vol 2 cuban tipical orchestra</div><div class="preco">R$ 55</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-lp-capital-inicial-independencia-1987-rock-nacional-153843851" target="_blank" rel="noopener" data-site="Enjoei" data-preco="65"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zODY4NDA1OS83ODIwMmJlZTRlMjViODcwNzZhODU2ZDk4MjEzMzdkMy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil lp capital inicial - independencia (1987) rock nacional</div><div class="preco">R$ 65</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-leci-brandao-as-coisas-que-mamae-me-ensinou-153623005" target="_blank" rel="noopener" data-site="Enjoei" data-preco="15"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC8yMWU3ZmExOTliYjEzN2YzMDdmMGU5YWYwOWE5MjEwNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil leci brandão as coisas que mamãe me ensinou</div><div class="preco">R$ 15</div><div class="extra"></div></div></a></div></section></div>
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.1</span></div><span>Enjoei · Estação Cultural · Sebo Casa Laranja · Sebo do Messias</span></footer>
+</main>
+<script>
+// Filtros por site e faixa de preço, e ordem por preço. "Por site" mantém os
+// grupos; ordenar por preço junta tudo numa lista única.
+const estado = { site: '', faixa: '', ordem: '' };
+const secoes = document.getElementById('secoes'), lista = document.getElementById('lista');
+const cards = [...document.querySelectorAll('#secoes .card')];
+const preco = c => c.dataset.preco === '' ? null : parseFloat(c.dataset.preco);
+// Faixas sem buracos: centavos entre 50 e 51 caem em "51 a 100", e assim por diante.
+const FAIXAS = { ate50: p => p <= 50, '51a100': p => p > 50 && p <= 100, mais100: p => p > 100 };
+const passa = c => (!estado.site || c.dataset.site === estado.site)
+  && (!estado.faixa || (preco(c) !== null && FAIXAS[estado.faixa](preco(c))));
+
+function atualizar() {
+  const { ordem } = estado;
+  if (!ordem) {
+    lista.hidden = true; lista.replaceChildren(); secoes.hidden = false;
+    cards.forEach(c => c.hidden = !passa(c));
+    secoes.querySelectorAll('section').forEach(s => {
+      const visiveis = s.querySelectorAll('.card:not([hidden])').length;
+      s.hidden = visiveis === 0;
+      s.querySelector('h2 span').textContent = String(visiveis).padStart(3, '0');
+    });
+    if (!cards.some(passa)) { lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>'; lista.hidden = false; }
+    return;
+  }
+  const escolhidos = cards.filter(passa).sort((a, b) => {
+    const pa = preco(a), pb = preco(b);
+    if (pa === null) return 1; if (pb === null) return -1;  // sem preço vai pro fim
+    return ordem === 'asc' ? pa - pb : pb - pa;
+  });
+  lista.replaceChildren(...escolhidos.map(c => { const n = c.cloneNode(true); n.hidden = false; return n; }));
+  secoes.hidden = true; lista.hidden = false;
+  if (!escolhidos.length) lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>';
+}
+
+// Tema: alterna entre claro e escuro e lembra a escolha neste navegador.
+const raiz = document.documentElement, sistemaEscuro = matchMedia('(prefers-color-scheme: dark)');
+const temaAtual = () => raiz.dataset.theme || (sistemaEscuro.matches ? 'dark' : 'light');
+const marcarTema = () => {
+  raiz.dataset.temaEfetivo = temaAtual();
+  document.getElementById('tema').setAttribute('aria-pressed', temaAtual() === 'dark');
+};
+document.getElementById('tema').addEventListener('click', () => {
+  raiz.dataset.theme = temaAtual() === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('digdigdig.tema', raiz.dataset.theme); } catch (e) {}
+  marcarTema();
+});
+sistemaEscuro.addEventListener('change', marcarTema);
+marcarTema();
+
+document.querySelectorAll('.menu').forEach(m => m.addEventListener('change', () => {
+  estado[m.dataset.chave] = m.value;
+  atualizar();
+}));
+
+document.querySelectorAll('.teclas').forEach(grupo => {
+  grupo.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    grupo.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    estado[grupo.dataset.chave] = b.dataset.valor;
+    atualizar();
+  });
+});
+
+// Botão Dig. Na página do servidor local (servidor.py, que responde em "estado"),
+// fala direto com ele. Na página publicada, manda "dig" para o tópico do ntfy que
+// o Mac escuta e acompanha pelo mesmo tópico os avisos inicio / fim:ok / fim:falha.
+const dig = document.getElementById('dig'), gatilho = dig.dataset.gatilho;
+const ntfy = 'https://ntfy.sh/' + encodeURIComponent(gatilho);
+const pausa = ms => new Promise(ok => setTimeout(ok, ms));
+function mostrarDig(texto, {ocupado = false, erro = false, dica = ''} = {}) {
+  dig.hidden = false;
+  dig.disabled = ocupado;
+  dig.classList.toggle('erro', erro);
+  dig.textContent = texto;
+  dig.title = dica;
+}
+
+// --- página local ---
+async function lerEstado() {
+  const r = await fetch('estado', {cache: 'no-store'});
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function mostrarEstado(e) {
+  if (e.rodando) mostrarDig('Cavando…', {ocupado: true});
+  else if (e.ok === false) mostrarDig('Falhou', {erro: true, dica: 'A última busca falhou — veja logs/buscador.log'});
+  else mostrarDig('Dig');
+}
+async function acompanharLocal() {
+  let e = await lerEstado();
+  mostrarEstado(e);
+  while (e.rodando) { await pausa(3000); e = await lerEstado(); mostrarEstado(e); }
+  if (e.ok) location.reload();
+}
+
+// --- página publicada ---
+async function avisosDesde(desde) {
+  const r = await fetch(`${ntfy}/json?poll=1&since=${desde}`, {cache: 'no-store'});
+  const texto = await r.text();
+  return texto.split('\n').filter(Boolean).map(l => JSON.parse(l)).filter(m => m.event === 'message');
+}
+async function esperarPublicacao() {
+  // o GitHub leva cerca de 1 minuto para pôr no ar a página nova
+  mostrarDig('Publicando…', {ocupado: true});
+  const atual = document.querySelector('.barra').textContent;
+  for (let i = 0; i < 40; i++) {
+    await pausa(6000);
+    try {
+      const html = await (await fetch(location.pathname + '?t=' + Date.now(), {cache: 'no-store'})).text();
+      const nova = new DOMParser().parseFromString(html, 'text/html').querySelector('.barra');
+      if (nova && nova.textContent !== atual) return location.reload();
+    } catch (err) {}
+  }
+  location.reload();
+}
+async function acompanharOnline(desde) {
+  const limite = Date.now() + 15 * 60 * 1000;
+  let comecou = false;
+  while (Date.now() < limite) {
+    let avisos = [];
+    try { avisos = await avisosDesde(desde); } catch (err) {}
+    const ultimo = avisos.map(m => m.message).filter(m => m !== 'dig').pop();
+    if (ultimo === 'fim:ok') return esperarPublicacao();
+    if (ultimo === 'fim:falha') return mostrarDig('Falhou', {erro: true, dica: 'A busca falhou no Mac — veja logs/buscador.log'});
+    if (ultimo === 'recente') {
+      mostrarDig('Já cavou', {ocupado: true, dica: 'Teve busca há menos de 10 minutos'});
+      await pausa(4000);
+      return mostrarDig('Dig');
+    }
+    if (ultimo === 'inicio') { comecou = true; mostrarDig('Cavando…', {ocupado: true}); }
+    else if (!comecou && Date.now() - desde * 1000 > 60000)
+      mostrarDig('Na fila', {ocupado: true, dica: 'O Mac parece desligado ou dormindo; a busca roda quando ele acordar'});
+    await pausa(5000);
+  }
+  mostrarDig('Dig');
+}
+async function cavarOnline() {
+  const desde = Math.floor(Date.now() / 1000) - 2;
+  mostrarDig('Chamando…', {ocupado: true});
+  try {
+    await fetch(ntfy, {method: 'POST', body: 'dig'});
+  } catch (err) {
+    return mostrarDig('Falhou', {erro: true, dica: 'Não consegui falar com o ntfy'});
+  }
+  acompanharOnline(desde);
+}
+
+let local = false;
+lerEstado().then(e => {
+  local = true;
+  mostrarEstado(e);
+  if (e.rodando) acompanharLocal();
+}).catch(async () => {
+  if (!gatilho) return;
+  mostrarDig('Dig');
+  // se já houver uma busca em andamento (pedida de outro aparelho), acompanha
+  try {
+    const desde = Math.floor(Date.now() / 1000) - 15 * 60;
+    const ultimo = (await avisosDesde(desde)).map(m => m.message).filter(m => m === 'inicio' || m.startsWith('fim:')).pop();
+    if (ultimo === 'inicio') acompanharOnline(desde);
+  } catch (err) {}
+});
+dig.addEventListener('click', async () => {
+  if (!local) return cavarOnline();
+  mostrarDig('Cavando…', {ocupado: true});
+  try {
+    await fetch('dig', {method: 'POST', headers: {'X-Dig': '1'}});
+    await acompanharLocal();
+  } catch (err) { mostrarDig('Falhou', {erro: true}); }
+});
+</script>
+</body></html>
