@@ -175,7 +175,7 @@ def publicar(conteudo, hoje):
     env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}  # nunca travar pedindo senha
     git = lambda *a: subprocess.run(["git", "-C", str(PASTA), *a], check=True, env=env,
                                     capture_output=True, text=True)
-    arquivos = ["index.html", ".nojekyll", "relatorios", "vistos.json"]
+    arquivos = ["index.html", "arquivo.html", ".nojekyll", "relatorios", "vistos.json"]
     try:
         # traz o que houver de novo no GitHub; mudanças locais em andamento são preservadas
         git("pull", "--rebase", "--autostash", "origin", "main")
@@ -322,6 +322,60 @@ def gerar_html(hoje, novos, erros, total_vistos):
     return conteudo
 
 
+# Cópias arquivadas ficam em relatorios/: sem o botão Dig, com o caminho de volta ao Arquivo.
+ESTILO_ARQUIVADO = ("<style>.dig{display:none!important}.topo .tema{display:none}"
+                    ".topo{justify-content:space-between}"
+                    ".arquivo-nav{margin-left:auto;font-size:15px;font-weight:500;color:inherit;text-decoration:none}"
+                    ".arquivo-nav:hover{text-decoration:underline}</style>")
+
+
+def arquivar(conteudo):
+    """Transforma uma página de Dig na sua cópia do Arquivo (vale também para
+    páginas feitas com versões antigas do modelo)."""
+    conteudo = re.sub(r'data-gatilho="[^"]*"', 'data-gatilho=""', conteudo)
+    conteudo = conteudo.replace("</style>", "</style>" + ESTILO_ARQUIVADO, 1)
+    if 'href="arquivo.html"' in conteudo:  # modelo atual: o link já existe no topo
+        return conteudo.replace('href="arquivo.html">Arquivo</a>', 'href="../arquivo.html">← Arquivo</a>')
+    return re.sub(r"<h1>(.*?)</h1>", r'<h1>\1</h1><a class="arquivo-nav" href="../arquivo.html">← Arquivo</a>',
+                  conteudo, count=1, flags=re.S)
+
+
+def dados_do_dig(arquivo):
+    """Lê de uma página de Dig quando ele foi feito, quantos discos e de quais sites."""
+    texto = arquivo.read_text(encoding="utf-8")
+    quando = re.search(r"Atualizado em (\d\d)\.(\d\d)\.(\d{4}) às (\d\d):(\d\d)", texto)
+    if not quando:
+        return None
+    d, m, a, h, mi = map(int, quando.groups())
+    novos = re.search(r"(\d+) novos", texto)
+    sites = list(dict.fromkeys(re.findall(r'<section[^>]*data-site="([^"]+)"', texto)))
+    return {"quando": dt.datetime(a, m, d, h, mi), "novos": int(novos.group(1)) if novos else 0,
+            "sites": [html.unescape(x) for x in sites], "arquivo": arquivo.name}
+
+
+def gerar_arquivo():
+    """Página do Arquivo: todos os Digs anteriores ao atual, do mais novo ao mais antigo."""
+    digs = sorted(filter(None, map(dados_do_dig, RELATORIOS.glob("vinil-*.html"))),
+                  key=lambda x: x["quando"], reverse=True)[1:]  # o primeiro é o Dig atual (index.html)
+    linhas = "".join(
+        f'<li><a href="relatorios/{html.escape(x["arquivo"])}">'
+        f'<span class="quando">{x["quando"]:%d.%m.%Y}<small>{x["quando"]:%H:%M}</small></span>'
+        f'<span class="quantos">{x["novos"]} disco{"s" if x["novos"] != 1 else ""}</span>'
+        f'<span class="onde">{html.escape(" · ".join(x["sites"]))}</span></a></li>'
+        for x in digs)
+    lista = f'<ol class="lista-arquivo">{linhas}</ol>' if digs else '<p class="vazio">Nenhum Dig arquivado ainda.</p>'
+    modelo = MODELO.read_text(encoding="utf-8")
+    cabeca = modelo[:modelo.index("<body>")].replace("<title>Dig Dig Dig!</title>", "<title>Arquivo · Dig Dig Dig!</title>")
+    versao = html.escape(VERSAO.read_text().strip() if VERSAO.exists() else "?")
+    return (cabeca + '<body><main>\n'
+            '<header class="topo"><h1><a href="./" class="logo">Dig Dig Dig!</a></h1>'
+            '<a class="link-topo" href="./">← Dig atual</a></header>\n'
+            f'<div class="barra"><div><b>Arquivo</b><span class="mut">{len(digs)} Dig{"s" if len(digs) != 1 else ""} anteriores</span></div></div>\n'
+            + lista +
+            f'\n<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v{versao}</span></div></footer>\n'
+            '</main></body></html>\n')
+
+
 def buscar():
     vistos = json.loads(VISTOS.read_text()) if VISTOS.exists() else {}
     primeira_vez = not vistos
@@ -354,11 +408,11 @@ def buscar():
     if primeira_vez:
         erros.insert(0, "Primeira execução: tudo o que foi encontrado aparece como novo.")
     RELATORIOS.mkdir(exist_ok=True)
-    destino = RELATORIOS / f"vinil-{agora:%Y-%m-%d}.html"
+    destino = RELATORIOS / f"vinil-{agora:%Y-%m-%d-%H%M}.html"  # um por Dig, para o Arquivo
     conteudo = gerar_html(agora, novos, erros, len(vistos))
-    destino.write_text(conteudo, encoding="utf-8")
-    (RELATORIOS / "ultimo.html").write_text(conteudo, encoding="utf-8")
+    destino.write_text(arquivar(conteudo), encoding="utf-8")
     (PASTA / "index.html").write_text(conteudo, encoding="utf-8")  # a página do servidor local
+    (PASTA / "arquivo.html").write_text(gerar_arquivo(), encoding="utf-8")
     print(f"{len(novos)} novos → {destino}", file=sys.stderr)
     link = publicar(conteudo, agora)
     notificar(novos, [e for e in erros if not e.startswith("Primeira execução")], link)

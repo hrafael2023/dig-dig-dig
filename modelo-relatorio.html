@@ -83,7 +83,12 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
   margin: 0; font-size: 64px; line-height: .9; font-weight: 600;
   font-stretch: 62%; font-variation-settings: "wdth" 62; letter-spacing: -.01em;
 }
-/* Botão Dig: aparece só na página do servidor local do Mac */
+/* Ações à direita do logo: link do Arquivo e botão Dig */
+.acoes { display: flex; align-items: center; gap: 20px; flex: none; }
+.link-topo { color: var(--ink); text-decoration: none; font-size: 15px; font-weight: 500; }
+.link-topo:hover { text-decoration: underline; text-underline-offset: 3px; }
+.topo .logo { color: inherit; text-decoration: none; }
+/* Botão Dig */
 .dig {
   flex: none; min-width: 72px; height: 40px; padding: 0 18px; border: 0; border-radius: 999px; cursor: pointer;
   background: var(--dig); color: var(--on-dig);
@@ -93,6 +98,20 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
 .dig:focus-visible { outline: 2px solid var(--dig); outline-offset: 3px; }
 .dig:disabled { cursor: progress; opacity: 1; background: var(--tag-bg); color: var(--tag-ink); }
 .dig.erro { background: #c4302b; color: #fff; }
+
+/* Arquivo: um Dig por linha, como um índice */
+.lista-arquivo { list-style: none; margin: 40px 0 0; padding: 0; border-bottom: 1px solid var(--line); }
+.lista-arquivo a {
+  display: grid; grid-template-columns: 220px 120px 1fr; align-items: baseline; gap: 4px 24px;
+  padding: 22px 0; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none;
+}
+.lista-arquivo a:hover .quando { color: var(--accent); }
+.lista-arquivo .quando {
+  font-size: 36px; line-height: 1; font-weight: 600; font-stretch: 62%; font-variation-settings: "wdth" 62;
+}
+.lista-arquivo .quando small { margin-left: 10px; font-size: 18px; font-weight: 400; color: var(--mut); }
+.lista-arquivo .quantos { font-weight: 600; font-size: 15px; }
+.lista-arquivo .onde { color: var(--mut); font-size: 13px; }
 
 /* Barra de status, como a "The Nice Feed" */
 .barra {
@@ -198,6 +217,11 @@ footer .versao { margin-left: 8px; font-size: 12px; font-variant-numeric: tabula
   main { padding: 0 16px 64px; }
   .topo { padding: 24px 0 20px; }
   .topo h1 { font-size: 44px; }
+  .acoes { gap: 14px; }
+  .link-topo { font-size: 14px; }
+  .lista-arquivo a { grid-template-columns: 1fr auto; padding: 18px 0; }
+  .lista-arquivo .quando { font-size: 28px; }
+  .lista-arquivo .onde { grid-column: 1 / -1; }
   .barra .lado { justify-content: space-between; }
   .dig { min-width: 56px; height: 36px; padding: 0 12px; font-size: 14px; }
   .controles { margin-top: 28px; gap: 14px; }
@@ -215,7 +239,7 @@ footer .versao { margin-left: 8px; font-size: 12px; font-variant-numeric: tabula
 
 <header class="topo">
   <h1>Dig Dig Dig!</h1>
-  <button type="button" class="dig" id="dig" data-gatilho="{{GATILHO}}" hidden>Dig</button>
+  <nav class="acoes"><a class="link-topo" href="arquivo.html">Arquivo</a><button type="button" class="dig" id="dig" data-gatilho="{{GATILHO}}" hidden>Dig</button></nav>
 </header>
 
 <div class="barra">

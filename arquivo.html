@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arquivo · Dig Dig Dig!</title>
+<script>
+  // aplica o tema escolhido antes de pintar a página, para não piscar
+  try { const t = localStorage.getItem("digdigdig.tema"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='22' fill='%232b2b2b'/%3E%3Ccircle cx='24' cy='24' r='8' fill='%236219ff'/%3E%3Ccircle cx='24' cy='24' r='2' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
+<style>
+/* Dig Dig Dig! — inspirado no It's Nice That: página branca e editorial,
+   grotesca com leve espaçamento, logo condensado, imagens retas e etiquetas roxas. */
+:root {
+  --bg: #ffffff;
+  --ink: #2b2b2b;
+  --mut: #8a8a8a;
+  --line: #e6e6e6;
+  --bar: #f2f2f2;
+  /* um tom de fundo por site, para separar as seções no scroll */
+  --tom-0: #f4efe4; --tom-1: #e6efe9; --tom-2: #eceef8;
+  --tom-3: #f7ebe6; --tom-4: #f4f1d9; --tom-5: #e9eef0;
+  --tag-bg: #f1ecff;
+  --tag-ink: #6219ff;
+  --accent: #6219ff;
+  --on-accent: #ffffff;
+  --dig: rgb(22, 19, 15);
+  --on-dig: #ffffff;
+  --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --serif: "Newsreader", Georgia, serif;
+  color-scheme: light;
+}
+/* Escuro: segue o sistema, a menos que o botão de tema tenha escolhido outro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141414;
+    --ink: #ececec;
+    --mut: #8f8f8f;
+    --line: #2c2c2c;
+    --bar: #1f1f1f;
+    --tom-0: #201d17; --tom-1: #17211b; --tom-2: #1b1d28;
+    --tom-3: #271d1a; --tom-4: #24231a; --tom-5: #1b2023;
+    --tag-bg: #241c3d;
+    --tag-ink: #b59cff;
+    --accent: #8b5cff;
+    --on-accent: #ffffff;
+    --dig: #ece8e1;
+    --on-dig: rgb(22, 19, 15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141414;
+  --ink: #ececec;
+  --mut: #8f8f8f;
+  --line: #2c2c2c;
+  --bar: #1f1f1f;
+  --tom-0: #201d17; --tom-1: #17211b; --tom-2: #1b1d28;
+  --tom-3: #271d1a; --tom-4: #24231a; --tom-5: #1b2023;
+  --tag-bg: #241c3d;
+  --tag-ink: #b59cff;
+  --accent: #8b5cff;
+  --on-accent: #ffffff;
+  --dig: #ece8e1;
+  --on-dig: rgb(22, 19, 15);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+/* garante que o atributo hidden vença os display: flex/grid de .card e .grade */
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 16px/1.5 var(--sans); letter-spacing: .01em; -webkit-font-smoothing: antialiased;
+}
+main { max-width: 1320px; margin: 0 auto; padding: 0 40px 96px; }
+
+/* Cabeçalho: logo à esquerda, botão Dig à direita */
+.topo { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 36px 0 28px; }
+.topo h1 {
+  margin: 0; font-size: 64px; line-height: .9; font-weight: 600;
+  font-stretch: 62%; font-variation-settings: "wdth" 62; letter-spacing: -.01em;
+}
+/* Ações à direita do logo: link do Arquivo e botão Dig */
+.acoes { display: flex; align-items: center; gap: 20px; flex: none; }
+.link-topo { color: var(--ink); text-decoration: none; font-size: 15px; font-weight: 500; }
+.link-topo:hover { text-decoration: underline; text-underline-offset: 3px; }
+.topo .logo { color: inherit; text-decoration: none; }
+/* Botão Dig */
+.dig {
+  flex: none; min-width: 72px; height: 40px; padding: 0 18px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--dig); color: var(--on-dig);
+  font: 600 15px/1 var(--sans); letter-spacing: .02em;
+}
+.dig:hover { opacity: .85; }
+.dig:focus-visible { outline: 2px solid var(--dig); outline-offset: 3px; }
+.dig:disabled { cursor: progress; opacity: 1; background: var(--tag-bg); color: var(--tag-ink); }
+.dig.erro { background: #c4302b; color: #fff; }
+
+/* Arquivo: um Dig por linha, como um índice */
+.lista-arquivo { list-style: none; margin: 40px 0 0; padding: 0; border-bottom: 1px solid var(--line); }
+.lista-arquivo a {
+  display: grid; grid-template-columns: 220px 120px 1fr; align-items: baseline; gap: 4px 24px;
+  padding: 22px 0; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none;
+}
+.lista-arquivo a:hover .quando { color: var(--accent); }
+.lista-arquivo .quando {
+  font-size: 36px; line-height: 1; font-weight: 600; font-stretch: 62%; font-variation-settings: "wdth" 62;
+}
+.lista-arquivo .quando small { margin-left: 10px; font-size: 18px; font-weight: 400; color: var(--mut); }
+.lista-arquivo .quantos { font-weight: 600; font-size: 15px; }
+.lista-arquivo .onde { color: var(--mut); font-size: 13px; }
+
+/* Barra de status, como a "The Nice Feed" */
+.barra {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px;
+  background: var(--bar); padding: 14px 18px; font-size: 13px; font-weight: 500;
+}
+.barra .mut { color: var(--mut); font-weight: 400; margin-left: 8px; }
+.barra b { font-weight: 500; color: var(--accent); }
+.barra .lado { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+/* Botão de tema, dentro da barra cinza */
+.tema {
+  width: 30px; height: 30px; margin: -6px -8px -6px 0; border: 0; padding: 0; border-radius: 50%; cursor: pointer;
+  background: transparent; color: var(--ink); display: grid; place-items: center;
+}
+.tema:hover { background: var(--line); }
+.tema:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tema svg { width: 18px; height: 18px; transition: transform .3s; }
+:root[data-tema-efetivo="dark"] .tema svg { transform: rotate(180deg); }
+
+/* Avisos */
+.avisos { list-style: none; margin: 12px 0 0; padding: 0; font-size: 13px; color: var(--mut); }
+.avisos li { padding: 4px 0; }
+.avisos li::before { content: "→ "; color: var(--accent); }
+
+/* Filtros: etiquetas retangulares, roxas quando ativas */
+.controles { display: flex; flex-wrap: wrap; gap: 16px 40px; margin: 40px 0 0; }
+.grupo { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.grupo > span, .grupo > label { font-size: 13px; font-weight: 500; }
+/* Menu de site: mesma etiqueta roxa, com seta desenhada */
+.menu {
+  font: 400 12px/1 var(--sans); letter-spacing: .04em; color: var(--on-accent); background-color: var(--accent);
+  border: 0; border-radius: 0; padding: 9px 32px 9px 12px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 15px center, right 11px center; background-size: 4px 4px; background-repeat: no-repeat;
+}
+.menu:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.menu option { color: var(--ink); background: var(--bg); }
+.teclas { display: flex; flex-wrap: wrap; gap: 6px; }
+.teclas button {
+  font: 400 12px/1 var(--sans); letter-spacing: .04em; color: var(--tag-ink); background: var(--tag-bg);
+  border: 0; border-radius: 0; padding: 9px 12px; cursor: pointer;
+}
+.teclas button:hover { box-shadow: inset 0 0 0 1px var(--tag-ink); }
+.teclas button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.teclas button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Seções: cada site é uma faixa de cor de ponta a ponta da tela, com o nome
+   do site preso no topo enquanto se rola — fica claro quando o site muda. */
+.tom-0 { --sec: var(--tom-0); } .tom-1 { --sec: var(--tom-1); } .tom-2 { --sec: var(--tom-2); }
+.tom-3 { --sec: var(--tom-3); } .tom-4 { --sec: var(--tom-4); } .tom-5 { --sec: var(--tom-5); }
+#secoes { margin-top: 56px; }
+#secoes section, #secoes h2 {
+  background: var(--sec);
+  /* fundo vaza até as bordas da janela sem criar rolagem lateral */
+  box-shadow: 0 0 0 100vmax var(--sec); clip-path: inset(0 -100vmax);
+}
+#secoes section { padding-bottom: 80px; }
+h2 {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 0 8px; padding: 28px 0 18px;
+  font-size: 34px; line-height: 1; font-weight: 600; letter-spacing: 0;
+  font-stretch: 62%; font-variation-settings: "wdth" 62;
+}
+h2 span { font: 400 13px var(--sans); letter-spacing: .03em; color: var(--mut); font-stretch: normal; font-variation-settings: normal; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 56px 32px; }
+#lista { margin-top: 56px; }
+
+.card { color: inherit; text-decoration: none; display: flex; flex-direction: column; }
+.capa { position: relative; aspect-ratio: 1; background: var(--bar); overflow: hidden; }
+.capa img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.card:hover .capa img { transform: scale(1.03); }
+.sem-foto { position: absolute; inset: 0; display: grid; place-items: center; }
+.sem-foto::before { content: ""; width: 44%; aspect-ratio: 1; border-radius: 50%; background: var(--ink); opacity: .85; }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.info { padding-top: 16px; display: flex; flex-direction: column; }
+.titulo {
+  order: 1; font-size: 20px; line-height: 1.3; letter-spacing: .02em; font-weight: 400;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.card:hover .titulo { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.preco { order: 2; font-size: 16px; font-weight: 600; color: var(--ink); margin-top: 10px; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.extra { order: 3; font-size: 13px; color: var(--mut); letter-spacing: .03em; }
+.site {
+  display: none; order: 4; align-self: flex-start; margin-top: 12px;
+  font-size: 12px; letter-spacing: .04em; color: var(--tag-ink); background: var(--tag-bg); padding: 6px 10px;
+}
+#lista .site { display: block; }
+/* na lista por preço, a etiqueta do site leva o tom da seção dele */
+.card[class*="tom-"] .site { background: var(--sec); color: var(--ink); }
+
+.vazio { grid-column: 1 / -1; margin: 96px 0; font: 400 28px/1.3 var(--serif); text-align: center; }
+footer {
+  margin-top: 120px; padding-top: 24px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  font-size: 13px; color: var(--mut);
+}
+footer strong { color: var(--ink); font-weight: 600; font-stretch: 62%; font-variation-settings: "wdth" 62; font-size: 20px; letter-spacing: 0; }
+footer .versao { margin-left: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 700px) {
+  main { padding: 0 16px 64px; }
+  .topo { padding: 24px 0 20px; }
+  .topo h1 { font-size: 44px; }
+  .acoes { gap: 14px; }
+  .link-topo { font-size: 14px; }
+  .lista-arquivo a { grid-template-columns: 1fr auto; padding: 18px 0; }
+  .lista-arquivo .quando { font-size: 28px; }
+  .lista-arquivo .onde { grid-column: 1 / -1; }
+  .barra .lado { justify-content: space-between; }
+  .dig { min-width: 56px; height: 36px; padding: 0 12px; font-size: 14px; }
+  .controles { margin-top: 28px; gap: 14px; }
+  .grupo { gap: 10px; }
+  #secoes { margin-top: 40px; }
+  #secoes section { padding-bottom: 56px; }
+  h2 { font-size: 28px; padding: 20px 0 14px; }
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 14px; }
+  .titulo { font-size: 16px; }
+  .info { padding-top: 10px; }
+  .preco { margin-top: 6px; font-size: 14px; }
+  .extra { font-size: 12px; }
+}
+</style></head><body><main>
+<header class="topo"><h1><a href="./" class="logo">Dig Dig Dig!</a></h1><a class="link-topo" href="./">← Dig atual</a></header>
+<div class="barra"><div><b>Arquivo</b><span class="mut">4 Digs anteriores</span></div></div>
+<ol class="lista-arquivo"><li><a href="relatorios/vinil-2026-11-02-1104.html"><span class="quando">02.11.2026<small>11:04</small></span><span class="quantos">44 discos</span><span class="onde">Enjoei · Sebo do Messias</span></a></li><li><a href="relatorios/vinil-2026-11-02-1020.html"><span class="quando">02.11.2026<small>10:20</small></span><span class="quantos">34 discos</span><span class="onde">Enjoei</span></a></li><li><a href="relatorios/vinil-2026-11-02-1008.html"><span class="quando">02.11.2026<small>10:08</small></span><span class="quantos">38 discos</span><span class="onde">Enjoei · Sebo Casa Laranja</span></a></li><li><a href="relatorios/vinil-2026-11-01-1912.html"><span class="quando">01.11.2026<small>19:12</small></span><span class="quantos">102 discos</span><span class="onde">Enjoei · Sebo Casa Laranja</span></a></li></ol>
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.1</span></div></footer>
+</main></body></html>

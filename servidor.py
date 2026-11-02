@@ -8,6 +8,7 @@ Atende só o próprio Mac (127.0.0.1) e só entrega o relatório, nunca os
 arquivos privados da pasta."""
 import datetime as dt
 import json
+import re
 import subprocess
 import sys
 import threading
@@ -117,8 +118,13 @@ class Pedido(BaseHTTPRequestHandler):
         if caminho == "/estado":
             with trava:
                 return self.responder(200, json.dumps(estado).encode())
+        # só as páginas do relatório: a atual, o Arquivo e os Digs arquivados
         if caminho in ("/", "/index.html"):
-            return self.responder(200, (PASTA / "index.html").read_bytes(), "text/html; charset=utf-8")
+            caminho = "/index.html"
+        if caminho == "/index.html" or caminho == "/arquivo.html" or re.fullmatch(r"/relatorios/vinil-[\d-]+\.html", caminho):
+            pagina = PASTA / caminho.lstrip("/")
+            if pagina.exists():
+                return self.responder(200, pagina.read_bytes(), "text/html; charset=utf-8")
         self.responder(404, b"{}")
 
     def do_POST(self):

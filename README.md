@@ -6,6 +6,8 @@ anúncios novos em **https://hrafael2023.github.io/dig-dig-dig/**, com um aviso
 no celular pelo ntfy.
 
 - `buscar.py` — o buscador (`python3 buscar.py`)
+- `arquivo.html` + `relatorios/` — o Arquivo: cada Dig vira uma página em
+  `relatorios/vinil-AAAA-MM-DD-HHMM.html`, listada em `arquivo.html`
 - `urls.txt` / `termos.txt` — sites e termos de busca
 - `modelo-relatorio.html` — visual do relatório
 - `servidor.py` — roda no Mac e dispara a busca quando o botão **Dig** é
