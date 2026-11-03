@@ -107,10 +107,10 @@ main { max-width: 1240px; margin: 0 auto; padding: 0 24px 72px; }
 /* Ações à direita do logo: link do Arquivo e botão Dig */
 .acoes { display: flex; align-items: center; gap: 8px; flex: none; }
 .link-topo {
-  display: inline-flex; align-items: center; height: 38px; padding: 0 14px; border: 1px solid var(--line);
-  color: var(--ink); background: var(--panel); text-decoration: none; font-size: 13px; font-weight: 650;
+  display: inline-flex; align-items: center; height: 38px; padding: 0 10px;
+  color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 650;
 }
-.link-topo:hover { border-color: var(--ink); }
+.link-topo:hover { text-decoration: underline; text-underline-offset: 3px; }
 .topo .logo { color: inherit; text-decoration: none; }
 /* Botão Dig: o botão principal, cheio e reto */
 .dig {
@@ -253,7 +253,7 @@ footer .versao { margin-left: 8px; font-size: 12px; font-weight: 650; font-varia
   .topo h1 { font-size: 19px; gap: 8px; }
   .topo h1::before { width: 30px; height: 30px; }
   .acoes { gap: 6px; }
-  .link-topo { height: 34px; padding: 0 10px; }
+  .link-topo { height: 34px; padding: 0 6px; }
   .dig { min-width: 60px; height: 34px; padding: 0 12px; }
   .barra { margin-top: 16px; padding: 20px; }
   .barra b { font-size: 32px; }
@@ -339,5 +339,5 @@ const inicial = new URL(location.href).searchParams.get('q');
 if (inicial) { campo.value = inicial; buscar(); }
 </script>
 
-<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.3</span></div></footer>
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.4</span></div></footer>
 </main></body></html>
