@@ -21,11 +21,12 @@ from pathlib import Path
 PASTA = Path(__file__).resolve().parent
 LOG = PASTA / "logs" / "buscador.log"
 ULTIMO = PASTA / "logs" / "gatilho-ultimo.txt"  # último aviso do ntfy já lido
+PROGRESSO = PASTA / "logs" / "progresso.json"  # buscar.py anota aqui em que busca está
 PORTA = 8777
 NTFY = "https://ntfy.sh"
 INTERVALO = dt.timedelta(minutes=10)  # mínimo entre buscas pedidas pela página pública
 
-estado = {"rodando": False, "inicio": None, "fim": None, "ok": None}
+estado = {"rodando": False, "inicio": None, "fim": None, "ok": None, "progresso": None}
 trava = threading.Lock()
 
 
@@ -50,18 +51,34 @@ def avisar(texto):
 
 
 def cavar():
-    """Roda buscar.py até o fim, anotando o resultado em `estado`."""
+    """Roda buscar.py até o fim, anotando o resultado em `estado`. Enquanto ele
+    roda, repassa o andamento (progresso.json) para a página local, por `estado`,
+    e para a publicada, pelo ntfy ("progresso:3/10:buscando:Enjoei")."""
     avisar("inicio")
     LOG.parent.mkdir(exist_ok=True)
+    PROGRESSO.unlink(missing_ok=True)
+    visto = None
     with open(LOG, "a", encoding="utf-8") as log:
         log.write(f"\n--- Dig em {dt.datetime.now():%d/%m/%Y %H:%M:%S} ---\n")
         log.flush()
-        r = subprocess.run([sys.executable, str(PASTA / "buscar.py")], cwd=PASTA,
-                           stdout=log, stderr=subprocess.STDOUT)
+        processo = subprocess.Popen([sys.executable, str(PASTA / "buscar.py")], cwd=PASTA,
+                                    stdout=log, stderr=subprocess.STDOUT)
+        while processo.poll() is None:
+            time.sleep(1)
+            try:
+                andamento = json.loads(PROGRESSO.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if andamento == visto:
+                continue
+            visto = andamento
+            with trava:
+                estado["progresso"] = andamento
+            avisar(f'progresso:{andamento["feitas"]}/{andamento["total"]}:{andamento["etapa"]}:{andamento["site"]}')
     with trava:
         estado.update(rodando=False, fim=dt.datetime.now().isoformat(timespec="seconds"),
-                      ok=r.returncode == 0)
-    avisar("fim:ok" if r.returncode == 0 else "fim:falha")
+                      ok=processo.returncode == 0, progresso=None)
+    avisar("fim:ok" if processo.returncode == 0 else "fim:falha")
 
 
 def pedir_dig(remoto):
@@ -74,7 +91,7 @@ def pedir_dig(remoto):
             threading.Thread(target=avisar, args=("recente",), daemon=True).start()
             return
         estado.update(rodando=True, inicio=dt.datetime.now().isoformat(timespec="seconds"),
-                      fim=None, ok=None)
+                      fim=None, ok=None, progresso=None)
         threading.Thread(target=cavar, daemon=True).start()
 
 

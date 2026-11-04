@@ -151,6 +151,12 @@ main { max-width: 1240px; margin: 0 auto; padding: 0 24px 72px; }
 .busca input:focus { box-shadow: 0 0 0 1px var(--ink); }
 #resultados .contagem { margin: 24px 0 16px; font-size: 13px; font-weight: 650; color: var(--mut); }
 
+/* Barra de andamento do Dig, logo abaixo do topo (como no DigAmazon) */
+.progresso { height: 4px; margin-top: 16px; background: var(--line); overflow: hidden; }
+.progresso i { display: block; height: 100%; width: var(--pct, 2%); background: var(--ink); transition: width 1s linear; }
+.status-dig { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--mut); }
+@media (prefers-reduced-motion: reduce) { .progresso i { transition: none; } }
+
 /* Barra de status: o painel de abertura, com o número em destaque */
 .barra {
   display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px;
@@ -282,6 +288,8 @@ footer .versao { margin-left: 8px; font-size: 12px; font-weight: 650; font-varia
   <h1>Dig Dig Dig!</h1>
   <nav class="acoes"><a class="link-topo" href="arquivo.html">Arquivo</a><button type="button" class="dig" id="dig" data-gatilho="{{GATILHO}}" hidden>Dig</button></nav>
 </header>
+<div id="progresso" class="progresso" role="progressbar" aria-label="Andamento do Dig" aria-valuemin="0" aria-valuemax="100" hidden><i></i></div>
+<p id="status-dig" class="status-dig" role="status" hidden></p>
 
 <div class="barra">
   <div><b>{{NOVOS}} novos</b><span class="mut">Atualizado em {{DATA}} às {{HORA}}</span></div>
@@ -367,7 +375,7 @@ document.querySelectorAll('.teclas').forEach(grupo => {
 
 // Botão Dig. Na página do servidor local (servidor.py, que responde em "estado"),
 // fala direto com ele. Na página publicada, manda "dig" para o tópico do ntfy que
-// o Mac escuta e acompanha pelo mesmo tópico os avisos inicio / fim:ok / fim:falha.
+// o Mac escuta e acompanha pelo mesmo tópico os avisos inicio / progresso / fim.
 const dig = document.getElementById('dig'), gatilho = dig.dataset.gatilho;
 const ntfy = 'https://ntfy.sh/' + encodeURIComponent(gatilho);
 const pausa = ms => new Promise(ok => setTimeout(ok, ms));
@@ -379,6 +387,44 @@ function mostrarDig(texto, {ocupado = false, erro = false, dica = ''} = {}) {
   dig.title = dica;
 }
 
+// --- barra de andamento, logo abaixo do topo (como no DigAmazon) ---
+// O Mac avisa a cada busca (um site/termo); entre um aviso e outro a barra
+// anda sozinha, no ritmo medido até ali.
+const SEG_POR_BUSCA = 8;  // ritmo esperado antes da primeira busca terminar
+const barra = document.getElementById('progresso'), linha = document.getElementById('status-dig');
+let andamento = null, relogio = null;
+function mostrarStatus(texto) { linha.hidden = !texto; linha.textContent = texto || ''; }
+function progresso(p) {
+  andamento = p;
+  barra.hidden = false;
+  if (!relogio) relogio = setInterval(desenharProgresso, 1000);
+  desenharProgresso();
+}
+function fimProgresso() {
+  clearInterval(relogio); relogio = null; andamento = null;
+  barra.hidden = true; mostrarStatus('');
+}
+function desenharProgresso() {
+  const p = andamento;
+  if (!p) return;
+  let pct, texto;
+  if (p.etapa === 'publicando') {
+    pct = 96; texto = 'Pronto. Publicando o resultado…';
+  } else if (!p.total) {
+    pct = 2; texto = 'Abrindo o navegador…';
+  } else {
+    const ritmo = p.feitas > 0 ? Math.max(3, (p.quando - p.inicio) / 1000 / p.feitas) : SEG_POR_BUSCA;
+    const atual = Math.min(p.feitas + (Date.now() - p.quando) / 1000 / ritmo, p.feitas + .95);
+    const faltam = Math.max(5, Math.round((p.total - atual) * ritmo + 10));
+    pct = Math.max(2, atual / p.total * 92);
+    texto = `Cavando em ${p.site} · busca ${p.feitas + 1} de ${p.total} · faltam uns `
+      + (faltam < 60 ? `${faltam} s` : `${Math.round(faltam / 60)} min`);
+  }
+  barra.style.setProperty('--pct', pct.toFixed(1) + '%');
+  barra.setAttribute('aria-valuenow', Math.round(pct));
+  mostrarStatus(texto);
+}
+
 // --- página local ---
 async function lerEstado() {
   const r = await fetch('estado', {cache: 'no-store'});
@@ -386,14 +432,20 @@ async function lerEstado() {
   return r.json();
 }
 function mostrarEstado(e) {
-  if (e.rodando) mostrarDig('Cavando…', {ocupado: true});
-  else if (e.ok === false) mostrarDig('Falhou', {erro: true, dica: 'A última busca falhou — veja logs/buscador.log'});
+  if (e.rodando) {
+    mostrarDig('Cavando…', {ocupado: true});
+    const p = e.progresso || {etapa: 'buscando', feitas: 0, total: 0, site: ''};
+    progresso({...p, inicio: Date.parse(e.inicio), quando: Date.parse(p.quando || e.inicio)});
+    return;
+  }
+  fimProgresso();
+  if (e.ok === false) mostrarDig('Falhou', {erro: true, dica: 'A última busca falhou — veja logs/buscador.log'});
   else mostrarDig('Dig');
 }
 async function acompanharLocal() {
   let e = await lerEstado();
   mostrarEstado(e);
-  while (e.rodando) { await pausa(3000); e = await lerEstado(); mostrarEstado(e); }
+  while (e.rodando) { await pausa(2000); e = await lerEstado(); mostrarEstado(e); }
   if (e.ok) location.reload();
 }
 
@@ -403,9 +455,18 @@ async function avisosDesde(desde) {
   const texto = await r.text();
   return texto.split('\n').filter(Boolean).map(l => JSON.parse(l)).filter(m => m.event === 'message');
 }
+const emAndamento = m => m === 'inicio' || m.startsWith('progresso:');
+function lerProgresso(aviso, inicio) {
+  // "progresso:3/10:buscando:Estante Virtual"
+  const [, conta = '0/0', etapa = 'buscando', ...site] = aviso.message.split(':');
+  const [feitas, total] = conta.split('/').map(Number);
+  return {etapa, feitas, total, site: site.join(':'), quando: aviso.time * 1000, inicio};
+}
 async function esperarPublicacao() {
   // o GitHub leva cerca de 1 minuto para pôr no ar a página nova
   mostrarDig('Publicando…', {ocupado: true});
+  progresso({etapa: 'publicando'});
+  mostrarStatus('Pronto. O GitHub leva cerca de 1 minuto para pôr a página nova no ar…');
   const atual = document.querySelector('.barra').textContent;
   for (let i = 0; i < 40; i++) {
     await pausa(6000);
@@ -423,27 +484,42 @@ async function acompanharOnline(desde) {
   while (Date.now() < limite) {
     let avisos = [];
     try { avisos = await avisosDesde(desde); } catch (err) {}
-    const ultimo = avisos.map(m => m.message).filter(m => m !== 'dig').pop();
-    if (ultimo === 'fim:ok') return esperarPublicacao();
-    if (ultimo === 'fim:falha') return mostrarDig('Falhou', {erro: true, dica: 'A busca falhou no Mac — veja logs/buscador.log'});
-    if (ultimo === 'recente') {
+    const ultimo = avisos.filter(m => m.message !== 'dig').pop();
+    const msg = ultimo?.message || '';
+    if (msg === 'fim:ok') return esperarPublicacao();
+    if (msg === 'fim:falha') {
+      fimProgresso();
+      return mostrarDig('Falhou', {erro: true, dica: 'A busca falhou no Mac — veja logs/buscador.log'});
+    }
+    if (msg === 'recente') {
       mostrarDig('Já cavou', {ocupado: true, dica: 'Teve busca há menos de 10 minutos'});
-      await pausa(4000);
+      mostrarStatus('Teve um Dig há menos de 10 minutos. Tente de novo daqui a pouco.');
+      await pausa(5000);
+      mostrarStatus('');
       return mostrarDig('Dig');
     }
-    if (ultimo === 'inicio') { comecou = true; mostrarDig('Cavando…', {ocupado: true}); }
-    else if (!comecou && Date.now() - desde * 1000 > 60000)
-      mostrarDig('Na fila', {ocupado: true, dica: 'O Mac parece desligado ou dormindo; a busca roda quando ele acordar'});
-    await pausa(5000);
+    if (emAndamento(msg)) {
+      comecou = true;
+      mostrarDig('Cavando…', {ocupado: true});
+      const inicio = (avisos.filter(m => m.message === 'inicio').pop() || ultimo).time * 1000;
+      progresso(lerProgresso(ultimo, inicio));
+    } else if (!comecou && Date.now() - desde * 1000 > 60000) {
+      mostrarDig('Na fila', {ocupado: true});
+      mostrarStatus('O Mac parece desligado ou dormindo. O pedido fica guardado e a busca roda quando ele acordar.');
+    }
+    await pausa(4000);
   }
+  fimProgresso();
   mostrarDig('Dig');
 }
 async function cavarOnline() {
   const desde = Math.floor(Date.now() / 1000) - 2;
   mostrarDig('Chamando…', {ocupado: true});
+  mostrarStatus('Chamando o Mac…');
   try {
     await fetch(ntfy, {method: 'POST', body: 'dig'});
   } catch (err) {
+    mostrarStatus('');
     return mostrarDig('Falhou', {erro: true, dica: 'Não consegui falar com o ntfy'});
   }
   acompanharOnline(desde);
@@ -460,8 +536,8 @@ lerEstado().then(e => {
   // se já houver uma busca em andamento (pedida de outro aparelho), acompanha
   try {
     const desde = Math.floor(Date.now() / 1000) - 15 * 60;
-    const ultimo = (await avisosDesde(desde)).map(m => m.message).filter(m => m === 'inicio' || m.startsWith('fim:')).pop();
-    if (ultimo === 'inicio') acompanharOnline(desde);
+    const ultimo = (await avisosDesde(desde)).map(m => m.message).filter(m => emAndamento(m) || m.startsWith('fim:')).pop();
+    if (ultimo && emAndamento(ultimo)) acompanharOnline(desde);
   } catch (err) {}
 });
 dig.addEventListener('click', async () => {
@@ -470,7 +546,7 @@ dig.addEventListener('click', async () => {
   try {
     await fetch('dig', {method: 'POST', headers: {'X-Dig': '1'}});
     await acompanharLocal();
-  } catch (err) { mostrarDig('Falhou', {erro: true}); }
+  } catch (err) { fimProgresso(); mostrarDig('Falhou', {erro: true}); }
 });
 </script>
 </body></html>

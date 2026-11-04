@@ -433,19 +433,36 @@ def gerar_arquivo():
             '</main></body></html>\n')
 
 
+PROGRESSO = PASTA / "logs" / "progresso.json"  # o servidor lê para a barra da página
+
+
+def contar(etapa, feitas=0, total=0, site=""):
+    """Anota em que ponto o Dig está: qual busca, de quantas, em qual site."""
+    try:
+        PROGRESSO.parent.mkdir(exist_ok=True)
+        PROGRESSO.write_text(json.dumps({"etapa": etapa, "feitas": feitas, "total": total, "site": site,
+                                         "quando": dt.datetime.now().isoformat(timespec="seconds")},
+                                        ensure_ascii=False))
+    except OSError:
+        pass
+
+
 def buscar():
     vistos = json.loads(VISTOS.read_text()) if VISTOS.exists() else {}
     primeira_vez = not vistos
     agora = dt.datetime.now()
     novos, erros = [], []
+    buscas = montar_buscas()
+    contar("buscando", 0, len(buscas), site_de(buscas[0][0])[0] if buscas else "")
 
     with sync_playwright() as p:
         ctx = p.chromium.launch_persistent_context(
             str(PERFIL), headless=True, user_agent=UA, locale="pt-BR",
             viewport={"width": 1366, "height": 900})
         pagina = ctx.new_page()
-        for url, termo in montar_buscas():
+        for n, (url, termo) in enumerate(buscas):
             nome = site_de(url)[0]
+            contar("buscando", n, len(buscas), nome)
             try:
                 _, itens = coletar(pagina, url)
                 print(f"{nome} [{termo or '-'}]: {len(itens)} anúncios", file=sys.stderr)
@@ -472,6 +489,7 @@ def buscar():
     (PASTA / "arquivo.html").write_text(gerar_arquivo(), encoding="utf-8")
     (PASTA / "busca.json").write_text(gerar_indice(), encoding="utf-8")
     print(f"{len(novos)} novos → {destino}", file=sys.stderr)
+    contar("publicando", len(buscas), len(buscas))
     link = publicar(conteudo, agora)
     notificar(novos, [e for e in erros if not e.startswith("Primeira execução")], link)
     return destino

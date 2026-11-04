@@ -151,6 +151,12 @@ main { max-width: 1240px; margin: 0 auto; padding: 0 24px 72px; }
 .busca input:focus { box-shadow: 0 0 0 1px var(--ink); }
 #resultados .contagem { margin: 24px 0 16px; font-size: 13px; font-weight: 650; color: var(--mut); }
 
+/* Barra de andamento do Dig, logo abaixo do topo (como no DigAmazon) */
+.progresso { height: 4px; margin-top: 16px; background: var(--line); overflow: hidden; }
+.progresso i { display: block; height: 100%; width: var(--pct, 2%); background: var(--ink); transition: width 1s linear; }
+.status-dig { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--mut); }
+@media (prefers-reduced-motion: reduce) { .progresso i { transition: none; } }
+
 /* Barra de status: o painel de abertura, com o número em destaque */
 .barra {
   display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px;
@@ -339,5 +345,5 @@ const inicial = new URL(location.href).searchParams.get('q');
 if (inicial) { campo.value = inicial; buscar(); }
 </script>
 
-<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.6</span></div></footer>
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.7</span></div></footer>
 </main></body></html>
