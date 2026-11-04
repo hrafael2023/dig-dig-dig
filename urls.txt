@@ -28,6 +28,10 @@ https://www.sebocasalaranja.com.br/discos-de-vinil/?sort_by=created-descending
 https://www.estantevirtual.com.br/busca?q=lp%20vinil&sort=new-releases
 https://www.estantevirtual.com.br/busca?q=lp%20vinil&sort=new-releases&page=2
 
+# Sebo do Vinil — catálogo, mais recentes primeiro
+# (a página carrega mais itens ao rolar; o buscador pega os ~48 mais recentes)
+https://sebodovinil.com.br/shop/?orderby=date
+
 # Shopee — DESATIVADA: bloqueia login automático com captcha.
 # Para reativar, tire o # da linha abaixo e rode: python3 buscar.py --login
 # https://shopee.com.br/search?keyword={termo}&sortBy=ctime

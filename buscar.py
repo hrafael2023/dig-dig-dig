@@ -122,6 +122,22 @@ JS_ESTANTE = """() => [...document.querySelectorAll('.product-item')].map(c => {
   };
 })"""
 
+JS_SEBO_VINIL = """() => [...document.querySelectorAll('article.product-card')].map(c => {
+  const a = c.querySelector('.product-card__title a') || c.querySelector('a.product-card__cover');
+  const img = c.querySelector('.product-card__img');
+  // textContent, não innerText: o site põe o artista em maiúsculas só pelo CSS
+  const texto = sel => c.querySelector(sel)?.textContent.replace(/\\s+/g, ' ').trim() || '';
+  const artista = texto('.product-card__artist'), disco = texto('.product-card__title');
+  return {
+    titulo: [artista, disco].filter(Boolean).join(' — '),
+    preco: texto('.product-card__price').replace(/R\\$\\s*/, 'R$ '),
+    link: a?.href,
+    foto: img?.currentSrc || img?.getAttribute('src') || '',
+    // ex.: "Outros · 1985 · Odeon · Excelente · capa excelente"
+    extra: [texto('.product-card__meta'), texto('.product-card__grade')].filter(Boolean).join(' · '),
+  };
+})"""
+
 # Leitor genérico para sites novos: qualquer link com foto e texto.
 JS_GENERICO = """() => [...document.querySelectorAll('a[href]')].filter(a => a.querySelector('img')).map(a => {
   const box = a.closest('li, article, [class*="card"], [class*="product"], [class*="item"]') || a;
@@ -140,6 +156,7 @@ SITES = {
     "estacaocultural.com.br": ("Estação Cultural", JS_ESTACAO),
     "sebocasalaranja.com.br": ("Sebo Casa Laranja", JS_CASA_LARANJA),
     "estantevirtual.com.br": ("Estante Virtual", JS_ESTANTE),
+    "sebodovinil.com.br": ("Sebo do Vinil", JS_SEBO_VINIL),
 }
 
 
