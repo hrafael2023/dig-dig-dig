@@ -106,6 +106,22 @@ JS_CASA_LARANJA = """() => [...document.querySelectorAll('.js-item-product')].ma
   };
 })"""
 
+JS_ESTANTE = """() => [...document.querySelectorAll('.product-item')].map(c => {
+  const a = c.querySelector('a.product-item__link');
+  const img = c.querySelector('.product-item__image');
+  // fotos ainda não carregadas guardam a URL em data-src; "indisponivel" é a capa genérica de sem foto
+  const foto = [img?.getAttribute('data-src'), img?.currentSrc, img?.getAttribute('src')]
+    .find(u => u && !u.startsWith('data:') && !u.includes('indisponivel'));
+  const texto = sel => c.querySelector(sel)?.innerText.replace(/\\s+/g, ' ').trim() || '';
+  return {
+    titulo: a?.getAttribute('title') || texto('.product-item__name'),
+    preco: texto('.product-item__sale-price').replace(/\\u00a0/g, ' '),
+    link: a?.href,
+    foto: foto ? new URL(foto, location.href).href : '',
+    extra: [texto('.product-item__author'), texto('.product-item__year')].filter(Boolean).join(' · '),
+  };
+})"""
+
 # Leitor genérico para sites novos: qualquer link com foto e texto.
 JS_GENERICO = """() => [...document.querySelectorAll('a[href]')].filter(a => a.querySelector('img')).map(a => {
   const box = a.closest('li, article, [class*="card"], [class*="product"], [class*="item"]') || a;
@@ -123,6 +139,7 @@ SITES = {
     "shopee.com.br": ("Shopee", JS_SHOPEE),
     "estacaocultural.com.br": ("Estação Cultural", JS_ESTACAO),
     "sebocasalaranja.com.br": ("Sebo Casa Laranja", JS_CASA_LARANJA),
+    "estantevirtual.com.br": ("Estante Virtual", JS_ESTANTE),
 }
 
 
