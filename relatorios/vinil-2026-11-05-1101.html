@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dig Dig Dig!</title>
+<script>
+  // aplica o tema escolhido antes de pintar a página, para não piscar
+  try { const t = localStorage.getItem("digdigdig.tema"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%2317312f'/%3E%3Ccircle cx='24' cy='24' r='14' fill='%23fff'/%3E%3Ccircle cx='24' cy='24' r='4' fill='%2317312f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..800&display=swap" rel="stylesheet">
+<style>
+/* Dig Dig Dig! — no design system do FootyLogos: DM Sans, verde-escuro sobre
+   cinza-esverdeado, painéis brancos com borda fina, cantos retos e rótulos
+   pequenos em maiúsculas. */
+:root {
+  --bg: #f4f6f5;
+  --panel: #ffffff;
+  --ink: #17312f;
+  --mut: #53605c;
+  --eyebrow: #6e817a;
+  --line: #d9dfdc;
+  --bar: #eef1ef;
+  /* um tom por site, para separar as seções no scroll */
+  --tom-0: #eaf2ed; --tom-1: #f3efe4; --tom-2: #e9eef5;
+  --tom-3: #f4ebe8; --tom-4: #f0f1e2; --tom-5: #e7edee;
+  --tag-bg: #e8eeeb;
+  --tag-ink: #17312f;
+  --accent: #17312f;
+  --on-accent: #ffffff;
+  --dig: rgb(22, 19, 15);
+  --on-dig: #ffffff;
+  --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+/* Escuro: segue o sistema, a menos que o botão de tema tenha escolhido outro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1413;
+    --panel: #131d1c;
+    --ink: #e3ebe8;
+    --mut: #9aaba5;
+    --eyebrow: #7f938c;
+    --line: #253330;
+    --bar: #1a2725;
+    --tom-0: #14211c; --tom-1: #201d15; --tom-2: #151c25;
+    --tom-3: #221816; --tom-4: #1c1e14; --tom-5: #161d1f;
+    --tag-bg: #1d2b28;
+    --tag-ink: #d4e2dd;
+    --accent: #d4e2dd;
+    --on-accent: #0d1413;
+    --dig: #e3ebe8;
+    --on-dig: rgb(22, 19, 15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1413;
+  --panel: #131d1c;
+  --ink: #e3ebe8;
+  --mut: #9aaba5;
+  --eyebrow: #7f938c;
+  --line: #253330;
+  --bar: #1a2725;
+  --tom-0: #14211c; --tom-1: #201d15; --tom-2: #151c25;
+  --tom-3: #221816; --tom-4: #1c1e14; --tom-5: #161d1f;
+  --tag-bg: #1d2b28;
+  --tag-ink: #d4e2dd;
+  --accent: #d4e2dd;
+  --on-accent: #0d1413;
+  --dig: #e3ebe8;
+  --on-dig: rgb(22, 19, 15);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+/* garante que o atributo hidden vença os display: flex/grid de .card e .grade */
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased;
+}
+main { max-width: 1240px; margin: 0 auto; padding: 0 24px 72px; }
+/* rótulo pequeno em maiúsculas, como "FOOTBALL IDENTITY DATABASE" */
+.grupo > span, .grupo > label, .busca label, h2 span, .site {
+  font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--eyebrow);
+}
+
+/* Cabeçalho: faixa branca de ponta a ponta, logo à esquerda, ações à direita */
+.topo {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0;
+  background: var(--panel);
+  /* fundo e linha de baixo vazam até as bordas da janela sem criar rolagem lateral */
+  box-shadow: 0 0 0 100vmax var(--panel), 0 1px 0 100vmax var(--line); clip-path: inset(0 -100vmax -1px);
+}
+.topo h1 {
+  display: flex; align-items: center; gap: 10px; margin: 0;
+  font-size: 22px; line-height: 1; font-weight: 700; letter-spacing: -.04em;
+}
+/* marca: disco branco num quadrado verde, como o "FL" do FootyLogos */
+.topo h1::before {
+  content: ""; flex: none; width: 34px; height: 34px; border-radius: 8px;
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='17' cy='17' r='10' fill='%23fff'/%3E%3Ccircle cx='17' cy='17' r='3' fill='%2317312f'/%3E%3C/svg%3E") center / 100% no-repeat;
+}
+:root[data-tema-efetivo="dark"] .topo h1::before { background-color: #2c4a46; }
+/* Ações à direita do logo: link do Arquivo e botão Dig */
+.acoes { display: flex; align-items: center; gap: 8px; flex: none; }
+.link-topo {
+  display: inline-flex; align-items: center; height: 38px; padding: 0 10px;
+  color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 650;
+}
+.link-topo:hover { text-decoration: underline; text-underline-offset: 3px; }
+.topo .logo { color: inherit; text-decoration: none; }
+/* Botão Dig: o botão principal, cheio e reto */
+.dig {
+  flex: none; min-width: 76px; height: 38px; padding: 0 18px; border: 0; border-radius: 0; cursor: pointer;
+  background: var(--dig); color: var(--on-dig);
+  font: 750 13px/1 var(--sans); letter-spacing: .01em;
+}
+.dig:hover { opacity: .88; }
+.dig:focus-visible { outline: 2px solid var(--dig); outline-offset: 3px; }
+.dig:disabled { cursor: progress; opacity: 1; background: var(--tag-bg); color: var(--tag-ink); }
+.dig.erro { background: #b3261e; color: #fff; }
+
+/* Arquivo: os Digs numa tabela de linhas dentro de um painel */
+.lista-arquivo { list-style: none; margin: 16px 0 0; padding: 0; background: var(--panel); border: 1px solid var(--line); }
+.lista-arquivo li + li { border-top: 1px solid var(--line); }
+.lista-arquivo a {
+  display: grid; grid-template-columns: 200px 110px 1fr 16px; align-items: center; gap: 4px 24px;
+  padding: 18px 24px; color: var(--ink); text-decoration: none;
+}
+.lista-arquivo a::after { content: "→"; color: var(--eyebrow); }
+.lista-arquivo a:hover { background: var(--bar); }
+.lista-arquivo a:hover::after { color: var(--ink); }
+.lista-arquivo .quando { font-size: 22px; line-height: 1.1; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.lista-arquivo .quando small { margin-left: 8px; font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--mut); }
+.lista-arquivo .quantos { font-weight: 700; font-size: 14px; }
+.lista-arquivo .onde { color: var(--mut); font-size: 14px; }
+
+/* Busca no Arquivo: caixa branca com lupa, como a busca do FootyLogos */
+.busca { margin-top: 16px; padding: 28px 32px; background: var(--panel); border: 1px solid var(--line); }
+.busca label { display: block; margin-bottom: 12px; }
+.busca input {
+  width: 100%; height: 58px; padding: 0 16px 0 50px; border: 1px solid var(--ink); border-radius: 0;
+  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236e817a' stroke-width='1.8'%3E%3Ccircle cx='8.5' cy='8.5' r='6'/%3E%3Cpath d='M13 13l5 5' stroke-linecap='round'/%3E%3C/svg%3E") 18px center / 18px no-repeat;
+  color: var(--ink); outline: none; -webkit-appearance: none; appearance: none;
+  font: 400 16px/1.2 var(--sans);
+}
+.busca input::placeholder { color: var(--eyebrow); }
+.busca input:focus { box-shadow: 0 0 0 1px var(--ink); }
+#resultados .contagem { margin: 24px 0 16px; font-size: 13px; font-weight: 650; color: var(--mut); }
+
+/* Barra de andamento do Dig, logo abaixo do topo (como no DigAmazon) */
+.progresso { height: 4px; margin-top: 16px; background: var(--line); overflow: hidden; }
+.progresso i { display: block; height: 100%; width: var(--pct, 2%); background: var(--ink); transition: width 1s linear; }
+.status-dig { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--mut); }
+@media (prefers-reduced-motion: reduce) { .progresso i { transition: none; } }
+
+/* Barra de status: o painel de abertura, com o número em destaque */
+.barra {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px;
+  margin-top: 24px; padding: 28px 32px; background: var(--panel); border: 1px solid var(--line);
+  font-size: 14px; color: var(--mut);
+}
+.barra > div:first-child { display: flex; flex-direction: column; gap: 6px; }
+.barra b { font-size: 40px; line-height: 1; font-weight: 700; letter-spacing: -.05em; color: var(--ink); }
+.barra .mut { color: var(--mut); }
+.barra .lado { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-weight: 500; }
+/* Botão de tema, dentro do painel */
+.tema {
+  width: 34px; height: 34px; border: 1px solid var(--line); padding: 0; border-radius: 0; cursor: pointer;
+  background: var(--panel); color: var(--ink); display: grid; place-items: center;
+}
+.tema:hover { border-color: var(--ink); }
+.tema:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tema svg { width: 16px; height: 16px; transition: transform .3s; }
+:root[data-tema-efetivo="dark"] .tema svg { transform: rotate(180deg); }
+
+/* Avisos */
+.avisos { list-style: none; margin: 0; padding: 12px 32px; background: var(--panel); border: 1px solid var(--line); border-top: 0; font-size: 13px; color: var(--mut); }
+.avisos li { padding: 3px 0; }
+.avisos li::before { content: "→ "; color: var(--ink); }
+
+/* Filtros: painel colado ao de cima, botões retos com borda; o ativo fica cheio */
+.controles {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px 36px; margin: 0;
+  padding: 18px 32px; background: var(--panel); border: 1px solid var(--line); border-top: 0;
+}
+.grupo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.menu {
+  font: 650 12px/1 var(--sans); color: var(--ink); background-color: var(--panel);
+  border: 1px solid var(--line); border-radius: 0; height: 34px; padding: 0 34px 0 12px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 16px center, right 12px center; background-size: 4px 4px; background-repeat: no-repeat;
+}
+.menu:hover { border-color: var(--ink); }
+.menu:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.menu option { color: var(--ink); background: var(--panel); }
+.teclas { display: flex; flex-wrap: wrap; }
+.teclas button {
+  font: 650 12px/1 var(--sans); color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 0; height: 34px; padding: 0 12px; margin-left: -1px; cursor: pointer;
+}
+.teclas button:first-child { margin-left: 0; }
+.teclas button:hover { position: relative; border-color: var(--ink); }
+.teclas button[aria-pressed="true"] { position: relative; background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.teclas button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Seções: cada site é um painel com o seu tom, e o nome do site fica preso no
+   topo enquanto se rola — fica claro quando o site muda. */
+.tom-0 { --sec: var(--tom-0); } .tom-1 { --sec: var(--tom-1); } .tom-2 { --sec: var(--tom-2); }
+.tom-3 { --sec: var(--tom-3); } .tom-4 { --sec: var(--tom-4); } .tom-5 { --sec: var(--tom-5); }
+#secoes { margin-top: 24px; display: flex; flex-direction: column; gap: 24px; }
+#secoes section { background: var(--sec); border: 1px solid var(--line); padding: 0 24px 24px; }
+h2 {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 -24px 0; padding: 22px 24px 18px; background: var(--sec);
+  font-size: 29px; line-height: 1.1; font-weight: 700; letter-spacing: -.034em;
+}
+h2 span { letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+#lista { margin-top: 24px; }
+
+.card { color: inherit; text-decoration: none; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); }
+.card:hover { border-color: var(--ink); }
+.capa { position: relative; aspect-ratio: 1; background: var(--bar); overflow: hidden; border-bottom: 1px solid var(--line); }
+.capa img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.card:hover .capa img { transform: scale(1.03); }
+.sem-foto { position: absolute; inset: 0; display: grid; place-items: center; }
+.sem-foto::before { content: ""; width: 44%; aspect-ratio: 1; border-radius: 50%; background: var(--ink); opacity: .85; }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.info { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
+.titulo {
+  order: 1; font-size: 15px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.card:hover .titulo { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.preco { order: 2; margin-top: auto; padding-top: 12px; font-size: 18px; font-weight: 750; letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.extra { order: 3; font-size: 13px; color: var(--mut); }
+.site { display: none; order: 0; margin-bottom: 8px; }
+#lista .site, #resultados .site { display: block; }
+
+.vazio { grid-column: 1 / -1; margin: 0; padding: 72px 24px; font-size: 22px; font-weight: 700; letter-spacing: -.03em; text-align: center; background: var(--panel); border: 1px solid var(--line); }
+#secoes .vazio, #lista .vazio { margin-top: 0; }
+footer {
+  margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;
+  font-size: 13px; color: var(--mut);
+}
+footer strong { color: var(--ink); font-weight: 700; font-size: 16px; letter-spacing: -.03em; }
+footer .versao { margin-left: 8px; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 700px) {
+  main { padding: 0 16px 56px; }
+  .topo { padding: 10px 0; }
+  .topo h1 { font-size: 19px; gap: 8px; }
+  .topo h1::before { width: 30px; height: 30px; }
+  .acoes { gap: 6px; }
+  .link-topo { height: 34px; padding: 0 6px; }
+  .dig { min-width: 60px; height: 34px; padding: 0 12px; }
+  .barra { margin-top: 16px; padding: 20px; }
+  .barra b { font-size: 32px; }
+  .barra .lado { justify-content: space-between; }
+  .avisos { padding: 10px 20px; }
+  .controles { padding: 16px 20px; gap: 14px; }
+  .grupo { gap: 10px; }
+  .lista-arquivo a { grid-template-columns: 1fr auto; padding: 16px 20px; }
+  .lista-arquivo a::after { display: none; }
+  .lista-arquivo .quando { font-size: 20px; }
+  .lista-arquivo .onde { grid-column: 1 / -1; font-size: 13px; }
+  .busca { padding: 20px; }
+  .busca input { height: 52px; }
+  #secoes { margin-top: 16px; gap: 16px; }
+  #secoes section { padding: 0 12px 12px; }
+  h2 { font-size: 24px; margin: 0 -12px; padding: 16px 12px 14px; }
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .info { padding: 10px 10px 12px; }
+  .titulo { font-size: 14px; }
+  .preco { font-size: 16px; padding-top: 8px; }
+  .extra { font-size: 12px; }
+}
+</style><style>.dig{display:none!important}.topo .tema{display:none}.topo{justify-content:space-between}.arquivo-nav{margin-left:auto;font-size:15px;font-weight:500;color:inherit;text-decoration:none}.arquivo-nav:hover{text-decoration:underline}</style></head><body><main>
+
+<header class="topo">
+  <h1>Dig Dig Dig!</h1>
+  <nav class="acoes"><a class="link-topo" href="../arquivo.html">← Arquivo</a><button type="button" class="dig" id="dig" data-gatilho="" hidden>Dig</button></nav>
+</header>
+<div id="progresso" class="progresso" role="progressbar" aria-label="Andamento do Dig" aria-valuemin="0" aria-valuemax="100" hidden><i></i></div>
+<p id="status-dig" class="status-dig" role="status" hidden></p>
+
+<div class="barra">
+  <div><b>109 novos</b><span class="mut">Atualizado em 05.11.2026 às 11:01</span></div>
+  <div class="lado"><span>1570 acompanhados</span>
+    <button type="button" class="tema" id="tema" aria-label="Alternar tema claro/escuro">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 2a8 8 0 0 1 0 16z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+
+<div class="controles"><div class="grupo"><label for="menu-site">Site</label><select class="menu" id="menu-site" data-chave="site"><option value="">Todos os sites</option><option value="Enjoei">Enjoei</option><option value="Estante Virtual">Estante Virtual</option><option value="Sebo Casa Laranja">Sebo Casa Laranja</option></select></div><div class="grupo"><span>Preço</span><div class="teclas" data-chave="faixa"><button type="button" data-valor="" aria-pressed="true">Todos</button><button type="button" data-valor="ate50" aria-pressed="false">Até R$ 50</button><button type="button" data-valor="51a100" aria-pressed="false">R$ 51 a 100</button><button type="button" data-valor="mais100" aria-pressed="false">Mais de R$ 101</button></div></div><div class="grupo"><span>Ordem</span><div class="teclas" data-chave="ordem"><button type="button" data-valor="" aria-pressed="true">Por site</button><button type="button" data-valor="asc" aria-pressed="false">Menor preço</button><button type="button" data-valor="desc" aria-pressed="false">Maior preço</button></div></div></div><div id="lista" class="grade" hidden></div>
+<div id="secoes"><section class="tom-0" data-site="Enjoei"><h2>Enjoei <span>031</span></h2><div class="grade"><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-rei-dos-reis-mattos-nascimento-153505288" target="_blank" rel="noopener" data-site="Enjoei" data-preco="140"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy85ODIxNTc4LzM3YWM1MGU5OWJhNTg0Y2M5ODNhODU0NzFkNWE5ZWM1LmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil rei dos reis mattos nascimento</div><div class="preco">R$ 140</div><div class="extra">de R$ 150</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lulu-santos-eu-e-meme-meme-e-eu-1995-154239563" target="_blank" rel="noopener" data-site="Enjoei" data-preco="42"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy85ODIxNTc4LzNiZTEzNDRjNTRlODNhMGM5YzFhNDdkNWE1ZjhjZmZmLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lulu santos eu e memê memê e eu 1995</div><div class="preco">R$ 42</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-crosby-stills-amp-nash-replay-1981-154130186" target="_blank" rel="noopener" data-site="Enjoei" data-preco="148"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjkwNDkxMy9lZmZkYzliZTcyOTIzZjU4MGVkZTM0Yzc4YWZhMmQxMi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil crosby stills &amp; nash replay 1981</div><div class="preco">R$ 148</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-lp-iron-maiden-the-number-of-the-beast-154066583" target="_blank" rel="noopener" data-site="Enjoei" data-preco="150"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMTQ4MzMwNS81MmExMjE0YmQzZGU2YTg2NzJmMDdmOTMxYmRmNjcyYS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco lp iron maiden the number of the beast</div><div class="preco">R$ 150</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-talking-heads-little-creatures-1985-154084530" target="_blank" rel="noopener" data-site="Enjoei" data-preco="135"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjAzNTI5MC84M2RlNzM5OTk5ZWIyMGYzNzllZjYxNWQzMTBhOWZkZi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil talking heads little creatures 1985</div><div class="preco">R$ 135</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-eu-elizabeth-152629063" target="_blank" rel="noopener" data-site="Enjoei" data-preco="29"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMDA5MzYwNS80OWRjM2MxZWZlOGFkOTM1Nzk3MTRmYzA0MDFlMGY0Ny5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil eu elizabeth</div><div class="preco">R$ 29</div><div class="extra">de R$ 34</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-elis-regina-luz-das-estrelas-154130754" target="_blank" rel="noopener" data-site="Enjoei" data-preco="80"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zODc1NDIzNC81ZDQ1YTRhY2EyY2NmMjk3NTIxODZmMGFiNTc5Y2Q5Yy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil elis regina luz das estrelas</div><div class="preco">R$ 80</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-mara-lima-alem-da-morte-152915765" target="_blank" rel="noopener" data-site="Enjoei" data-preco="50"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzM3MjY0Ni9jZmIxZThhYmQzMmVhZDhmZGJkY2M0OTkxMzRkYTViMi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil mara lima além da morte</div><div class="preco">R$ 50</div><div class="extra">de R$ 56</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-nelson-goncalves-ao-vivo-50-anos-de-boemia-153864121" target="_blank" rel="noopener" data-site="Enjoei" data-preco="14"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC9lYjQ4YzExOWQ2N2E3MTNjNzYyMWEyMzBjZDU1MGUxMi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil nelson gonçalves ao vivo 50 anos de boemia</div><div class="preco">R$ 14</div><div class="extra">de R$ 15</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-taylor-swift-midnights-edicao-especial-152960639" target="_blank" rel="noopener" data-site="Enjoei" data-preco="385"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMzM5NzIzNi8xM2M3NTNiNDI0OGQyMGMyNmE4ZTQ4ZTU0NzQ4MTIwYS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil taylor swift midnights edição especial</div><div class="preco">R$ 385</div><div class="extra">de R$ 550</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/fagner-lp-maxi-single-nacional-usado-as-dores-do-mundo-1990-153044081" target="_blank" rel="noopener" data-site="Enjoei" data-preco="72"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTEyNjczNC83NWJiMWY5NzI3MzliNmEzZTNiNjkxNTNjMjM1ZGJjOS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">fagner lp maxi single nacional usado as dores do mundo 1990</div><div class="preco">R$ 72</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-santana-spirits-dancing-in-the-flesh-154200433" target="_blank" rel="noopener" data-site="Enjoei" data-preco="70"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yODg5MDEvOWUzYmYzODhjNGIzM2ZhNTA2YTNkMTM4MDBjMjc1MzUuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil santana spirits dancing in the flesh</div><div class="preco">R$ 70</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-george-benson-blue-benson-154217117" target="_blank" rel="noopener" data-site="Enjoei" data-preco="40"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM0NjkzMy84MzdkNGVlNjg5NmE5ZTVhMzljNjY2NzliOTBjYmU0Mi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil george benson blue benson</div><div class="preco">R$ 40</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-judas-priest-turbo-153509211" target="_blank" rel="noopener" data-site="Enjoei" data-preco="234"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMzAyODEwNS9jYzU3ZjUzYzEzNTAyZWFmZDM4MWE3M2VmOWNhZmU5My5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil judas priest turbo</div><div class="preco">R$ 234</div><div class="extra">de R$ 250</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-a-turma-do-balao-magico-1985-152749878" target="_blank" rel="noopener" data-site="Enjoei" data-preco="78"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy83NTQ1NjUvZTBiMzJiMDIyMzM4NzlhYmY2N2FiNmM0MWFjZGM3YTEuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp a turma do balão mágico 1985</div><div class="preco">R$ 78</div><div class="extra">de R$ 90</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/peter-paul-amp-mary-star-collection-vinil-1977-duplo-excelente-153113674" target="_blank" rel="noopener" data-site="Enjoei" data-preco="138"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjkwNDkxMy8xMmFhOWY1MDFmNTRkODQ4YmNhMzM1NmIzZjc2YzgyZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">peter, paul &amp; mary - star collection - vinil 1977 - duplo. excelente</div><div class="preco">R$ 138</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-brasa-tres-the-terribles-153200949" target="_blank" rel="noopener" data-site="Enjoei" data-preco="71"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjY1MDAyMi84NWVmNDNkZmFiOTFhNzk1MGEwMmQ0Njg3ZGQzY2UyYi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil brasa três the terribles</div><div class="preco">R$ 71</div><div class="extra">de R$ 80</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-irmas-galvao-lembrancas-153450169" target="_blank" rel="noopener" data-site="Enjoei" data-preco="76"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjY1MDAyMi8xZWM4MDllMGY2MzgxNjAyZDIwNmQxNDVlZTJmMzc3MS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil irmãs galvão lembranças</div><div class="preco">R$ 76</div><div class="extra">de R$ 80</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-joao-mineiro-e-marciano-1988-153569030" target="_blank" rel="noopener" data-site="Enjoei" data-preco="46"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjY1MDAyMi9lMTZhOGE1MjE2NjA4NDAyOTc5MDA4ODUxMmQ3NGEyNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp joão mineiro e marciano 1988</div><div class="preco">R$ 46</div><div class="extra">de R$ 50</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-quem-sou-eu-internacional-1989-153569530" target="_blank" rel="noopener" data-site="Enjoei" data-preco="46"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjY1MDAyMi83Mjg5YjQyNzMyYzE0MTIyODgzYWFmMWNiMmVmMDc4Ny5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp quem sou eu internacional 1989</div><div class="preco">R$ 46</div><div class="extra">de R$ 50</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-fonograma-nacional-vol-2-153003615" target="_blank" rel="noopener" data-site="Enjoei" data-preco="12"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC8wMDk1Y2FmNmNlMWNhMTgxOGE2YjI5ZmQ4OWY5OWM3Yi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil fonograma nacional vol 2</div><div class="preco">R$ 12</div><div class="extra">de R$ 15</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-compacto-giorgio-let-the-music-play-152500265" target="_blank" rel="noopener" data-site="Enjoei" data-preco="50"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy85ODIxNTc4LzFjZGRkNDkyNGY1MzFhYWZhZTRlNmNjYjFmYzZhMWRkLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco compacto giorgio let the music play</div><div class="preco">R$ 50</div><div class="extra">de R$ 60</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-madonna-like-a-virgin-154025267" target="_blank" rel="noopener" data-site="Enjoei" data-preco="130"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMTY4NjY3Ny81Y2Y5YzhiZjkwZmU4NDhjNDFmNjAwZjFhZGY4MGZjOS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp madonna like a virgin</div><div class="preco">R$ 130</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-agnaldo-timoteo-comanda-o-sucesso-1969-150546223" target="_blank" rel="noopener" data-site="Enjoei" data-preco="40"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTYyMTcxMS85NTk0YTkzZDVmYzQ0ZGE4YTJmMjQ4YTI5YWI0NWFlYS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp agnaldo timóteo comanda o sucesso 1969</div><div class="preco">R$ 40</div><div class="extra">de R$ 60</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-jane-duboc-so-nos-dois-153535179" target="_blank" rel="noopener" data-site="Enjoei" data-preco="85"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNzMzMTczMy9iZDI5ZmVhYWE0NDQ0OGU2ZjJhNjgxOTc5N2QxMWY4Zi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp jane duboc só nós dois</div><div class="preco">R$ 85</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-joao-bosco-afinal-de-contas-152514015" target="_blank" rel="noopener" data-site="Enjoei" data-preco="64"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNzA2NjYwNC8yMDliYTQ5NTNkZmY1MTcwMTJkOWIzNWE0MTUyYzg2ZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil joão bosco afinal de contas</div><div class="preco">R$ 64</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-yngwie-malmsteen-trilogy-154200299" target="_blank" rel="noopener" data-site="Enjoei" data-preco="179"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yODg5MDEvOTYxYzA1MWQ2YWE5YTE4NGIwOWVmMTg1OGNlMWQ2MDYuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil yngwie malmsteen trilogy</div><div class="preco">R$ 179</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-tony-damito-cortico-153873175" target="_blank" rel="noopener" data-site="Enjoei" data-preco="15"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTM2NzQ2MC8xMjVhODFkOTI1MWY2ODIwNzQzNTE4ZTAzODMzNDA2Yi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil tony damito cortiço</div><div class="preco">R$ 15</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-joanna-nascente-154267489" target="_blank" rel="noopener" data-site="Enjoei" data-preco="79"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjEwMTkvODQ0NGI3ZWFlMTcxZGYzOTg4MmI5MzJkNDc2ZGExYzQuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil joanna nascente</div><div class="preco">R$ 79</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-lacrado-novo-guns-n-roses-appetite-for-destruction-1987-reedicao-importada-154218748" target="_blank" rel="noopener" data-site="Enjoei" data-preco="360"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMDI5MzUxNi81NDQxYjQ0MzdmN2Y2OGE3ODMyMjQ0NjU1YWMyNmNlOS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp lacrado/novo guns n&#x27; roses - appetite for destruction (1987) reedição importada</div><div class="preco">R$ 360</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-diana-1972-cbs-154256986" target="_blank" rel="noopener" data-site="Enjoei" data-preco="179"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy83MjU3NDkvOGUyZTYzNzc1ZTBlMmMwZWRiZmVhN2ZlOGFhOTExZjEuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil diana 1972 cbs</div><div class="preco">R$ 179</div><div class="extra"></div></div></a></div></section><section class="tom-1" data-site="Estante Virtual"><h2>Estante Virtual <span>018</span></h2><div class="grade"><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-lote-com-15-discos-de-vinil-para-artesanato-e-decoracao-grp-TTE-5878-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="37.50"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TTE-5878-000/TTE-5878-000_detail1.jpg?ts=1793886065143?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Lote Com 15 Discos de Vinil Para Artesanato e Decoração</div><div class="preco">R$ 37,50</div><div class="extra">Varios · 2000</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-lote-com-40-lps-de-vinil-mpb-coletaneas-e-classicos-s-grp-TTE-5875-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="220.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TTE-5875-000/TTE-5875-000_detail1.jpg?ts=1793886076015?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Lote Com 40 Lps de Vinil - Mpb Coletâneas e Classicos (s</div><div class="preco">R$ 220,00</div><div class="extra">Varios · 2000</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-azymuth-light-as-a-feather-grp-TTB-9578-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="350.00"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Azymuth - Light As A Feather</div><div class="preco">R$ 350,00</div><div class="extra">Azymuth · 1979</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-aristides-santos-e-seu-conjunto-doidao-grp-TTB-9271-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="500.00"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Aristides Santos e Seu Conjunto - Doidão</div><div class="preco">R$ 500,00</div><div class="extra">Aristides Santos e Seu Conjunto · 1967</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-the-best-of-the-best-vol12-grp-TTB-0373-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="50.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TTB-0373-000/TTB-0373-000_detail1.jpg?ts=1793817691738?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - The Best Of The Best Vol.12</div><div class="preco">R$ 50,00</div><div class="extra">Vários</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-beat-master-07-grp-TTB-0370-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="50.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TTB-0370-000/TTB-0370-000_detail1.jpg?ts=1793817721878?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Beat Master 07.</div><div class="preco">R$ 50,00</div><div class="extra">Vários</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/07J-9212-000-BK" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="28.00"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">Blue Lock Vol. 4</div><div class="preco">R$ 28,00</div><div class="extra">Muneyuki Kaneshirio · 2022</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/07Q-8821-000-BK" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="15.00"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">Limite zero</div><div class="preco">R$ 15,00</div><div class="extra">Joe Vitale; Ihaleakala Hew Len · 2009</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/FVY-4339-000-BK" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="10.00"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">Na rota do perigo</div><div class="preco">R$ 10,00</div><div class="extra">Marcos Rey · 1991</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/FU7-9197-000-BK" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="43.92"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">A era do capital improdutivo</div><div class="preco">R$ 43,92</div><div class="extra">DOWBOR, LADISLAU · 2017</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/09E-6296-000-BK" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="35.00"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">Jesus de Nazaré</div><div class="preco">R$ 35,00</div><div class="extra">Joseph Ratzinger</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/FW0-4895-000-BK" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="25.00"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">O fenômeno pitesti</div><div class="preco">R$ 25,00</div><div class="extra">Virgil Ierunca · 2022</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/0PC-8870-000-BK" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="99.90"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">Física conceitual</div><div class="preco">R$ 99,90</div><div class="extra">Paul G. Hewitt · 2011</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/0B4-6395-000-BK" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="87.80"><div class="capa"><img src="https://estatico.estantevirtual.com.br/imagem/livro-loading.gif" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">Adivinha quanto eu te amo</div><div class="preco">R$ 87,80</div><div class="extra">Sam Mc Bratney · 2012</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-various-grease-the-original-soundtrack-from-the-motion-grp-TT8-4498-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="120.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TT8-4498-000/TT8-4498-000_detail1.jpg?ts=1793747961204?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Various - Grease: The Original Soundtrack From The Motion</div><div class="preco">R$ 120,00</div><div class="extra">Vários · 1978</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-saturday-night-fever-trilha-sonora-original-do-filme-grp-TT8-4497-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="100.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TT8-4497-000/TT8-4497-000_detail1.jpg?ts=1793745780578?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Saturday Night Fever - Trilha Sonora Original do Filme</div><div class="preco">R$ 100,00</div><div class="extra">Vários · 1978</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-the-best-of-louis-armstrong-1971-duplo-grp-TT8-3460-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="90.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TT8-3460-000/TT8-3460-000_detail1.jpg?ts=1793740519112?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">Lp Vinil: the Best of Louis Armstrong (1971) Duplo</div><div class="preco">R$ 90,00</div><div class="extra">Louis Armstrong · 1971</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-sucessos-inesqueciveis-de-cascatinha-inhana-1987-grp-TT8-3457-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="50.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TT8-3457-000/TT8-3457-000_detail1.jpg?ts=1793740449843?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">Lp Vinil: Sucessos Inesquecíveis de Cascatinha &amp; Inhana (1987)</div><div class="preco">R$ 50,00</div><div class="extra">Cascatinha &amp; Inhana · 1987</div></div></a></div></section><section class="tom-3" data-site="Sebo Casa Laranja"><h2>Sebo Casa Laranja <span>060</span></h2><div class="grade"><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-america-do-sol-mercedes-sosa-victor-jara-e-outros-1978-ujj0n/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="50.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-11-05-at-08-55-00-59c48dd18637acf04317938815057375-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP América do Sol - Mercedes Sosa, Victor Jara e outros (1978)</div><div class="preco">R$50,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-los-van-van-al-son-del-caribe-importado-sgp6p/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="100.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-11-05-at-08-55-01-074af5fe23fee02d1a17938814086656-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Los Van Van - Al son del Caribe (IMPORTADO)</div><div class="preco">R$100,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-mercedes-sosa-a-arte-de-duplo-mic2p/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="100.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-11-05-at-08-54-55-1-1b7e149d2a4b098b5117938813344831-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Mercedes Sosa - A Arte de (duplo)</div><div class="preco">R$100,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-10-discos-de-vinil-de-tango-77y0i/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="99.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000225172-f0a26616feb37d548317938783625880-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote com 10 discos de vinil de tango</div><div class="preco">R$99,00</div><div class="extra">de R$149,00</div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-10-discos-de-vinil-de-musica-italiana-diversos-c6874/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="119.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000225111-c2399f458e33809bd317938776502011-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote com 10 discos de vinil de música italiana diversos</div><div class="preco">R$119,00</div><div class="extra">de R$149,00</div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-10-discos-de-vinil-da-colecao-nova-historia-da-mpb-1y6gu/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="119.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-11-02-at-15-49-44-da346de7dba80a1df317936455057788-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote com 10 discos de vinil da coleção Nova História da MPB</div><div class="preco">R$119,00</div><div class="extra">de R$149,00</div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-10-discos-de-vinil-do-ray-conniff-1f4hy/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="119.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-11-02-at-15-39-07-4236cbcce588b1174b17936450401625-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote com 10 discos de vinil do Ray Conniff</div><div class="preco">R$119,00</div><div class="extra">de R$149,00</div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-10-discos-de-vinil-de-orquestras-brasileiras-e-afins-itwb5/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="119.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-11-02-at-15-32-28-c0ad85dfd89eb3236217936444283076-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote com 10 discos de vinil de orquestras brasileiras e afins</div><div class="preco">R$119,00</div><div class="extra">de R$149,00</div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-31-fitas-magnetica-de-audio-antigas-raridade-lt2-usado-lote-com-31-fitas-magnetica-de-audio-antigas-raridade-lt2-usado-lote-com-31-fitas-magnetica-de-audio-antigas-raridade-lt2-usado-lote-com-31-fitas-magnetica-de-audio-antigas-raridade-lt2-usado/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="1700.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-18-at-18-19-43-8b6f6c79b527b1382d17934498950071-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote Com 31 Fitas Magnética De Audio Antigas - Raridade</div><div class="preco">R$1.700,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-21-fitas-magnetica-de-audio-antigas-raridade-leia-a-descricao-1yrf4/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="1400.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-22-at-12-48-11-cb50f6130928c3aa5217934497841693-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote Com 21 Fitas Magnética De Audio Antigas - Raridade - Leia a Descrição</div><div class="preco">R$1.400,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-xuxa-xou-da-xuxa-vol-6-com-encarte-1i0wi/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="40.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-40-03-2-b7c3c0137dc992a9bf17932087664759-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Xuxa - Xou da Xuxa vol.6 com encarte</div><div class="preco">R$40,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-dilermando-pinheiro-sambas-do-passado-10-polegadas-keai0/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-40-03-4-c7711ed209e8cff84617932082427598-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Dilermando Pinheiro - Sambas do passado - 10 polegadas</div><div class="preco">R$30,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-rachel-mcfarlane-loveland-i-need-somebody-myorl/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="60.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-40-01-24f890232d42faf9b617932080785455-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Rachel Mcfarlane - Loveland i need somebody</div><div class="preco">R$60,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-a-caminho-do-sucesso-vol-1-tom-lima-young-brothers-etc-raro-2-71wd9/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-40-00-1-1f1ad6ef7404387a9c17932076205010-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp A Caminho Do Sucesso Vol.1 - Tom Lima, Young Brothers Etc RARO (2)</div><div class="preco">R$30,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-os-violinos-magicos-n-2-uqcam/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-40-00-3-65a944a3ef9c0949a617932070906695-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Os Violinos mágicos n.2</div><div class="preco">R$30,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-10-discos-de-vinil-de-cantores-brasileiros-antigos-velha-guarda-lt1-jbuoj/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="129.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000222438-ae10040f3e832a914317932057896451-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote com 10 discos de vinil de cantores brasileiros antigos - velha guarda lt1</div><div class="preco">R$129,00</div><div class="extra">de R$149,00</div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-10-discos-de-vinil-musica-instrumental-brasileira-qzjru/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="119.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000222425-24262e9a6367c4880117932044413030-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote com 10 discos de vinil musica instrumental brasileira</div><div class="preco">R$119,00</div><div class="extra">de R$149,00</div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-10-discos-de-vinil-de-samba-antigo-1poy0/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="129.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000222414-dd91dfe5d278ea30cd17932035876136-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote com 10 discos de vinil de samba antigo</div><div class="preco">R$129,00</div><div class="extra">de R$149,00</div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lote-com-10-discos-de-vinil-de-chorinho-1y21u/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="129.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000222393-6fca7320d2e0bb5e1417932025452438-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lote com 10 discos de vinil de chorinho</div><div class="preco">R$129,00</div><div class="extra">de R$149,00</div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-mapa-da-mina-internacional-leia-a-descricao-md8sz/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-59-1-765e029bfe5cbbec5117931980498102-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Trilha da Mapa da Mina Internacional - Leia a Descrição</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-roda-de-fogo-internacional-8qhc1/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-59-169ffa2d0afe19a92e17931978244683-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Trilha da Novela Roda de Fogo Internacional</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-baila-comigo-internacional-1p2rd/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000222377-04ffadcd877db02d0317931963723558-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Trilha da Novela Baila Comigo Internacional</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-agua-viva-internacional-w5czo/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-58-5976c78d5878418bde17931956983753-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Trilha Da Novela Água Viva Internacional</div><div class="preco">R$30,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-o-salvador-da-patria-nacional-ks5zo/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-51-1-3e030a1eb86d8dff2317931955484870-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Trilha da Novela O Salvador da Pátria Nacional</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-coracao-alado-internacional-6e8z0/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-51-690052fbb39e4a13de17931954934476-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Trilha da Novela Coração Alado Internacional</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-nina-nacional-1qavb/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-50-684d499869455d9de317931954394191-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Trilha da Novela Nina Nacional</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-de-corpo-e-alma-internacional-1374n/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-48-e719fb53e963b9c9ad17931952650492-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Trilha Da Novela De Corpo e Alma Internacional</div><div class="preco">R$25,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-top-model-nacional-1qjbz/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-47-9966991f82a710538017931951367662-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Trilha Da Novela Top Model Nacional</div><div class="preco">R$30,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-bebe-a-bordo-nacional-18fws/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-46-1-f50865bc67da4b7fd017931950003602-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Trilha Da Novela Bebê a Bordo Nacional</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-trilha-da-novela-bebe-a-bordo-internacional-1klk5/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-28-at-10-39-46-0b5179254cec911a5017931948820519-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Trilha Da Novela Bebê a Bordo Internacional</div><div class="preco">R$30,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-ultraje-a-rigor-crescendo-1hh3k/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="40.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000217760-26cc2dda163535fb5917930223391251-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Ultraje a rigor - Crescendo</div><div class="preco">R$40,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-as-boas-disco-1973-104vq/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="70.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-26-at-09-58-12-2-7fc6ca40bbf4d266ca17930220836021-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP As Boas - Disco 1973</div><div class="preco">R$70,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-chitaozinho-e-xororo-planeta-azul-com-encarte-13084/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="40.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-26-at-09-58-10-2-2b5514abb222745a9f17930216801054-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Chitãozinho e Xororó - Planeta AZul com encarte</div><div class="preco">R$40,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-chitaozinho-e-xororo-tudo-por-amor-2-13hqh/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-26-at-09-58-09-052ceb851e1a2bdfaf17930216297470-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Chitãozinho e Xororó - Tudo por amor (2)</div><div class="preco">R$30,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-chitaozinho-e-xororo-os-meninos-do-brasil-2-jm7g7/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-26-at-09-58-06-b7b3fda5921202c21917930213882771-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Chitãozinho e Xororó - Os meninos do Brasil (2)</div><div class="preco">R$30,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-xuxa-xou-da-xuxa-vol-3-1cmlx/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-26-at-09-58-06-1-7803a88f0da8e578f017930213085213-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Xuxa - Xou da Xuxa vol.3</div><div class="preco">R$25,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-mara-maravilha-curumim-1qpwp/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-26-at-09-58-06-2-91a12958a73c4511bd17930212483026-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Mara Maravilha - Curumim</div><div class="preco">R$25,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-estorias-infantis-o-urso-bolinha-e-outros-dpoby/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-26-at-09-58-07-bba227f8410008b37117930211826660-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Estórias infantis - O Urso Bolinha e outros</div><div class="preco">R$25,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-estorias-infantis-o-pintinho-qui-qui-ri-qui-e-outros-1p45b/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-26-at-09-58-05-a39854c3d9b85c6aae17930211227883-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Estórias infantis - O Pintinho Qui Qui Ri Qui e outros</div><div class="preco">R$25,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-orquestra-victor-brasileira-musicas-de-zequinha-de-abreu-10kr7/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="40.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/whatsapp-image-2026-10-26-at-09-58-04-1-636361667efa5235fc17930210456493-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">Lp Orquestra Victor Brasileira - Músicas de Zequinha de Abreu</div><div class="preco">R$40,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-paulo-diniz-quero-voltar-pra-bahia-odeon-capa-sanduiche-9nabl/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="190.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220861-3281c9f6453586304d17928730560241-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Paulo Diniz - Quero voltar pra Bahia - Odeon capa sanduiche</div><div class="preco">R$190,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-rimsky-korsakovs-greatest-hits-15cpq/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220920-3f0046fbb8b840917717928725323567-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Rimsky Korsakovs - Greatest Hits</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-dvorak-sinfonia-n-1-t828j/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220919-d8352cb454be9f23e717928725650436-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Dvorak - Sinfonia n.1</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-artur-rubinstein-valsas-de-chopin-1229z/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220918-713e06f0695ff03aa417928725882320-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Artur Rubinstein - Valsas de Chopin</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-brilhantissimo-vol-18-music-of-the-strauss-family-mmt8u/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220913-f19cc350d4eab50b2917928726165570-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Brilhantíssimo vol.18 - Music of the Strauss Family</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-leonard-bernstein-beethoven-oojf1/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220912-050559c78f592dce9a17928726445309-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Leonard Bernstein - Beethoven</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-grieg-1q67z/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220910-47738002d8a5665f9c17928727015025-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Grieg</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-schumann-15ab3/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220908-d66b7f26a1ddd9b00c17928727714133-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Schumann</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-schubert-mg4oo/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220907-a33685bef5fce031de17928728005267-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Schubert</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-operas-favoritas-grandes-aberturas-extlz/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220921-0dca64beb2208b05e317928712316120-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Operas Favoritas - Grandes aberturas</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-hebert-von-karajan-tchaikovsky-f6rs0/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220922-a099e5632b633d070d17928712737633-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Hebert Von Karajan - Tchaikovsky</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-magnificat-j-s-bach-ptire/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220924-5758191522469ac57d17928712978494-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Magnificat - J.S. Bach</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-wanda-landowska-cravo-bem-temperado-18x9w/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220925-a7a3b57330a03813b517928713181038-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Wanda Landowska - Cravo bem temperado</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-stravinsky-qsdip/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220927-4692b8b300b2daa82e17928715128767-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Stravinsky</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-rameali-10pxu/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220928-4b216bd81d42467b4f17928715537073-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Tchaikovsky</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-ravel-1sfw6/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220930-1cd6c39299685d061917928715996745-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Ravel</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-chopin-1pgf7/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220931-2338d55ff91d205cf517928716967601-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Chopin</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-scarlatti-18xpa/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220932-79f58c294f572769a217928719771301-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Scarlatti</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-cesar-franck-1cy8n/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220933-eb7d95dff1d308046317928720164684-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Cesar Franck</div><div class="preco">R$20,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.sebocasalaranja.com.br/produtos/lp-grandes-mestres-da-musica-prokofiev-emcd1/?entry_path=category" target="_blank" rel="noopener" data-site="Sebo Casa Laranja" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/002/271/131/products/1000220934-3094ed2f72566a50ae17928705182697-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Sebo Casa Laranja</div><div class="titulo">LP Grandes mestres da música Prokofiev</div><div class="preco">R$20,00</div><div class="extra"></div></div></a></div></section></div>
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.8</span></div><span>Enjoei · Estante Virtual · Estação Cultural · Sebo Casa Laranja · Sebo do Messias · Sebo do Vinil</span></footer>
+</main>
+<script>
+// Filtros por site e faixa de preço, e ordem por preço. "Por site" mantém os
+// grupos; ordenar por preço junta tudo numa lista única.
+const estado = { site: '', faixa: '', ordem: '' };
+const secoes = document.getElementById('secoes'), lista = document.getElementById('lista');
+const cards = [...document.querySelectorAll('#secoes .card')];
+const preco = c => c.dataset.preco === '' ? null : parseFloat(c.dataset.preco);
+// Faixas sem buracos: centavos entre 50 e 51 caem em "51 a 100", e assim por diante.
+const FAIXAS = { ate50: p => p <= 50, '51a100': p => p > 50 && p <= 100, mais100: p => p > 100 };
+const passa = c => (!estado.site || c.dataset.site === estado.site)
+  && (!estado.faixa || (preco(c) !== null && FAIXAS[estado.faixa](preco(c))));
+
+function atualizar() {
+  const { ordem } = estado;
+  if (!ordem) {
+    lista.hidden = true; lista.replaceChildren(); secoes.hidden = false;
+    cards.forEach(c => c.hidden = !passa(c));
+    secoes.querySelectorAll('section').forEach(s => {
+      const visiveis = s.querySelectorAll('.card:not([hidden])').length;
+      s.hidden = visiveis === 0;
+      s.querySelector('h2 span').textContent = String(visiveis).padStart(3, '0');
+    });
+    if (!cards.some(passa)) { lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>'; lista.hidden = false; }
+    return;
+  }
+  const escolhidos = cards.filter(passa).sort((a, b) => {
+    const pa = preco(a), pb = preco(b);
+    if (pa === null) return 1; if (pb === null) return -1;  // sem preço vai pro fim
+    return ordem === 'asc' ? pa - pb : pb - pa;
+  });
+  lista.replaceChildren(...escolhidos.map(c => { const n = c.cloneNode(true); n.hidden = false; return n; }));
+  secoes.hidden = true; lista.hidden = false;
+  if (!escolhidos.length) lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>';
+}
+
+// Tema: alterna entre claro e escuro e lembra a escolha neste navegador.
+const raiz = document.documentElement, sistemaEscuro = matchMedia('(prefers-color-scheme: dark)');
+const temaAtual = () => raiz.dataset.theme || (sistemaEscuro.matches ? 'dark' : 'light');
+const marcarTema = () => {
+  raiz.dataset.temaEfetivo = temaAtual();
+  document.getElementById('tema').setAttribute('aria-pressed', temaAtual() === 'dark');
+};
+document.getElementById('tema').addEventListener('click', () => {
+  raiz.dataset.theme = temaAtual() === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('digdigdig.tema', raiz.dataset.theme); } catch (e) {}
+  marcarTema();
+});
+sistemaEscuro.addEventListener('change', marcarTema);
+marcarTema();
+
+document.querySelectorAll('.menu').forEach(m => m.addEventListener('change', () => {
+  estado[m.dataset.chave] = m.value;
+  atualizar();
+}));
+
+document.querySelectorAll('.teclas').forEach(grupo => {
+  grupo.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    grupo.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    estado[grupo.dataset.chave] = b.dataset.valor;
+    atualizar();
+  });
+});
+
+// Botão Dig. Na página do servidor local (servidor.py, que responde em "estado"),
+// fala direto com ele. Na página publicada, manda "dig" para o tópico do ntfy que
+// o Mac escuta e acompanha pelo mesmo tópico os avisos inicio / progresso / fim.
+const dig = document.getElementById('dig'), gatilho = dig.dataset.gatilho;
+const ntfy = 'https://ntfy.sh/' + encodeURIComponent(gatilho);
+const pausa = ms => new Promise(ok => setTimeout(ok, ms));
+function mostrarDig(texto, {ocupado = false, erro = false, dica = ''} = {}) {
+  dig.hidden = false;
+  dig.disabled = ocupado;
+  dig.classList.toggle('erro', erro);
+  dig.textContent = texto;
+  dig.title = dica;
+}
+
+// --- barra de andamento, logo abaixo do topo (como no DigAmazon) ---
+// O Mac avisa a cada busca (um site/termo); entre um aviso e outro a barra
+// anda sozinha, no ritmo medido até ali.
+const SEG_POR_BUSCA = 8;  // ritmo esperado antes da primeira busca terminar
+const barra = document.getElementById('progresso'), linha = document.getElementById('status-dig');
+let andamento = null, relogio = null;
+function mostrarStatus(texto) { linha.hidden = !texto; linha.textContent = texto || ''; }
+function progresso(p) {
+  andamento = p;
+  barra.hidden = false;
+  if (!relogio) relogio = setInterval(desenharProgresso, 1000);
+  desenharProgresso();
+}
+function fimProgresso() {
+  clearInterval(relogio); relogio = null; andamento = null;
+  barra.hidden = true; mostrarStatus('');
+}
+function desenharProgresso() {
+  const p = andamento;
+  if (!p) return;
+  let pct, texto;
+  if (p.etapa === 'publicando') {
+    pct = 96; texto = p.texto || 'Pronto. Publicando o resultado…';
+  } else if (!p.total) {
+    pct = 2; texto = 'Abrindo o navegador…';
+  } else {
+    const ritmo = p.feitas > 0 ? Math.max(3, (p.quando - p.inicio) / 1000 / p.feitas) : SEG_POR_BUSCA;
+    const atual = Math.min(p.feitas + (Date.now() - p.quando) / 1000 / ritmo, p.feitas + .95);
+    const faltam = Math.max(5, Math.round((p.total - atual) * ritmo + 10));
+    pct = Math.max(2, atual / p.total * 92);
+    texto = `Cavando em ${p.site} · busca ${p.feitas + 1} de ${p.total} · faltam uns `
+      + (faltam < 60 ? `${faltam} s` : `${Math.round(faltam / 60)} min`);
+  }
+  barra.style.setProperty('--pct', pct.toFixed(1) + '%');
+  barra.setAttribute('aria-valuenow', Math.round(pct));
+  mostrarStatus(texto);
+}
+
+// --- página local ---
+async function lerEstado() {
+  const r = await fetch('estado', {cache: 'no-store'});
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function mostrarEstado(e) {
+  if (e.rodando) {
+    mostrarDig('Cavando…', {ocupado: true});
+    const p = e.progresso || {etapa: 'buscando', feitas: 0, total: 0, site: ''};
+    progresso({...p, inicio: Date.parse(e.inicio), quando: Date.parse(p.quando || e.inicio)});
+    return;
+  }
+  fimProgresso();
+  if (e.ok === false) mostrarDig('Falhou', {erro: true, dica: 'A última busca falhou — veja logs/buscador.log'});
+  else mostrarDig('Dig');
+}
+async function acompanharLocal() {
+  let e = await lerEstado();
+  mostrarEstado(e);
+  while (e.rodando) { await pausa(2000); e = await lerEstado(); mostrarEstado(e); }
+  if (e.ok) location.reload();
+}
+
+// --- página publicada ---
+async function avisosDesde(desde) {
+  const r = await fetch(`${ntfy}/json?poll=1&since=${desde}`, {cache: 'no-store'});
+  const texto = await r.text();
+  return texto.split('\n').filter(Boolean).map(l => JSON.parse(l)).filter(m => m.event === 'message');
+}
+const emAndamento = m => m === 'inicio' || m.startsWith('progresso:');
+function lerProgresso(aviso, inicio) {
+  // "progresso:3/10:buscando:Estante Virtual"
+  const [, conta = '0/0', etapa = 'buscando', ...site] = aviso.message.split(':');
+  const [feitas, total] = conta.split('/').map(Number);
+  return {etapa, feitas, total, site: site.join(':'), quando: aviso.time * 1000, inicio};
+}
+async function esperarPublicacao() {
+  // o GitHub leva cerca de 1 minuto para pôr no ar a página nova
+  mostrarDig('Publicando…', {ocupado: true});
+  progresso({etapa: 'publicando', texto: 'Pronto. O GitHub leva cerca de 1 minuto para pôr a página nova no ar…'});
+  const atual = document.querySelector('.barra').textContent;
+  for (let i = 0; i < 40; i++) {
+    await pausa(6000);
+    try {
+      const html = await (await fetch(location.pathname + '?t=' + Date.now(), {cache: 'no-store'})).text();
+      const nova = new DOMParser().parseFromString(html, 'text/html').querySelector('.barra');
+      if (nova && nova.textContent !== atual) return location.reload();
+    } catch (err) {}
+  }
+  location.reload();
+}
+async function acompanharOnline(desde) {
+  const limite = Date.now() + 15 * 60 * 1000;
+  let comecou = false;
+  while (Date.now() < limite) {
+    let avisos = [];
+    try { avisos = await avisosDesde(desde); } catch (err) {}
+    const ultimo = avisos.filter(m => m.message !== 'dig').pop();
+    const msg = ultimo?.message || '';
+    if (msg === 'fim:ok') return esperarPublicacao();
+    if (msg === 'fim:falha') {
+      fimProgresso();
+      return mostrarDig('Falhou', {erro: true, dica: 'A busca falhou no Mac — veja logs/buscador.log'});
+    }
+    if (msg === 'recente') {
+      mostrarDig('Já cavou', {ocupado: true, dica: 'Teve busca há menos de 10 minutos'});
+      mostrarStatus('Teve um Dig há menos de 10 minutos. Tente de novo daqui a pouco.');
+      await pausa(5000);
+      mostrarStatus('');
+      return mostrarDig('Dig');
+    }
+    if (emAndamento(msg)) {
+      comecou = true;
+      mostrarDig('Cavando…', {ocupado: true});
+      const inicio = (avisos.filter(m => m.message === 'inicio').pop() || ultimo).time * 1000;
+      progresso(lerProgresso(ultimo, inicio));
+    } else if (!comecou && Date.now() - desde * 1000 > 60000) {
+      mostrarDig('Na fila', {ocupado: true});
+      mostrarStatus('O Mac parece desligado ou dormindo. O pedido fica guardado e a busca roda quando ele acordar.');
+    }
+    await pausa(4000);
+  }
+  fimProgresso();
+  mostrarDig('Dig');
+}
+async function cavarOnline() {
+  const desde = Math.floor(Date.now() / 1000) - 2;
+  mostrarDig('Chamando…', {ocupado: true});
+  mostrarStatus('Chamando o Mac…');
+  try {
+    await fetch(ntfy, {method: 'POST', body: 'dig'});
+  } catch (err) {
+    mostrarStatus('');
+    return mostrarDig('Falhou', {erro: true, dica: 'Não consegui falar com o ntfy'});
+  }
+  acompanharOnline(desde);
+}
+
+let local = false;
+lerEstado().then(e => {
+  local = true;
+  mostrarEstado(e);
+  if (e.rodando) acompanharLocal();
+}).catch(async () => {
+  if (!gatilho) return;
+  mostrarDig('Dig');
+  // se já houver uma busca em andamento (pedida de outro aparelho), acompanha
+  try {
+    const desde = Math.floor(Date.now() / 1000) - 15 * 60;
+    const ultimo = (await avisosDesde(desde)).map(m => m.message).filter(m => emAndamento(m) || m.startsWith('fim:')).pop();
+    if (ultimo && emAndamento(ultimo)) acompanharOnline(desde);
+  } catch (err) {}
+});
+dig.addEventListener('click', async () => {
+  if (!local) return cavarOnline();
+  mostrarDig('Cavando…', {ocupado: true});
+  try {
+    await fetch('dig', {method: 'POST', headers: {'X-Dig': '1'}});
+    await acompanharLocal();
+  } catch (err) { fimProgresso(); mostrarDig('Falhou', {erro: true}); }
+});
+</script>
+</body></html>
