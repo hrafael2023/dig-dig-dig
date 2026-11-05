@@ -409,7 +409,7 @@ function desenharProgresso() {
   if (!p) return;
   let pct, texto;
   if (p.etapa === 'publicando') {
-    pct = 96; texto = 'Pronto. Publicando o resultado…';
+    pct = 96; texto = p.texto || 'Pronto. Publicando o resultado…';
   } else if (!p.total) {
     pct = 2; texto = 'Abrindo o navegador…';
   } else {
@@ -465,8 +465,7 @@ function lerProgresso(aviso, inicio) {
 async function esperarPublicacao() {
   // o GitHub leva cerca de 1 minuto para pôr no ar a página nova
   mostrarDig('Publicando…', {ocupado: true});
-  progresso({etapa: 'publicando'});
-  mostrarStatus('Pronto. O GitHub leva cerca de 1 minuto para pôr a página nova no ar…');
+  progresso({etapa: 'publicando', texto: 'Pronto. O GitHub leva cerca de 1 minuto para pôr a página nova no ar…'});
   const atual = document.querySelector('.barra').textContent;
   for (let i = 0; i < 40; i++) {
     await pausa(6000);
