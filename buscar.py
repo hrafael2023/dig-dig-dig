@@ -106,18 +106,29 @@ JS_CASA_LARANJA = """() => [...document.querySelectorAll('.js-item-product')].ma
   };
 })"""
 
-JS_ESTANTE = """() => [...document.querySelectorAll('.product-item')].map(c => {
+# Só a lista de resultados: no meio dela o site põe um carrossel de livros
+# recomendados (.recommendations), que também usa .product-item.
+JS_ESTANTE = """() => [...document.querySelectorAll('.product-list__items .product-item')]
+  .filter(c => !c.closest('.recommendations')).map(c => {
   const a = c.querySelector('a.product-item__link');
   const img = c.querySelector('.product-item__image');
   // fotos ainda não carregadas guardam a URL em data-src; "indisponivel" é a capa genérica de sem foto
   const foto = [img?.getAttribute('data-src'), img?.currentSrc, img?.getAttribute('src')]
-    .find(u => u && !u.startsWith('data:') && !u.includes('indisponivel'));
+    .find(u => u && !u.startsWith('data:') && !/indisponivel|loading/.test(u));
   const texto = sel => c.querySelector(sel)?.innerText.replace(/\\s+/g, ' ').trim() || '';
+  const titulo = a?.getAttribute('title') || texto('.product-item__name');
+  // muitos itens vêm sem <a>, só com data-code; o site aceita qualquer nome antes do código,
+  // mas o nome igual ao dele mantém o link igual ao dos discos já vistos
+  const nome = titulo.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9\\s]/g, '').trim().split(/\\s+/).join('-');
+  const codigo = c.getAttribute('data-code');
+  // a foto só carrega quando o item aparece na tela; as que não carregaram saem do código
+  const reserva = codigo && `https://static.estantevirtual.com.br/book/00/${codigo}/${codigo}_detail1.jpg?ims=fit-in/300x400/filters:fill(ffffff)`;
   return {
-    titulo: a?.getAttribute('title') || texto('.product-item__name'),
+    titulo,
     preco: texto('.product-item__sale-price').replace(/\\u00a0/g, ' '),
-    link: a?.href,
-    foto: foto ? new URL(foto, location.href).href : '',
+    link: a?.href || (codigo ? `${location.origin}/livro/${nome}-grp-${codigo}` : ''),
+    foto: foto ? new URL(foto, location.href).href : reserva || '',
     extra: [texto('.product-item__author'), texto('.product-item__year')].filter(Boolean).join(' · '),
   };
 })"""
