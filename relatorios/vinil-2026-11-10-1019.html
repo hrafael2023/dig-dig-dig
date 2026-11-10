@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dig Dig Dig!</title>
+<script>
+  // aplica o tema escolhido antes de pintar a página, para não piscar
+  try { const t = localStorage.getItem("digdigdig.tema"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%2317312f'/%3E%3Ccircle cx='24' cy='24' r='14' fill='%23fff'/%3E%3Ccircle cx='24' cy='24' r='4' fill='%2317312f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..800&display=swap" rel="stylesheet">
+<style>
+/* Dig Dig Dig! — no design system do FootyLogos: DM Sans, verde-escuro sobre
+   cinza-esverdeado, painéis brancos com borda fina, cantos retos e rótulos
+   pequenos em maiúsculas. */
+:root {
+  --bg: #f4f6f5;
+  --panel: #ffffff;
+  --ink: #17312f;
+  --mut: #53605c;
+  --eyebrow: #6e817a;
+  --line: #d9dfdc;
+  --bar: #eef1ef;
+  /* um tom por site, para separar as seções no scroll */
+  --tom-0: #eaf2ed; --tom-1: #f3efe4; --tom-2: #e9eef5;
+  --tom-3: #f4ebe8; --tom-4: #f0f1e2; --tom-5: #e7edee;
+  --tag-bg: #e8eeeb;
+  --tag-ink: #17312f;
+  --accent: #17312f;
+  --on-accent: #ffffff;
+  --dig: rgb(22, 19, 15);
+  --on-dig: #ffffff;
+  --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+/* Escuro: segue o sistema, a menos que o botão de tema tenha escolhido outro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1413;
+    --panel: #131d1c;
+    --ink: #e3ebe8;
+    --mut: #9aaba5;
+    --eyebrow: #7f938c;
+    --line: #253330;
+    --bar: #1a2725;
+    --tom-0: #14211c; --tom-1: #201d15; --tom-2: #151c25;
+    --tom-3: #221816; --tom-4: #1c1e14; --tom-5: #161d1f;
+    --tag-bg: #1d2b28;
+    --tag-ink: #d4e2dd;
+    --accent: #d4e2dd;
+    --on-accent: #0d1413;
+    --dig: #e3ebe8;
+    --on-dig: rgb(22, 19, 15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1413;
+  --panel: #131d1c;
+  --ink: #e3ebe8;
+  --mut: #9aaba5;
+  --eyebrow: #7f938c;
+  --line: #253330;
+  --bar: #1a2725;
+  --tom-0: #14211c; --tom-1: #201d15; --tom-2: #151c25;
+  --tom-3: #221816; --tom-4: #1c1e14; --tom-5: #161d1f;
+  --tag-bg: #1d2b28;
+  --tag-ink: #d4e2dd;
+  --accent: #d4e2dd;
+  --on-accent: #0d1413;
+  --dig: #e3ebe8;
+  --on-dig: rgb(22, 19, 15);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+/* garante que o atributo hidden vença os display: flex/grid de .card e .grade */
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased;
+}
+main { max-width: 1240px; margin: 0 auto; padding: 0 24px 72px; }
+/* rótulo pequeno em maiúsculas, como "FOOTBALL IDENTITY DATABASE" */
+.grupo > span, .grupo > label, .busca label, h2 span, .site {
+  font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--eyebrow);
+}
+
+/* Cabeçalho: faixa branca de ponta a ponta, logo à esquerda, ações à direita */
+.topo {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0;
+  background: var(--panel);
+  /* fundo e linha de baixo vazam até as bordas da janela sem criar rolagem lateral */
+  box-shadow: 0 0 0 100vmax var(--panel), 0 1px 0 100vmax var(--line); clip-path: inset(0 -100vmax -1px);
+}
+.topo h1 {
+  display: flex; align-items: center; gap: 10px; margin: 0;
+  font-size: 22px; line-height: 1; font-weight: 700; letter-spacing: -.04em;
+}
+/* marca: disco branco num quadrado verde, como o "FL" do FootyLogos */
+.topo h1::before {
+  content: ""; flex: none; width: 34px; height: 34px; border-radius: 8px;
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='17' cy='17' r='10' fill='%23fff'/%3E%3Ccircle cx='17' cy='17' r='3' fill='%2317312f'/%3E%3C/svg%3E") center / 100% no-repeat;
+}
+:root[data-tema-efetivo="dark"] .topo h1::before { background-color: #2c4a46; }
+/* Ações à direita do logo: link do Arquivo e botão Dig */
+.acoes { display: flex; align-items: center; gap: 8px; flex: none; }
+.link-topo {
+  display: inline-flex; align-items: center; height: 38px; padding: 0 10px;
+  color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 650;
+}
+.link-topo:hover { text-decoration: underline; text-underline-offset: 3px; }
+.topo .logo { color: inherit; text-decoration: none; }
+/* Botão Dig: o botão principal, cheio e reto */
+.dig {
+  flex: none; min-width: 76px; height: 38px; padding: 0 18px; border: 0; border-radius: 0; cursor: pointer;
+  background: var(--dig); color: var(--on-dig);
+  font: 750 13px/1 var(--sans); letter-spacing: .01em;
+}
+.dig:hover { opacity: .88; }
+.dig:focus-visible { outline: 2px solid var(--dig); outline-offset: 3px; }
+.dig:disabled { cursor: progress; opacity: 1; background: var(--tag-bg); color: var(--tag-ink); }
+.dig.erro { background: #b3261e; color: #fff; }
+
+/* Arquivo: os Digs numa tabela de linhas dentro de um painel */
+.lista-arquivo { list-style: none; margin: 16px 0 0; padding: 0; background: var(--panel); border: 1px solid var(--line); }
+.lista-arquivo li + li { border-top: 1px solid var(--line); }
+.lista-arquivo a {
+  display: grid; grid-template-columns: 200px 110px 1fr 16px; align-items: center; gap: 4px 24px;
+  padding: 18px 24px; color: var(--ink); text-decoration: none;
+}
+.lista-arquivo a::after { content: "→"; color: var(--eyebrow); }
+.lista-arquivo a:hover { background: var(--bar); }
+.lista-arquivo a:hover::after { color: var(--ink); }
+.lista-arquivo .quando { font-size: 22px; line-height: 1.1; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.lista-arquivo .quando small { margin-left: 8px; font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--mut); }
+.lista-arquivo .quantos { font-weight: 700; font-size: 14px; }
+.lista-arquivo .onde { color: var(--mut); font-size: 14px; }
+
+/* Busca no Arquivo: caixa branca com lupa, como a busca do FootyLogos */
+.busca { margin-top: 16px; padding: 28px 32px; background: var(--panel); border: 1px solid var(--line); }
+.busca label { display: block; margin-bottom: 12px; }
+.busca input {
+  width: 100%; height: 58px; padding: 0 16px 0 50px; border: 1px solid var(--ink); border-radius: 0;
+  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236e817a' stroke-width='1.8'%3E%3Ccircle cx='8.5' cy='8.5' r='6'/%3E%3Cpath d='M13 13l5 5' stroke-linecap='round'/%3E%3C/svg%3E") 18px center / 18px no-repeat;
+  color: var(--ink); outline: none; -webkit-appearance: none; appearance: none;
+  font: 400 16px/1.2 var(--sans);
+}
+.busca input::placeholder { color: var(--eyebrow); }
+.busca input:focus { box-shadow: 0 0 0 1px var(--ink); }
+#resultados .contagem { margin: 24px 0 16px; font-size: 13px; font-weight: 650; color: var(--mut); }
+
+/* Barra de andamento do Dig, logo abaixo do topo (como no DigAmazon) */
+.progresso { height: 4px; margin-top: 16px; background: var(--line); overflow: hidden; }
+.progresso i { display: block; height: 100%; width: var(--pct, 2%); background: var(--ink); transition: width 1s linear; }
+.status-dig { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--mut); }
+@media (prefers-reduced-motion: reduce) { .progresso i { transition: none; } }
+
+/* Barra de status: o painel de abertura, com o número em destaque */
+.barra {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px;
+  margin-top: 24px; padding: 28px 32px; background: var(--panel); border: 1px solid var(--line);
+  font-size: 14px; color: var(--mut);
+}
+.barra > div:first-child { display: flex; flex-direction: column; gap: 6px; }
+.barra b { font-size: 40px; line-height: 1; font-weight: 700; letter-spacing: -.05em; color: var(--ink); }
+.barra .mut { color: var(--mut); }
+.barra .lado { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-weight: 500; }
+/* Botão de tema, dentro do painel */
+.tema {
+  width: 34px; height: 34px; border: 1px solid var(--line); padding: 0; border-radius: 0; cursor: pointer;
+  background: var(--panel); color: var(--ink); display: grid; place-items: center;
+}
+.tema:hover { border-color: var(--ink); }
+.tema:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tema svg { width: 16px; height: 16px; transition: transform .3s; }
+:root[data-tema-efetivo="dark"] .tema svg { transform: rotate(180deg); }
+
+/* Avisos */
+.avisos { list-style: none; margin: 0; padding: 12px 32px; background: var(--panel); border: 1px solid var(--line); border-top: 0; font-size: 13px; color: var(--mut); }
+.avisos li { padding: 3px 0; }
+.avisos li::before { content: "→ "; color: var(--ink); }
+
+/* Filtros: painel colado ao de cima, botões retos com borda; o ativo fica cheio */
+.controles {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px 36px; margin: 0;
+  padding: 18px 32px; background: var(--panel); border: 1px solid var(--line); border-top: 0;
+}
+.grupo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.menu {
+  font: 650 12px/1 var(--sans); color: var(--ink); background-color: var(--panel);
+  border: 1px solid var(--line); border-radius: 0; height: 34px; padding: 0 34px 0 12px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 16px center, right 12px center; background-size: 4px 4px; background-repeat: no-repeat;
+}
+.menu:hover { border-color: var(--ink); }
+.menu:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.menu option { color: var(--ink); background: var(--panel); }
+.teclas { display: flex; flex-wrap: wrap; }
+.teclas button {
+  font: 650 12px/1 var(--sans); color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 0; height: 34px; padding: 0 12px; margin-left: -1px; cursor: pointer;
+}
+.teclas button:first-child { margin-left: 0; }
+.teclas button:hover { position: relative; border-color: var(--ink); }
+.teclas button[aria-pressed="true"] { position: relative; background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.teclas button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Seções: cada site é um painel com o seu tom, e o nome do site fica preso no
+   topo enquanto se rola — fica claro quando o site muda. */
+.tom-0 { --sec: var(--tom-0); } .tom-1 { --sec: var(--tom-1); } .tom-2 { --sec: var(--tom-2); }
+.tom-3 { --sec: var(--tom-3); } .tom-4 { --sec: var(--tom-4); } .tom-5 { --sec: var(--tom-5); }
+#secoes { margin-top: 24px; display: flex; flex-direction: column; gap: 24px; }
+#secoes section { background: var(--sec); border: 1px solid var(--line); padding: 0 24px 24px; }
+h2 {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 -24px 0; padding: 22px 24px 18px; background: var(--sec);
+  font-size: 29px; line-height: 1.1; font-weight: 700; letter-spacing: -.034em;
+}
+h2 span { letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+#lista { margin-top: 24px; }
+
+.card { color: inherit; text-decoration: none; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); }
+.card:hover { border-color: var(--ink); }
+.capa { position: relative; aspect-ratio: 1; background: var(--bar); overflow: hidden; border-bottom: 1px solid var(--line); }
+.capa img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.card:hover .capa img { transform: scale(1.03); }
+.sem-foto { position: absolute; inset: 0; display: grid; place-items: center; }
+.sem-foto::before { content: ""; width: 44%; aspect-ratio: 1; border-radius: 50%; background: var(--ink); opacity: .85; }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.info { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
+.titulo {
+  order: 1; font-size: 15px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.card:hover .titulo { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.preco { order: 2; margin-top: auto; padding-top: 12px; font-size: 18px; font-weight: 750; letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.extra { order: 3; font-size: 13px; color: var(--mut); }
+.site { display: none; order: 0; margin-bottom: 8px; }
+#lista .site, #resultados .site { display: block; }
+
+.vazio { grid-column: 1 / -1; margin: 0; padding: 72px 24px; font-size: 22px; font-weight: 700; letter-spacing: -.03em; text-align: center; background: var(--panel); border: 1px solid var(--line); }
+#secoes .vazio, #lista .vazio { margin-top: 0; }
+footer {
+  margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;
+  font-size: 13px; color: var(--mut);
+}
+footer strong { color: var(--ink); font-weight: 700; font-size: 16px; letter-spacing: -.03em; }
+footer .versao { margin-left: 8px; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 700px) {
+  main { padding: 0 16px 56px; }
+  .topo { padding: 10px 0; }
+  .topo h1 { font-size: 19px; gap: 8px; }
+  .topo h1::before { width: 30px; height: 30px; }
+  .acoes { gap: 6px; }
+  .link-topo { height: 34px; padding: 0 6px; }
+  .dig { min-width: 60px; height: 34px; padding: 0 12px; }
+  .barra { margin-top: 16px; padding: 20px; }
+  .barra b { font-size: 32px; }
+  .barra .lado { justify-content: space-between; }
+  .avisos { padding: 10px 20px; }
+  .controles { padding: 16px 20px; gap: 14px; }
+  .grupo { gap: 10px; }
+  .lista-arquivo a { grid-template-columns: 1fr auto; padding: 16px 20px; }
+  .lista-arquivo a::after { display: none; }
+  .lista-arquivo .quando { font-size: 20px; }
+  .lista-arquivo .onde { grid-column: 1 / -1; font-size: 13px; }
+  .busca { padding: 20px; }
+  .busca input { height: 52px; }
+  #secoes { margin-top: 16px; gap: 16px; }
+  #secoes section { padding: 0 12px 12px; }
+  h2 { font-size: 24px; margin: 0 -12px; padding: 16px 12px 14px; }
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .info { padding: 10px 10px 12px; }
+  .titulo { font-size: 14px; }
+  .preco { font-size: 16px; padding-top: 8px; }
+  .extra { font-size: 12px; }
+}
+</style><style>.dig{display:none!important}.topo .tema{display:none}.topo{justify-content:space-between}.arquivo-nav{margin-left:auto;font-size:15px;font-weight:500;color:inherit;text-decoration:none}.arquivo-nav:hover{text-decoration:underline}</style></head><body><main>
+
+<header class="topo">
+  <h1>Dig Dig Dig!</h1>
+  <nav class="acoes"><a class="link-topo" href="../arquivo.html">← Arquivo</a><button type="button" class="dig" id="dig" data-gatilho="" hidden>Dig</button></nav>
+</header>
+<div id="progresso" class="progresso" role="progressbar" aria-label="Andamento do Dig" aria-valuemin="0" aria-valuemax="100" hidden><i></i></div>
+<p id="status-dig" class="status-dig" role="status" hidden></p>
+
+<div class="barra">
+  <div><b>133 novos</b><span class="mut">Atualizado em 10.11.2026 às 10:19</span></div>
+  <div class="lado"><span>2876 acompanhados</span>
+    <button type="button" class="tema" id="tema" aria-label="Alternar tema claro/escuro">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 2a8 8 0 0 1 0 16z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+
+<div class="controles"><div class="grupo"><label for="menu-site">Site</label><select class="menu" id="menu-site" data-chave="site"><option value="">Todos os sites</option><option value="Enjoei">Enjoei</option><option value="Estação Cultural">Estação Cultural</option><option value="Made in Quebrada">Made in Quebrada</option></select></div><div class="grupo"><span>Preço</span><div class="teclas" data-chave="faixa"><button type="button" data-valor="" aria-pressed="true">Todos</button><button type="button" data-valor="ate50" aria-pressed="false">Até R$ 50</button><button type="button" data-valor="51a100" aria-pressed="false">R$ 51 a 100</button><button type="button" data-valor="mais100" aria-pressed="false">Mais de R$ 101</button></div></div><div class="grupo"><span>Ordem</span><div class="teclas" data-chave="ordem"><button type="button" data-valor="" aria-pressed="true">Por site</button><button type="button" data-valor="asc" aria-pressed="false">Menor preço</button><button type="button" data-valor="desc" aria-pressed="false">Maior preço</button></div></div></div><div id="lista" class="grade" hidden></div>
+<div id="secoes"><section class="tom-0" data-site="Enjoei"><h2>Enjoei <span>030</span></h2><div class="grade"><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-the-wonderful-world-of-country-amp-folk-154125614" target="_blank" rel="noopener" data-site="Enjoei" data-preco="27"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjU5MzIxNS9lYWM1MjFmZjFhNTNlMWVlNGQ5OGEzNDgzYTI0YTFlZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil the wonderful world of country &amp; folk</div><div class="preco">R$ 27</div><div class="extra">de R$ 28</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-in-concert-18-original-hits-k-tel-153972457" target="_blank" rel="noopener" data-site="Enjoei" data-preco="35"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjU5MzIxNS84OTAwNGRjMDkwZTNkMWE1MjIzMjgyNTYzNGNlN2VlNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp in concert 18 original hits k-tel</div><div class="preco">R$ 35</div><div class="extra">de R$ 39</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-neil-diamond-jonathan-livingston-seagull-154473415" target="_blank" rel="noopener" data-site="Enjoei" data-preco="35"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjU5MzIxNS9iNjg0NDhhNDZmY2FkNDAxYTA3NWQ3ZjQxMWU4ZTEzZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil neil diamond jonathan livingston seagull</div><div class="preco">R$ 35</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-ozzy-osbourne-bark-at-the-moon-153142879" target="_blank" rel="noopener" data-site="Enjoei" data-preco="162"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMTIwMDYxMS84MjY5Zjc5YmYyZjU5YzA2ZTQ5MzhmNmZmN2EwZDRmMC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil ozzy osbourne bark at the moon</div><div class="preco">R$ 162</div><div class="extra">de R$ 180</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-trilha-sonora-amor-sem-fim-endless-love-154565936" target="_blank" rel="noopener" data-site="Enjoei" data-preco="86"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMjUxMjMyNy9lNjZkYzkyZTUyMTQxZTU5ODAwMzY1ODgxNWI3NGZmNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil trilha sonora amor sem fim endless love</div><div class="preco">R$ 86</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-ivan-lins-ao-vivo-20-anos-153719816" target="_blank" rel="noopener" data-site="Enjoei" data-preco="46"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy83MjkwOTc4L2NjZDNiNTEzOTU1ZGQxMzBlNDE1NjVkMzk5N2FlOWZmLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil ivan lins ao vivo 20 anos</div><div class="preco">R$ 46</div><div class="extra">de R$ 50</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-gilliard-visagem-especial-149117664" target="_blank" rel="noopener" data-site="Enjoei" data-preco="30"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNzU0NjU1NS80NjkwMjkyNzhkYTNjYzUxYzBlNWU5ODdiM2Y0MmQ5OC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp gilliard visagem + especial</div><div class="preco">R$ 30</div><div class="extra">de R$ 60</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-roberto-carlos-1972-cbs-154209155" target="_blank" rel="noopener" data-site="Enjoei" data-preco="24"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzI2NTI2Mi9mNzgzY2M4MzljNzMwNzA3ZGI4NDUyZTRjNTI5MGVkZi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil roberto carlos 1972 cbs</div><div class="preco">R$ 24</div><div class="extra">de R$ 25</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-ginga-pura-nada-igual-153977733" target="_blank" rel="noopener" data-site="Enjoei" data-preco="29"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMjAwMTQxMC84NDJiZmI3ODFiNmRkN2NkOGM4NjhhYTM2NmRmNGI1Mi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil ginga pura nada igual</div><div class="preco">R$ 29</div><div class="extra">de R$ 30</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-lp-vinil-crosby-stills-nash-young-american-dream-1988-original-vintage-antigo-raro-com-encarte-152941001" target="_blank" rel="noopener" data-site="Enjoei" data-preco="101"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNTk2MjEzOS81NWEwZWQ2N2M4NDdjMTVhMjczZmZjN2RmMTYxYzgxZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco lp vinil crosby,stills,nash,young&quot;american dream&quot;1988,original,vintage,antigo,raro,com encarte</div><div class="preco">R$ 101</div><div class="extra">de R$ 119</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-vinil-cartola-1974-polysom-154406135" target="_blank" rel="noopener" data-site="Enjoei" data-preco="259"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTk4Mzc5My85YzVkNTdjZjhkYmMxNjA5YzVlZTdmNTM4ZjFjZmNjMi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp vinil cartola 1974 polysom</div><div class="preco">R$ 259</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lote-2-vinis-the-mission-gods-own-medicine-children-154430439" target="_blank" rel="noopener" data-site="Enjoei" data-preco="300"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MDEwNDIxMC81YzFjMmI3YzdhODhkMGQ4NGIxZDhjM2ZjMTc3OWVkMS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lote 2 vinis the mission gods own medicine children</div><div class="preco">R$ 300</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-os-gaiteiros-1986-vol-6-disco-de-vinil-153691309" target="_blank" rel="noopener" data-site="Enjoei" data-preco="40"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMTczOTM1Ny8yMTBlM2M2MTIwY2RiNjY2YTkxMmJiYjk5M2I3NzM2YS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp os gaiteiros 1986 vol. 6, disco de vinil</div><div class="preco">R$ 40</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-gabriela-sim-livre-153851521" target="_blank" rel="noopener" data-site="Enjoei" data-preco="61"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yODUxMTU4OS9lYjgwNmE4ZDE2YmI0Njc3ZWEyOTk5NmNkOGE3ODUyMi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil gabriela sim livre</div><div class="preco">R$ 61</div><div class="extra">de R$ 65</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-cartola-1976-154583298" target="_blank" rel="noopener" data-site="Enjoei" data-preco="250"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80Mzc0NjM3Mi9jOWUxMWY2MDY4NDg3NGI5ODlmOWQyMzczMjc0M2Y5Ni5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil cartola 1976</div><div class="preco">R$ 250</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-madonna-you-can-dance-152933878" target="_blank" rel="noopener" data-site="Enjoei" data-preco="199"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNzY0NTk0Mi9lZjAyZGZlYzU5YTkwY2RiMzk3ZWQzMDc3ZmFlZDJjZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil madonna you can dance</div><div class="preco">R$ 199</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-nat-king-cole-1977-sings-amp-plays-the-original-king-cole-trio-153307153" target="_blank" rel="noopener" data-site="Enjoei" data-preco="129"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNzY0NTk0Mi9jMzljNTcyYTI3NTFiNGUwMTczMWY4NzRiMjc1MWE2Ny5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp nat king cole 1977 sings &amp; plays - the original &quot;king cole trio&quot;</div><div class="preco">R$ 129</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-trini-lopez-more-trini-lopez-at-pj-s-154500681" target="_blank" rel="noopener" data-site="Enjoei" data-preco="65"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzAwNTg4MS83ZTJkNTI0NzVjNzc0NDRkYzNjYzRiMjc3MTMyN2I5ZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil trini lopez more trini lopez at pj&#x27;s</div><div class="preco">R$ 65</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-paulinho-da-viola-historia-da-musica-popular-152744515" target="_blank" rel="noopener" data-site="Enjoei" data-preco="31"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNzU0NjU1NS9kMDUyNzJmMGI2ODM5NDhlY2NmYmQ1N2U1NTdkMWZmZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil paulinho da viola história da música popular</div><div class="preco">R$ 31</div><div class="extra">de R$ 37</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-michael-jackson-16-original-greatest-hits-153865437" target="_blank" rel="noopener" data-site="Enjoei" data-preco="168"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTg2Mjc2NC8xYzBlNDNkMDM2YzIyYzNjOWI2MWNhYjdmOTJjMzRlYy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil michael jackson 16 original greatest hits</div><div class="preco">R$ 168</div><div class="extra">de R$ 180</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-tina-turner-let-s-stay-together-154372635" target="_blank" rel="noopener" data-site="Enjoei" data-preco="80"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy81NDAyMDQvY2Q3MTU2YTQ0NThjZjNmMjJmOGY4ZWEwOTJiNTk0MWMuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil tina turner let&#x27;s stay together</div><div class="preco">R$ 80</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-fleetwood-mac-tango-in-the-night-152403751" target="_blank" rel="noopener" data-site="Enjoei" data-preco="299"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNzY0NTk0Mi84ZjAxOWQzMTU3ZWMyN2Q3MjVkOTM0Y2M0Y2Y5MTExMC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil fleetwood mac tango in the night</div><div class="preco">R$ 299</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-chaves-trilha-sonora-original-1989-154321749" target="_blank" rel="noopener" data-site="Enjoei" data-preco="110"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy83OTQ0MzU0Lzg5MDExODZhNDRkZTcwMmNkYzllN2E5Yzk0OTZlYjEwLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil chaves trilha sonora original 1989</div><div class="preco">R$ 110</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-disco-de-vinil-britney-spears-oops-i-did-it-again-picture-disc-153757681" target="_blank" rel="noopener" data-site="Enjoei" data-preco="475"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy83MjAyMTQ2L2MyZjZlOTVjNTY5MjkwZGVkYjM0MTAzNTRkZjdhODkzLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp disco de vinil britney spears oops i did it again picture disc</div><div class="preco">R$ 475</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-title-fight-compacto-153928418" target="_blank" rel="noopener" data-site="Enjoei" data-preco="170"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMDMxODUyNy85ZDEzYzU1YWUyNGM3MmZhMzBiNGU2Y2U3OWJhZmU5Yy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil title fight compacto</div><div class="preco">R$ 170</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-luiz-melodia-maravilhas-contemporaneas-azul-154213305" target="_blank" rel="noopener" data-site="Enjoei" data-preco="250"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMDcwMzAzNS9jMDhiOGY5NzA1MmRhODAwYmFkYWI5ZDM5ZDZkNmMzMi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil luiz melodia maravilhas contemporâneas azul</div><div class="preco">R$ 250</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-vinicius-e-toquinho-philips-154456634" target="_blank" rel="noopener" data-site="Enjoei" data-preco="110"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMjE1MjE0MS85ODU3MzdkZWEwYjdlNDgyODAwNjY0MDE4ZDA2ZWQxZi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil vinicius e toquinho philips</div><div class="preco">R$ 110</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-o-prestigio-de-caetano-veloso-154583155" target="_blank" rel="noopener" data-site="Enjoei" data-preco="95"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjc1NDA1Mi8zZjdjNDdjM2U2MmE2OTZmMzc3ZDU0ZjM3Yzg5N2MwNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp o prestígio de caetano veloso</div><div class="preco">R$ 95</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-o-melhor-de-moraes-moreira-1990-152444851" target="_blank" rel="noopener" data-site="Enjoei" data-preco="56"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMjcxMDA2Ni85ZGRmYjkxY2M0OWM1ZGYxNDI0NmM1OTEyZTM5YjBlNC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil o melhor de moraes moreira 1990</div><div class="preco">R$ 56</div><div class="extra">de R$ 69</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-hits-brasil-iii-153896421" target="_blank" rel="noopener" data-site="Enjoei" data-preco="30"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMzE0NTI2MS84NmEyMjAzNDEzMjBhNzE4NWY0MjdlZGE4M2QxMGZiMS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil hits brasil iii</div><div class="preco">R$ 30</div><div class="extra">de R$ 32</div></div></a></div></section><section class="tom-2" data-site="Estação Cultural"><h2>Estação Cultural <span>007</span></h2><div class="grade"><a class="card tom-2" href="https://estacaocultural.com.br/produto/dominguinhos-quem-me-levara-sou-eu-dominguinhos/34449173/2032089" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="27.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34449173.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Dominguinhos - Quem Me Levará Sou Eu — Dominguinhos</div><div class="preco">R$ 27,00</div><div class="extra">Condição: Usado · Universitário de Marília</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/picture-traitor-picture/34449151/2032088" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34449151.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Picture - Traitor — Picture</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Universitário de Marília</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/queen-samantha-the-letter-queen-samantha/34449127/2032087" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="27.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34449127.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Queen Samantha - The Letter — Queen Samantha</div><div class="preco">R$ 27,00</div><div class="extra">Condição: Usado · Universitário de Marília</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/matogrosso-e-mathias-24-horas-de-amor-matogrosso-e-mathias/34449199/2032083" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="45.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34449199.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">MATOGROSSO E MATHIAS = 24 HORAS DE AMOR = — MATOGROSSO E MATHIAS</div><div class="preco">R$ 45,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/annihilation-of-the-wicked-nile/34449183/2032070" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="285.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34449183.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">ANNIHILATION OF THE WICKED — NILE</div><div class="preco">R$ 285,00</div><div class="extra">Condição: Usado · Estação Cultural Taubaté</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/tom-petty-e-the-heartbreakers-live-at-the-fillmore-1997-tom-petty-e-the-heartbreakers/34449157/2032069" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="266.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34449157.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">TOM PETTY E THE HEARTBREAKERS LIVE AT THE FILLMORE - 1997 — TOM PETTY E THE HEARTBREAKERS</div><div class="preco">R$ 266,00</div><div class="extra">Condição: Novo · Estação Cultural Taubaté</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/no-heavy-petting-ufo/34449116/2032068" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="361.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34449116.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">NO HEAVY PETTING — UFO</div><div class="preco">R$ 361,00</div><div class="extra">Condição: Novo · Estação Cultural Taubaté</div></div></a></div></section><section class="tom-3" data-site="Made in Quebrada"><h2>Made in Quebrada <span>096</span></h2><div class="grade"><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-edu-lobo-missa-breve-n5rcy/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="145.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000740287-1cdd1cfd046ee3a02f17940066497576-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Edu Lobo Missa Breve</div><div class="preco">R$145,00</div><div class="extra">de R$290,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-seu-jorge-the-other-side-1y0io/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="135.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000740289-5af31e40da9ec4c83d17940065684623-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Seu Jorge The Other Side</div><div class="preco">R$135,00</div><div class="extra">de R$270,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-adele-30-qij22/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000740264-328c058413e67ae35017940045981545-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Adele 30</div><div class="preco">R$260,00</div><div class="extra">de R$380,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-jorja-smith-falling-or-flying-168fl/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="249.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000740253-cea0343acae66f650d17940039655646-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Jorja Smith Falling or Flying</div><div class="preco">R$249,00</div><div class="extra">de R$329,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-alice-in-chains-4903a/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="460.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000730428-a2c08097c78a482d1d17932901075668-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Alice in Chains</div><div class="preco">R$460,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-doug-carn-infant-eyes-black-jazz-1e4wc/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="269.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000730397-322ecc6a2b0323c4d417932887933073-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Doug Carn Infant Eyes Black Jazz</div><div class="preco">R$269,00</div><div class="extra">de R$320,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-weezer-2019-1d7n3/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="249.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000730302-7116fda6ef16d0bbdd17932871795090-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Weezer 2019</div><div class="preco">R$249,00</div><div class="extra">de R$280,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-death-grips-the-money-store-146v8/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="190.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000717277-dbf0adfe2a061d375717926021878414-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Death Grips The Money Store</div><div class="preco">R$190,00</div><div class="extra">de R$250,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-tarcis-todo-mundo-ama-o-sol-z1rf8/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="189.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000717088-60b2b77dbb1a06f25b17925968014721-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Tarcis Todo Mundo Ama o Sol</div><div class="preco">R$189,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/disco-de-vinil-lp-andrea-me-leva-pra-casa-15dwk/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297852-5fc7dff77397882d8417921857283482-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Disco De Vinil Lp Andréa Me Leva Pra Casa</div><div class="preco">R$20,00</div><div class="extra">de R$40,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/disco-de-vinil-lp-markinhos-moura-sabor-de-mim-1jnbh/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297857-c1fe3b4f61ef8fda1b17921857727606-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Disco De Vinil Lp Markinhos Moura Sabor De Mim</div><div class="preco">R$30,00</div><div class="extra">de R$60,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-thalias-mixtape-o056w/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297847-5526f60d9e1c49989417921846194976-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco De Vinil Thalia Mixtape</div><div class="preco">R$260,00</div><div class="extra">de R$309,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-iii-banks-18e8x/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="145.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297842-9d9ab46d3ebc40521917921847125000-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco De Vinil III Banks</div><div class="preco">R$145,00</div><div class="extra">de R$290,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-elton-john-a-single-man/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="60.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297788-e2db9537003552f82717921823129869-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Elton John A Single Man</div><div class="preco">R$60,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-carpenters-a-song-for-you/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="39.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297793-b7aa1f87fdb9c927d617921823781123-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Carpenters A Song For You</div><div class="preco">R$39,00</div><div class="extra">de R$45,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-boy-george-sold/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297796-59fc3dff7fd4fef15917921824061279-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Boy George Sold</div><div class="preco">R$30,00</div><div class="extra">de R$60,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-barbra-streisand-evergreens/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="175.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297801-4f6c6af9cbd75f6c0817921824414709-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Barbra Streisand Evergreens</div><div class="preco">R$175,00</div><div class="extra">de R$350,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-my-name-is-barbra-two/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="47.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297804-ed1668de73e845e5a717921824769400-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil My Name Is Barbra, Two</div><div class="preco">R$47,50</div><div class="extra">de R$95,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-hits-5/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="60.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297808-12504b2b402514f32e17921825064450-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Hits 5</div><div class="preco">R$60,00</div><div class="extra">de R$120,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-ofra-haza-shaday/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="65.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297815-e1b828730088daad3e17921825508074-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Ofra Haza Shaday</div><div class="preco">R$65,00</div><div class="extra">de R$80,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-l-s-dunes-past-lives-6dpg0/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="239.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000708307-c7705bf5a8aedf8c1717921790341892-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil L.S. Dunes Past Lives</div><div class="preco">R$239,00</div><div class="extra">de R$290,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-baiana-system-o-mundo-da-voltas-1ale1/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="190.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297672-50d5d27f0fc4bdd2a617921653497269-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco De Vinil Baiana System O Mundo Dá Voltas</div><div class="preco">R$190,00</div><div class="extra">de R$240,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-de-la-soul-3-feet-high-and-rising-copia-1i7zy/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="369.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000688753-ead485f168e31f18fe17909607396192-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil De La Soul 3 Feet High And Rising (Rosa)</div><div class="preco">R$369,00</div><div class="extra">de R$390,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-13th-floor-elevators-bull-of-the-woods/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="259.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261002_122038-c79aeb46f5a2971a2a17909554056796-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil 13th Floor Elevators Bull Of The Woods</div><div class="preco">R$259,00</div><div class="extra">de R$295,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-the-offspring-ignition/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261002_122132-bb924755c389270c9617909554204713-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil The Offspring Ignition</div><div class="preco">R$260,00</div><div class="extra">de R$309,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-lady-gaga-born-this-way-the-tenth-anniversary/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="620.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261002_122353-f2990fbf3eaf083a2017909554790872-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Lady Gaga Born This Way (The Tenth Anniversary)</div><div class="preco">R$620,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-zizi-possi-amor-musica/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_153851-91b0d208f193a8a7ca17908862481714-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Zizi Possi Amor &amp; Música</div><div class="preco">R$25,00</div><div class="extra">de R$50,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-tete-espindola-gaiola/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154044-51e1ebd93e24020ac117908862717821-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Tetê Espíndola Gaiola</div><div class="preco">R$25,00</div><div class="extra">de R$50,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-simone-14-grandes-sucessos/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="45.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154159-764a6ad166816eedb217908862941454-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Simone 14 Grandes Sucessos</div><div class="preco">R$45,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-rita-lee-roberto-bombom/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="85.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154319-678fd97adaf520d9bc17908863196216-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Rita Lee &amp; Roberto Bombom</div><div class="preco">R$85,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-roberto-carlos-e-erasmo-carlos-sonia-mello-vol-2/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154523-5994cc55389323638217908863586244-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Sonia Mello Roberto Carlos e Erasmo Carlos Vol.2</div><div class="preco">R$25,00</div><div class="extra">de R$50,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-nara-leao-paulo-autran-tereza-rachel-oduvaldo-vianna-filho-liberdade-liberdade/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="130.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154632-979d5f68674259ff6b17908863952451-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Nara Leão, Paulo Autran, Tereza Rachel, Oduvaldo Vianna Filho - Liberdade, Liberdade</div><div class="preco">R$130,00</div><div class="extra">de R$260,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-marina-olhos-felizes/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="95.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154823-1aab5da4194bb4b6fe17908864200919-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Marina Olhos Felizes</div><div class="preco">R$95,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-os-maiores-sucessos-de-marina/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="50.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155004-8ee14e948ce6ef760917908864451952-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Os Maiores Sucessos De Marina</div><div class="preco">R$50,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-marina-simples-como-fogo/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="160.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155053-5d0ea09b3d506eace317908864674098-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Marina Simples Como Fogo</div><div class="preco">R$160,00</div><div class="extra">de R$180,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-maria-bethania-alteza/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="65.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155153-b28860386e0e06fdc617908866683664-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Maria Bethânia Alteza</div><div class="preco">R$65,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-maria-bethania-ao-vivo/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="37.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155248-a9e311d9d8ba73ba7b17908867676781-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Maria Bethânia Ao Vivo</div><div class="preco">R$37,50</div><div class="extra">de R$75,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-maria-bethania-as-cancoes-que-voce-fez-pra-mim/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="190.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155352-f3ab572377c6c1aedd17908868546435-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Maria Bethânia As Canções Que Você Fez Pra Mim</div><div class="preco">R$190,00</div><div class="extra">de R$240,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-marisa-barroso-1962/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="185.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155545-d695ad1d22a7b6e22f17908869968441-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Marisa Barroso 1962</div><div class="preco">R$185,00</div><div class="extra">de R$370,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-marisa-barroso-astor-silva/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="375.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155754-7026e4cbaf2570cf0817908871179509-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Marisa Barroso &amp; Astor Silva</div><div class="preco">R$375,00</div><div class="extra">de R$750,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-leila-pinheiro-bencao-bossa-nova/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_160138-0b64115f75b48cbc3617908872047634-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Leila Pinheiro Benção Bossa Nova</div><div class="preco">R$20,00</div><div class="extra">de R$40,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-wlm-company-double-split-vol-i/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="60.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_113142-84b2df4dfe4010555817908752899099-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil WLM Company Double Split Vol. I</div><div class="preco">R$60,00</div><div class="extra">de R$120,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-lady-pank-drop-everything/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="115.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_113335-a30419f761695dfa7a17908753097418-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Lady Pank Drop Everything</div><div class="preco">R$115,00</div><div class="extra">de R$230,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-die-toten-hosen-fiesta-y-ruido-die-toten-hosen-live-in-argentinien/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="197.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_115206-a3e2966288ce57707917908754227391-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Die Toten Hosen Fiesta Y Ruido - Die Toten Hosen Live In Argentinien</div><div class="preco">R$197,50</div><div class="extra">de R$395,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-rafa-ponde-brazillian-reggae-experience-vol-2/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="140.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_115534-226b20ecff0dcd8ea517908754787294-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Rafa Pondé Brazillian Reggae Experience Vol.2</div><div class="preco">R$140,00</div><div class="extra">de R$199,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-panic-at-the-disco-too-weird-to-live-too-rare-to-die/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/d_q_np_947183-mlc42907314894_072020-f-191fc98dce1e4b51fe17907832094641-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Panic! At The Disco Too Weird To Live, Too Rare To Die!</div><div class="preco">R$260,00</div><div class="extra">de R$295,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-milo-j-la-vida-era-mas-corta/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="620.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/81q3wiqiqhl-_ac_sl1200_-bacaf73333aac064da17907832475930-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Milo J La Vida Era Más Corta</div><div class="preco">R$620,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-mastodon-the-hunter/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/71s2drhqngl-_ac_sl1273_-a78ac197c9624b6d5a17907832732949-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Mastodon The Hunter</div><div class="preco">R$260,00</div><div class="extra">de R$295,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-chet-baker-sings/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="279.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/r-2930625-1437056636-5751-aed8b41cac5ee6b40f17907833887219-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Chet Baker Sings</div><div class="preco">R$279,00</div><div class="extra">de R$325,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-linda-ronstadt-prisoner-in-disguise/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="145.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260924_183350-70e2a70d1e539efdaf17907792542861-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Linda Ronstadt Prisoner In Disguise</div><div class="preco">R$145,00</div><div class="extra">de R$290,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-the-who-tommy-the-movie-trilha-sonora-original/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="120.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260924_183654-31507546bab249e95217907794144888-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil The Who Tommy The Movie - Trilha Sonora Original</div><div class="preco">R$120,00</div><div class="extra">de R$150,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-the-beatles-love-songs/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="160.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260924_184303-3ce5ca76e9e811c38f17907795179474-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil The Beatles Love Songs</div><div class="preco">R$160,00</div><div class="extra">de R$190,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-zappa-them-or-us/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="190.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260924_184542-7003732a65e2ff26bc17907793545311-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Zappa Them Or Us</div><div class="preco">R$190,00</div><div class="extra">de R$250,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-emerson-lake-palmer-works/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="120.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260924_184806-517cffac2d25de3b8117907793256390-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Emerson Lake &amp; Palmer Works</div><div class="preco">R$120,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/compacto-punk-chelo-lion-and-his-yellow-fingers-xosuo/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="42.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000680493-549342a7e3b522655e17901964944911-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Compacto Punk Chelo Lion and His Yellow Fingers</div><div class="preco">R$42,50</div><div class="extra">de R$85,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-kleiton-kledir-1981-1hthz/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000680030-6895f2297e2e5c68b817901151491676-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Kleiton &amp; Kledir 1981</div><div class="preco">R$20,00</div><div class="extra">de R$40,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-tim-maia-racional-volume-3-16p5n/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="299.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000679928-074d16766d3729143517901097626727-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Tim Maia Racional Volume 3</div><div class="preco">R$299,00</div><div class="extra">de R$390,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-rico-dalasam-fim-das-tentativas-19l4i/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="230.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000679789-c3af526a30716463de17901031803871-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Rico Dalasam Fim das Tentativas</div><div class="preco">R$230,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/compacto-projeto-nave-e-sombra-snj-1apzj/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="75.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000678975-1c864490fb6c037a9717900275705223-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Compacto Projeto Nave e Sombra Snj</div><div class="preco">R$75,00</div><div class="extra">de R$95,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/compacto-projeto-nave-rapadura-alem-mar-nzid7/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="75.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000678973-1ec0bcc3731007ff2117900274474730-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Compacto Projeto Nave Rapadura Além Mar</div><div class="preco">R$75,00</div><div class="extra">de R$95,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-dona-onete-bagaceira-1o9yq/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="190.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000678965-7bb0e323856dde984a17900259703969-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Dona Onete Bagaceira</div><div class="preco">R$190,00</div><div class="extra">de R$230,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-os-gatos-durval-ferreira-w8evy/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="159.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000678602-41b79e6e97d4e2286917900061483668-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Os Gatos Durval Ferreira</div><div class="preco">R$159,00</div><div class="extra">de R$250,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-air-supply-now-and-forever/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="47.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_122217-509654e78e1fe8279817896610217408-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Air Supply Now And Forever</div><div class="preco">R$47,50</div><div class="extra">de R$95,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-the-alan-parsons-project-vulture-culture/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="95.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_122350-21b83d438cbb16372c17896610646857-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil The Alan Parsons Project Vulture Culture</div><div class="preco">R$95,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-the-alan-parsons-project-ammonia-avenue/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="32.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_122525-cccd4cebc9114dc09b17896610418009-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil The Alan Parsons Project Ammonia Avenue</div><div class="preco">R$32,50</div><div class="extra">de R$65,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-the-style-council-cafe-bleu/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="45.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_122906-962d9d0b1599f9120b17896611171172-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil The Style Council Café Bleu</div><div class="preco">R$45,00</div><div class="extra">de R$90,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-huey-lewis-and-the-news-hard-at-play/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_123011-f892639ab5549db89217896610941595-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Huey Lewis And The News Hard At Play</div><div class="preco">R$30,00</div><div class="extra">de R$60,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-u2-sunday-bloody-sunday-special-u-s-remixes/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="70.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_123503-aa79430a3f2b5fe78017896611576537-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil U2 Sunday Bloody Sunday + Special U.S Remixes</div><div class="preco">R$70,00</div><div class="extra">de R$80,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-wagner-tiso/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="60.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_123939-98998e0193d591123217896612640142-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Wagner Tiso</div><div class="preco">R$60,00</div><div class="extra">de R$80,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-dance-mix-2/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_124105-fb3b344814c198ad4717896614416707-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Dance Mix 2</div><div class="preco">R$25,00</div><div class="extra">de R$50,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-afrika-gumbe/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="60.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_124213-1f290664c6b213259b17896613445688-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Afrika Gumbe</div><div class="preco">R$60,00</div><div class="extra">de R$120,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-preme-alegria-dos-homens/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="22.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_124414-6a305d5bf116857b9317896615334498-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Premê Alegria Dos Homens</div><div class="preco">R$22,50</div><div class="extra">de R$45,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-christopher-cross-every-turn-of-the-world/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="42.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_124611-6de5a2c4ff5646582f17896614991347-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Christopher Cross Every Turn Of The World</div><div class="preco">R$42,50</div><div class="extra">de R$85,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-bad-company-fame-and-fortune/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="40.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_124750-621abc9b2448a60fb817896614747510-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Bad Company Fame And Fortune</div><div class="preco">R$40,00</div><div class="extra">de R$80,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-barrabas-heart-of-the-city/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="40.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_125215-e0134ff2f4975c535d17896614034588-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Barrabas Heart Of The City</div><div class="preco">R$40,00</div><div class="extra">de R$80,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-bonnie-tyler-bitterblue/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="40.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20260917_125318-8ae805865fd11364b117896615593897-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Bonnie Tyler Bitterblue</div><div class="preco">R$40,00</div><div class="extra">de R$80,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-weezer/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="249.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4520787-3695946-fd40c484b260069c0d17894977352434-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Weezer</div><div class="preco">R$249,00</div><div class="extra">de R$309,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-oasis-definitely-maybe/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="520.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/r-5073915-1467817136-4160-89cb6d5974e1b4c55f17894979828577-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Oasis Definitely Maybe</div><div class="preco">R$520,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-sam-smith-hazel-eyes/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="299.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4525750-3687756-af141bd3883717a36b17894974753202-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Sam Smith Hazel Eyes</div><div class="preco">R$299,00</div><div class="extra">de R$350,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-phoebe-bridgers-lost-weekend/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="340.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4524725-3673745-f718b2dda53ebf20c317894973311566-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Phoebe Bridgers Lost Weekend</div><div class="preco">R$340,00</div><div class="extra">de R$370,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-pale-jay-low-end-love-songs/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="270.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4358531-3223560-f0a02e9e6014a564d417894973087125-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Pale Jay Low End Love Songs</div><div class="preco">R$270,00</div><div class="extra">de R$295,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-neu-neu-2/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="239.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1646945-ec28b8201a9a6a37de17894972294520-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Neu! Neu 2</div><div class="preco">R$239,00</div><div class="extra">de R$280,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-metallica-master-of-puppets/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="289.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000679999-5ce338c758d9ef21c317901143195677-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Metallica Master Of Puppets</div><div class="preco">R$289,00</div><div class="extra">de R$310,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-metallica-kill-em-all/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="289.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000680011-f9b86ce5c35312cb2a17901144687953-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Metallica Kill Em All</div><div class="preco">R$289,00</div><div class="extra">de R$310,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-melvins-stoner-witch/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="379.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/3797282-3ea4bb5c8539d091dd17894971514600-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Melvins Stoner Witch</div><div class="preco">R$379,00</div><div class="extra">de R$420,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-kanye-west-jesus-is-king/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="310.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/3812364-2557532-e115012d5ed241480e17894944071692-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Kanye West JESUS IS KING</div><div class="preco">R$310,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-iron-maiden-the-number-of-the-beast/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="279.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4400080-3595264-7aaab064ef3aad525417894943026431-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Iron Maiden The Number of the Beast</div><div class="preco">R$279,00</div><div class="extra">de R$295,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-interpol-this-mirror-weighs-a-ton-colorido-exclusivo-deluxe/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="240.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/r-38091960-1788893833-5531-29328219e2949d8aa117894942784711-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Interpol This Mirror Weighs a Ton (COLORIDO EXCLUSIVO / DELUXE)</div><div class="preco">R$240,00</div><div class="extra">de R$389,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-horse-meat-disco-presents-disco-boogie-from-brazil-vol-1/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="369.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4402607-3322380-eda9e1a21bb9753c4f17894941564568-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Horse Meat Disco Presents Disco &amp; Boogie From Brazil Vol. 1</div><div class="preco">R$369,00</div><div class="extra">de R$390,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-guns-n-roses-use-your-illusion-ii/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="450.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4137433-2891747-c0886ac4bbde65700117894941043803-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Guns N Roses Use Your Illusion II</div><div class="preco">R$450,00</div><div class="extra">de R$490,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-guns-n-roses-use-your-illusion-i/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="450.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4137432-2891744-02abdad600751ee6cb17894940710702-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Guns N Roses Use Your Illusion I</div><div class="preco">R$450,00</div><div class="extra">de R$490,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-geto-boys-we-cant-be-stopped-35th-anniversary/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="249.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4511571-3667073-c17c0e8734edb799f817894940220119-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Geto Boys We Can&#x27;t Be Stopped (35th Anniversary)</div><div class="preco">R$249,00</div><div class="extra">de R$380,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-fontaines-d-c-a-heros-death/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/3822563-2582182-c2861c4f3db6fc3d1617894940006680-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Fontaines D.C. A Hero&#x27;s Death</div><div class="preco">R$260,00</div><div class="extra">de R$280,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-fela-kuti-open-close/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="259.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/3986189-2724506-231698cb8955417cd617894939485421-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Fela Kuti Open &amp; Close</div><div class="preco">R$259,00</div><div class="extra">de R$280,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-fela-kuti-music-of-many-colours/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="249.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/3744319-2510262-91e737e780b539f70617894939064054-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Fela Kuti Music Of Many Colours</div><div class="preco">R$249,00</div><div class="extra">de R$280,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-ezra-collective-dance-no-ones-watching/?entry_path=category" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="289.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/4375417-3269866-c4639a3f17773c826617894938841012-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Ezra Collective Dance, No One&#x27;s Watching</div><div class="preco">R$289,00</div><div class="extra">de R$380,00</div></div></a></div></section></div>
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.11</span></div><span>Enjoei · Estante Virtual · Estação Cultural · Made in Quebrada · Sebo Casa Laranja · Sebo do Messias · Sebo do Vinil</span></footer>
+</main>
+<script>
+// Filtros por site e faixa de preço, e ordem por preço. "Por site" mantém os
+// grupos; ordenar por preço junta tudo numa lista única.
+const estado = { site: '', faixa: '', ordem: '' };
+const secoes = document.getElementById('secoes'), lista = document.getElementById('lista');
+const cards = [...document.querySelectorAll('#secoes .card')];
+const preco = c => c.dataset.preco === '' ? null : parseFloat(c.dataset.preco);
+// Faixas sem buracos: centavos entre 50 e 51 caem em "51 a 100", e assim por diante.
+const FAIXAS = { ate50: p => p <= 50, '51a100': p => p > 50 && p <= 100, mais100: p => p > 100 };
+const passa = c => (!estado.site || c.dataset.site === estado.site)
+  && (!estado.faixa || (preco(c) !== null && FAIXAS[estado.faixa](preco(c))));
+
+function atualizar() {
+  const { ordem } = estado;
+  if (!ordem) {
+    lista.hidden = true; lista.replaceChildren(); secoes.hidden = false;
+    cards.forEach(c => c.hidden = !passa(c));
+    secoes.querySelectorAll('section').forEach(s => {
+      const visiveis = s.querySelectorAll('.card:not([hidden])').length;
+      s.hidden = visiveis === 0;
+      s.querySelector('h2 span').textContent = String(visiveis).padStart(3, '0');
+    });
+    if (!cards.some(passa)) { lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>'; lista.hidden = false; }
+    return;
+  }
+  const escolhidos = cards.filter(passa).sort((a, b) => {
+    const pa = preco(a), pb = preco(b);
+    if (pa === null) return 1; if (pb === null) return -1;  // sem preço vai pro fim
+    return ordem === 'asc' ? pa - pb : pb - pa;
+  });
+  lista.replaceChildren(...escolhidos.map(c => { const n = c.cloneNode(true); n.hidden = false; return n; }));
+  secoes.hidden = true; lista.hidden = false;
+  if (!escolhidos.length) lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>';
+}
+
+// Tema: alterna entre claro e escuro e lembra a escolha neste navegador.
+const raiz = document.documentElement, sistemaEscuro = matchMedia('(prefers-color-scheme: dark)');
+const temaAtual = () => raiz.dataset.theme || (sistemaEscuro.matches ? 'dark' : 'light');
+const marcarTema = () => {
+  raiz.dataset.temaEfetivo = temaAtual();
+  document.getElementById('tema').setAttribute('aria-pressed', temaAtual() === 'dark');
+};
+document.getElementById('tema').addEventListener('click', () => {
+  raiz.dataset.theme = temaAtual() === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('digdigdig.tema', raiz.dataset.theme); } catch (e) {}
+  marcarTema();
+});
+sistemaEscuro.addEventListener('change', marcarTema);
+marcarTema();
+
+document.querySelectorAll('.menu').forEach(m => m.addEventListener('change', () => {
+  estado[m.dataset.chave] = m.value;
+  atualizar();
+}));
+
+document.querySelectorAll('.teclas').forEach(grupo => {
+  grupo.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    grupo.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    estado[grupo.dataset.chave] = b.dataset.valor;
+    atualizar();
+  });
+});
+
+// Botão Dig. Na página do servidor local (servidor.py, que responde em "estado"),
+// fala direto com ele. Na página publicada, manda "dig" para o tópico do ntfy que
+// o Mac escuta e acompanha pelo mesmo tópico os avisos inicio / progresso / fim.
+const dig = document.getElementById('dig'), gatilho = dig.dataset.gatilho;
+const ntfy = 'https://ntfy.sh/' + encodeURIComponent(gatilho);
+const pausa = ms => new Promise(ok => setTimeout(ok, ms));
+function mostrarDig(texto, {ocupado = false, erro = false, dica = ''} = {}) {
+  dig.hidden = false;
+  dig.disabled = ocupado;
+  dig.classList.toggle('erro', erro);
+  dig.textContent = texto;
+  dig.title = dica;
+}
+
+// --- barra de andamento, logo abaixo do topo (como no DigAmazon) ---
+// O Mac avisa a cada busca (um site/termo); entre um aviso e outro a barra
+// anda sozinha, no ritmo medido até ali.
+const SEG_POR_BUSCA = 8;  // ritmo esperado antes da primeira busca terminar
+const barra = document.getElementById('progresso'), linha = document.getElementById('status-dig');
+let andamento = null, relogio = null;
+function mostrarStatus(texto) { linha.hidden = !texto; linha.textContent = texto || ''; }
+function progresso(p) {
+  andamento = p;
+  barra.hidden = false;
+  if (!relogio) relogio = setInterval(desenharProgresso, 1000);
+  desenharProgresso();
+}
+function fimProgresso() {
+  clearInterval(relogio); relogio = null; andamento = null;
+  barra.hidden = true; mostrarStatus('');
+}
+function desenharProgresso() {
+  const p = andamento;
+  if (!p) return;
+  let pct, texto;
+  if (p.etapa === 'publicando') {
+    pct = 96; texto = p.texto || 'Pronto. Publicando o resultado…';
+  } else if (!p.total) {
+    pct = 2; texto = 'Abrindo o navegador…';
+  } else {
+    const ritmo = p.feitas > 0 ? Math.max(3, (p.quando - p.inicio) / 1000 / p.feitas) : SEG_POR_BUSCA;
+    const atual = Math.min(p.feitas + (Date.now() - p.quando) / 1000 / ritmo, p.feitas + .95);
+    const faltam = Math.max(5, Math.round((p.total - atual) * ritmo + 10));
+    pct = Math.max(2, atual / p.total * 92);
+    texto = `Cavando em ${p.site} · busca ${p.feitas + 1} de ${p.total} · faltam uns `
+      + (faltam < 60 ? `${faltam} s` : `${Math.round(faltam / 60)} min`);
+  }
+  barra.style.setProperty('--pct', pct.toFixed(1) + '%');
+  barra.setAttribute('aria-valuenow', Math.round(pct));
+  mostrarStatus(texto);
+}
+
+// --- página local ---
+async function lerEstado() {
+  const r = await fetch('estado', {cache: 'no-store'});
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function mostrarEstado(e) {
+  if (e.rodando) {
+    mostrarDig('Cavando…', {ocupado: true});
+    const p = e.progresso || {etapa: 'buscando', feitas: 0, total: 0, site: ''};
+    progresso({...p, inicio: Date.parse(e.inicio), quando: Date.parse(p.quando || e.inicio)});
+    return;
+  }
+  fimProgresso();
+  if (e.ok === false) mostrarDig('Falhou', {erro: true, dica: 'A última busca falhou — veja logs/buscador.log'});
+  else mostrarDig('Dig');
+}
+async function acompanharLocal() {
+  let e = await lerEstado();
+  mostrarEstado(e);
+  while (e.rodando) { await pausa(2000); e = await lerEstado(); mostrarEstado(e); }
+  if (e.ok) location.reload();
+}
+
+// --- página publicada ---
+async function avisosDesde(desde) {
+  const r = await fetch(`${ntfy}/json?poll=1&since=${desde}`, {cache: 'no-store'});
+  const texto = await r.text();
+  return texto.split('\n').filter(Boolean).map(l => JSON.parse(l)).filter(m => m.event === 'message');
+}
+const emAndamento = m => m === 'inicio' || m.startsWith('progresso:');
+function lerProgresso(aviso, inicio) {
+  // "progresso:3/10:buscando:Estante Virtual"
+  const [, conta = '0/0', etapa = 'buscando', ...site] = aviso.message.split(':');
+  const [feitas, total] = conta.split('/').map(Number);
+  return {etapa, feitas, total, site: site.join(':'), quando: aviso.time * 1000, inicio};
+}
+async function esperarPublicacao() {
+  // o GitHub leva cerca de 1 minuto para pôr no ar a página nova
+  mostrarDig('Publicando…', {ocupado: true});
+  progresso({etapa: 'publicando', texto: 'Pronto. O GitHub leva cerca de 1 minuto para pôr a página nova no ar…'});
+  const atual = document.querySelector('.barra').textContent;
+  for (let i = 0; i < 40; i++) {
+    await pausa(6000);
+    try {
+      const html = await (await fetch(location.pathname + '?t=' + Date.now(), {cache: 'no-store'})).text();
+      const nova = new DOMParser().parseFromString(html, 'text/html').querySelector('.barra');
+      if (nova && nova.textContent !== atual) return location.reload();
+    } catch (err) {}
+  }
+  location.reload();
+}
+async function acompanharOnline(desde) {
+  const limite = Date.now() + 15 * 60 * 1000;
+  let comecou = false;
+  while (Date.now() < limite) {
+    let avisos = [];
+    try { avisos = await avisosDesde(desde); } catch (err) {}
+    const ultimo = avisos.filter(m => m.message !== 'dig').pop();
+    const msg = ultimo?.message || '';
+    if (msg === 'fim:ok') return esperarPublicacao();
+    if (msg === 'fim:falha') {
+      fimProgresso();
+      return mostrarDig('Falhou', {erro: true, dica: 'A busca falhou no Mac — veja logs/buscador.log'});
+    }
+    if (msg === 'recente') {
+      mostrarDig('Já cavou', {ocupado: true, dica: 'Teve busca há menos de 10 minutos'});
+      mostrarStatus('Teve um Dig há menos de 10 minutos. Tente de novo daqui a pouco.');
+      await pausa(5000);
+      mostrarStatus('');
+      return mostrarDig('Dig');
+    }
+    if (emAndamento(msg)) {
+      comecou = true;
+      mostrarDig('Cavando…', {ocupado: true});
+      const inicio = (avisos.filter(m => m.message === 'inicio').pop() || ultimo).time * 1000;
+      progresso(lerProgresso(ultimo, inicio));
+    } else if (!comecou && Date.now() - desde * 1000 > 60000) {
+      mostrarDig('Na fila', {ocupado: true});
+      mostrarStatus('O Mac parece desligado ou dormindo. O pedido fica guardado e a busca roda quando ele acordar.');
+    }
+    await pausa(4000);
+  }
+  fimProgresso();
+  mostrarDig('Dig');
+}
+async function cavarOnline() {
+  const desde = Math.floor(Date.now() / 1000) - 2;
+  mostrarDig('Chamando…', {ocupado: true});
+  mostrarStatus('Chamando o Mac…');
+  try {
+    await fetch(ntfy, {method: 'POST', body: 'dig'});
+  } catch (err) {
+    mostrarStatus('');
+    return mostrarDig('Falhou', {erro: true, dica: 'Não consegui falar com o ntfy'});
+  }
+  acompanharOnline(desde);
+}
+
+let local = false;
+lerEstado().then(e => {
+  local = true;
+  mostrarEstado(e);
+  if (e.rodando) acompanharLocal();
+}).catch(async () => {
+  if (!gatilho) return;
+  mostrarDig('Dig');
+  // se já houver uma busca em andamento (pedida de outro aparelho), acompanha
+  try {
+    const desde = Math.floor(Date.now() / 1000) - 15 * 60;
+    const ultimo = (await avisosDesde(desde)).map(m => m.message).filter(m => emAndamento(m) || m.startsWith('fim:')).pop();
+    if (ultimo && emAndamento(ultimo)) acompanharOnline(desde);
+  } catch (err) {}
+});
+dig.addEventListener('click', async () => {
+  if (!local) return cavarOnline();
+  mostrarDig('Cavando…', {ocupado: true});
+  try {
+    await fetch('dig', {method: 'POST', headers: {'X-Dig': '1'}});
+    await acompanharLocal();
+  } catch (err) { fimProgresso(); mostrarDig('Falhou', {erro: true}); }
+});
+</script>
+</body></html>
