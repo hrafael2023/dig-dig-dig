@@ -166,6 +166,8 @@ SITES = {
     "shopee.com.br": ("Shopee", JS_SHOPEE),
     "estacaocultural.com.br": ("Estação Cultural", JS_ESTACAO),
     "sebocasalaranja.com.br": ("Sebo Casa Laranja", JS_CASA_LARANJA),
+    # mesma plataforma de loja do Casa Laranja (Nuvemshop), mesmo leitor
+    "madeinquebradadiscos.com.br": ("Made in Quebrada", JS_CASA_LARANJA),
     "estantevirtual.com.br": ("Estante Virtual", JS_ESTANTE),
     "sebodovinil.com.br": ("Sebo do Vinil", JS_SEBO_VINIL),
 }
