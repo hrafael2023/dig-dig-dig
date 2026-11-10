@@ -24,7 +24,8 @@ https://estacaocultural.com.br/produtos/DISCO-DE-VINIL?filtro=novidade&offset=30
 # (a página carrega mais itens ao rolar; o buscador pega os ~60 mais recentes)
 https://www.sebocasalaranja.com.br/discos-de-vinil/?sort_by=created-descending
 
-https://www.madeinquebradadiscos.com.br/discos-de-vinil/?sort_by=price-ascending
+https://www.madeinquebradadiscos.com.br/discos-de-vinil/?sort_by=created-descending
+https://www.madeinquebradadiscos.com.br/discos-de-vinil/page/2/?sort_by=created-descending
 
 # Estante Virtual — busca "lp vinil", últimos cadastrados (2 primeiras páginas)
 https://www.estantevirtual.com.br/busca?q=lp%20vinil&sort=new-releases
