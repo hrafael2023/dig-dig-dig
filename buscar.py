@@ -149,6 +149,26 @@ JS_SEBO_VINIL = """() => [...document.querySelectorAll('article.product-card')].
   };
 })"""
 
+# Sebo Nova Floresta: cada disco é um .produto_box_01; título "Artista - Disco",
+# e embaixo gênero (categoria2) e Artista/Gravadora/Tipo.
+JS_NOVA_FLORESTA = """() => [...document.querySelectorAll('.produto_box_01')].map(c => {
+  const a = c.querySelector('a[href*="produtos-interna.php"]');
+  const img = c.querySelector('.produto_box_01_01 img');
+  const foto = img?.getAttribute('src') || '';
+  const texto = sel => c.querySelector(sel)?.textContent.replace(/\\s+/g, ' ').trim() || '';
+  const genero = c.querySelector('.produto_categoria a + a')?.textContent.trim() || '';
+  const ficha = Object.fromEntries([...c.querySelectorAll('.produto_box_01_02 strong')]
+    .map(s => [s.textContent.trim(), (s.nextSibling?.textContent || '').replace(/^[:\\s]+/, '').trim()]));
+  return {
+    titulo: texto('.produto_titulo'),
+    preco: texto('.produto_valor'),
+    link: a?.href,
+    foto: foto && !foto.includes('sem-foto') ? new URL(foto, location.href).href : '',
+    // ex.: "Cantor Nacional · Kuarup · Usado"
+    extra: [genero, ficha['Gravadora'], ficha['Tipo']].filter(Boolean).join(' · '),
+  };
+})"""
+
 # Leitor genérico para sites novos: qualquer link com foto e texto.
 JS_GENERICO = """() => [...document.querySelectorAll('a[href]')].filter(a => a.querySelector('img')).map(a => {
   const box = a.closest('li, article, [class*="card"], [class*="product"], [class*="item"]') || a;
@@ -170,6 +190,7 @@ SITES = {
     "madeinquebradadiscos.com.br": ("Made in Quebrada", JS_CASA_LARANJA),
     "estantevirtual.com.br": ("Estante Virtual", JS_ESTANTE),
     "sebodovinil.com.br": ("Sebo do Vinil", JS_SEBO_VINIL),
+    "sebonovafloresta.com.br": ("Sebo Nova Floresta", JS_NOVA_FLORESTA),
 }
 
 

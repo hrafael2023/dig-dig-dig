@@ -38,3 +38,6 @@ https://sebodovinil.com.br/shop/?orderby=date
 # Shopee — DESATIVADA: bloqueia login automático com captcha.
 # Para reativar, tire o # da linha abaixo e rode: python3 buscar.py --login
 # https://shopee.com.br/search?keyword={termo}&sortBy=ctime
+
+# 96 LPs por página, dos últimos cadastrados
+https://www.sebonovafloresta.com.br/site/produtos.php?categoria1=DISCO%20DE%20VINIL&ordenar=6&pagina_limit=96
