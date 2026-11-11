@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dig Dig Dig!</title>
+<script>
+  // aplica o tema escolhido antes de pintar a página, para não piscar
+  try { const t = localStorage.getItem("digdigdig.tema"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%2317312f'/%3E%3Ccircle cx='24' cy='24' r='14' fill='%23fff'/%3E%3Ccircle cx='24' cy='24' r='4' fill='%2317312f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..800&display=swap" rel="stylesheet">
+<style>
+/* Dig Dig Dig! — no design system do FootyLogos: DM Sans, verde-escuro sobre
+   cinza-esverdeado, painéis brancos com borda fina, cantos retos e rótulos
+   pequenos em maiúsculas. */
+:root {
+  --bg: #f4f6f5;
+  --panel: #ffffff;
+  --ink: #17312f;
+  --mut: #53605c;
+  --eyebrow: #6e817a;
+  --line: #d9dfdc;
+  --bar: #eef1ef;
+  /* um tom por site, para separar as seções no scroll */
+  --tom-0: #eaf2ed; --tom-1: #f3efe4; --tom-2: #e9eef5;
+  --tom-3: #f4ebe8; --tom-4: #f0f1e2; --tom-5: #e7edee;
+  --tag-bg: #e8eeeb;
+  --tag-ink: #17312f;
+  --accent: #17312f;
+  --on-accent: #ffffff;
+  --dig: rgb(22, 19, 15);
+  --on-dig: #ffffff;
+  --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+/* Escuro: segue o sistema, a menos que o botão de tema tenha escolhido outro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1413;
+    --panel: #131d1c;
+    --ink: #e3ebe8;
+    --mut: #9aaba5;
+    --eyebrow: #7f938c;
+    --line: #253330;
+    --bar: #1a2725;
+    --tom-0: #14211c; --tom-1: #201d15; --tom-2: #151c25;
+    --tom-3: #221816; --tom-4: #1c1e14; --tom-5: #161d1f;
+    --tag-bg: #1d2b28;
+    --tag-ink: #d4e2dd;
+    --accent: #d4e2dd;
+    --on-accent: #0d1413;
+    --dig: #e3ebe8;
+    --on-dig: rgb(22, 19, 15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1413;
+  --panel: #131d1c;
+  --ink: #e3ebe8;
+  --mut: #9aaba5;
+  --eyebrow: #7f938c;
+  --line: #253330;
+  --bar: #1a2725;
+  --tom-0: #14211c; --tom-1: #201d15; --tom-2: #151c25;
+  --tom-3: #221816; --tom-4: #1c1e14; --tom-5: #161d1f;
+  --tag-bg: #1d2b28;
+  --tag-ink: #d4e2dd;
+  --accent: #d4e2dd;
+  --on-accent: #0d1413;
+  --dig: #e3ebe8;
+  --on-dig: rgb(22, 19, 15);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+/* garante que o atributo hidden vença os display: flex/grid de .card e .grade */
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased;
+}
+main { max-width: 1240px; margin: 0 auto; padding: 0 24px 72px; }
+/* rótulo pequeno em maiúsculas, como "FOOTBALL IDENTITY DATABASE" */
+.grupo > span, .grupo > label, .busca label, h2 span, .site {
+  font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--eyebrow);
+}
+
+/* Cabeçalho: faixa branca de ponta a ponta, logo à esquerda, ações à direita */
+.topo {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0;
+  background: var(--panel);
+  /* fundo e linha de baixo vazam até as bordas da janela sem criar rolagem lateral */
+  box-shadow: 0 0 0 100vmax var(--panel), 0 1px 0 100vmax var(--line); clip-path: inset(0 -100vmax -1px);
+}
+.topo h1 {
+  display: flex; align-items: center; gap: 10px; margin: 0;
+  font-size: 22px; line-height: 1; font-weight: 700; letter-spacing: -.04em;
+}
+/* marca: disco branco num quadrado verde, como o "FL" do FootyLogos */
+.topo h1::before {
+  content: ""; flex: none; width: 34px; height: 34px; border-radius: 8px;
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='17' cy='17' r='10' fill='%23fff'/%3E%3Ccircle cx='17' cy='17' r='3' fill='%2317312f'/%3E%3C/svg%3E") center / 100% no-repeat;
+}
+:root[data-tema-efetivo="dark"] .topo h1::before { background-color: #2c4a46; }
+/* Ações à direita do logo: link do Arquivo e botão Dig */
+.acoes { display: flex; align-items: center; gap: 8px; flex: none; }
+.link-topo {
+  display: inline-flex; align-items: center; height: 38px; padding: 0 10px;
+  color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 650;
+}
+.link-topo:hover { text-decoration: underline; text-underline-offset: 3px; }
+.topo .logo { color: inherit; text-decoration: none; }
+/* Botão Dig: o botão principal, cheio e reto */
+.dig {
+  flex: none; min-width: 76px; height: 38px; padding: 0 18px; border: 0; border-radius: 0; cursor: pointer;
+  background: var(--dig); color: var(--on-dig);
+  font: 750 13px/1 var(--sans); letter-spacing: .01em;
+}
+.dig:hover { opacity: .88; }
+.dig:focus-visible { outline: 2px solid var(--dig); outline-offset: 3px; }
+.dig:disabled { cursor: progress; opacity: 1; background: var(--tag-bg); color: var(--tag-ink); }
+.dig.erro { background: #b3261e; color: #fff; }
+
+/* Arquivo: os Digs numa tabela de linhas dentro de um painel */
+.lista-arquivo { list-style: none; margin: 16px 0 0; padding: 0; background: var(--panel); border: 1px solid var(--line); }
+.lista-arquivo li + li { border-top: 1px solid var(--line); }
+.lista-arquivo a {
+  display: grid; grid-template-columns: 200px 110px 1fr 16px; align-items: center; gap: 4px 24px;
+  padding: 18px 24px; color: var(--ink); text-decoration: none;
+}
+.lista-arquivo a::after { content: "→"; color: var(--eyebrow); }
+.lista-arquivo a:hover { background: var(--bar); }
+.lista-arquivo a:hover::after { color: var(--ink); }
+.lista-arquivo .quando { font-size: 22px; line-height: 1.1; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.lista-arquivo .quando small { margin-left: 8px; font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--mut); }
+.lista-arquivo .quantos { font-weight: 700; font-size: 14px; }
+.lista-arquivo .onde { color: var(--mut); font-size: 14px; }
+
+/* Busca no Arquivo: caixa branca com lupa, como a busca do FootyLogos */
+.busca { margin-top: 16px; padding: 28px 32px; background: var(--panel); border: 1px solid var(--line); }
+.busca label { display: block; margin-bottom: 12px; }
+.busca input {
+  width: 100%; height: 58px; padding: 0 16px 0 50px; border: 1px solid var(--ink); border-radius: 0;
+  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236e817a' stroke-width='1.8'%3E%3Ccircle cx='8.5' cy='8.5' r='6'/%3E%3Cpath d='M13 13l5 5' stroke-linecap='round'/%3E%3C/svg%3E") 18px center / 18px no-repeat;
+  color: var(--ink); outline: none; -webkit-appearance: none; appearance: none;
+  font: 400 16px/1.2 var(--sans);
+}
+.busca input::placeholder { color: var(--eyebrow); }
+.busca input:focus { box-shadow: 0 0 0 1px var(--ink); }
+#resultados .contagem { margin: 24px 0 16px; font-size: 13px; font-weight: 650; color: var(--mut); }
+
+/* Barra de andamento do Dig, logo abaixo do topo (como no DigAmazon) */
+.progresso { height: 4px; margin-top: 16px; background: var(--line); overflow: hidden; }
+.progresso i { display: block; height: 100%; width: var(--pct, 2%); background: var(--ink); transition: width 1s linear; }
+.status-dig { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--mut); }
+@media (prefers-reduced-motion: reduce) { .progresso i { transition: none; } }
+
+/* Barra de status: o painel de abertura, com o número em destaque */
+.barra {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px;
+  margin-top: 24px; padding: 28px 32px; background: var(--panel); border: 1px solid var(--line);
+  font-size: 14px; color: var(--mut);
+}
+.barra > div:first-child { display: flex; flex-direction: column; gap: 6px; }
+.barra b { font-size: 40px; line-height: 1; font-weight: 700; letter-spacing: -.05em; color: var(--ink); }
+.barra .mut { color: var(--mut); }
+.barra .lado { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-weight: 500; }
+/* Botão de tema, dentro do painel */
+.tema {
+  width: 34px; height: 34px; border: 1px solid var(--line); padding: 0; border-radius: 0; cursor: pointer;
+  background: var(--panel); color: var(--ink); display: grid; place-items: center;
+}
+.tema:hover { border-color: var(--ink); }
+.tema:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tema svg { width: 16px; height: 16px; transition: transform .3s; }
+:root[data-tema-efetivo="dark"] .tema svg { transform: rotate(180deg); }
+
+/* Avisos */
+.avisos { list-style: none; margin: 0; padding: 12px 32px; background: var(--panel); border: 1px solid var(--line); border-top: 0; font-size: 13px; color: var(--mut); }
+.avisos li { padding: 3px 0; }
+.avisos li::before { content: "→ "; color: var(--ink); }
+
+/* Filtros: painel colado ao de cima, botões retos com borda; o ativo fica cheio */
+.controles {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px 36px; margin: 0;
+  padding: 18px 32px; background: var(--panel); border: 1px solid var(--line); border-top: 0;
+}
+.grupo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.menu {
+  font: 650 12px/1 var(--sans); color: var(--ink); background-color: var(--panel);
+  border: 1px solid var(--line); border-radius: 0; height: 34px; padding: 0 34px 0 12px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 16px center, right 12px center; background-size: 4px 4px; background-repeat: no-repeat;
+}
+.menu:hover { border-color: var(--ink); }
+.menu:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.menu option { color: var(--ink); background: var(--panel); }
+.teclas { display: flex; flex-wrap: wrap; }
+.teclas button {
+  font: 650 12px/1 var(--sans); color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 0; height: 34px; padding: 0 12px; margin-left: -1px; cursor: pointer;
+}
+.teclas button:first-child { margin-left: 0; }
+.teclas button:hover { position: relative; border-color: var(--ink); }
+.teclas button[aria-pressed="true"] { position: relative; background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.teclas button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Seções: cada site é um painel com o seu tom, e o nome do site fica preso no
+   topo enquanto se rola — fica claro quando o site muda. */
+.tom-0 { --sec: var(--tom-0); } .tom-1 { --sec: var(--tom-1); } .tom-2 { --sec: var(--tom-2); }
+.tom-3 { --sec: var(--tom-3); } .tom-4 { --sec: var(--tom-4); } .tom-5 { --sec: var(--tom-5); }
+#secoes { margin-top: 24px; display: flex; flex-direction: column; gap: 24px; }
+#secoes section { background: var(--sec); border: 1px solid var(--line); padding: 0 24px 24px; }
+h2 {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 -24px 0; padding: 22px 24px 18px; background: var(--sec);
+  font-size: 29px; line-height: 1.1; font-weight: 700; letter-spacing: -.034em;
+}
+h2 span { letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+#lista { margin-top: 24px; }
+
+.card { color: inherit; text-decoration: none; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); }
+.card:hover { border-color: var(--ink); }
+.capa { position: relative; aspect-ratio: 1; background: var(--bar); overflow: hidden; border-bottom: 1px solid var(--line); }
+.capa img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.card:hover .capa img { transform: scale(1.03); }
+.sem-foto { position: absolute; inset: 0; display: grid; place-items: center; }
+.sem-foto::before { content: ""; width: 44%; aspect-ratio: 1; border-radius: 50%; background: var(--ink); opacity: .85; }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.info { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
+.titulo {
+  order: 1; font-size: 15px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.card:hover .titulo { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.preco { order: 2; margin-top: auto; padding-top: 12px; font-size: 18px; font-weight: 750; letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.extra { order: 3; font-size: 13px; color: var(--mut); }
+.site { display: none; order: 0; margin-bottom: 8px; }
+#lista .site, #resultados .site { display: block; }
+
+.vazio { grid-column: 1 / -1; margin: 0; padding: 72px 24px; font-size: 22px; font-weight: 700; letter-spacing: -.03em; text-align: center; background: var(--panel); border: 1px solid var(--line); }
+#secoes .vazio, #lista .vazio { margin-top: 0; }
+footer {
+  margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;
+  font-size: 13px; color: var(--mut);
+}
+footer strong { color: var(--ink); font-weight: 700; font-size: 16px; letter-spacing: -.03em; }
+footer .versao { margin-left: 8px; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 700px) {
+  main { padding: 0 16px 56px; }
+  .topo { padding: 10px 0; }
+  .topo h1 { font-size: 19px; gap: 8px; }
+  .topo h1::before { width: 30px; height: 30px; }
+  .acoes { gap: 6px; }
+  .link-topo { height: 34px; padding: 0 6px; }
+  .dig { min-width: 60px; height: 34px; padding: 0 12px; }
+  .barra { margin-top: 16px; padding: 20px; }
+  .barra b { font-size: 32px; }
+  .barra .lado { justify-content: space-between; }
+  .avisos { padding: 10px 20px; }
+  .controles { padding: 16px 20px; gap: 14px; }
+  .grupo { gap: 10px; }
+  .lista-arquivo a { grid-template-columns: 1fr auto; padding: 16px 20px; }
+  .lista-arquivo a::after { display: none; }
+  .lista-arquivo .quando { font-size: 20px; }
+  .lista-arquivo .onde { grid-column: 1 / -1; font-size: 13px; }
+  .busca { padding: 20px; }
+  .busca input { height: 52px; }
+  #secoes { margin-top: 16px; gap: 16px; }
+  #secoes section { padding: 0 12px 12px; }
+  h2 { font-size: 24px; margin: 0 -12px; padding: 16px 12px 14px; }
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .info { padding: 10px 10px 12px; }
+  .titulo { font-size: 14px; }
+  .preco { font-size: 16px; padding-top: 8px; }
+  .extra { font-size: 12px; }
+}
+</style><style>.dig{display:none!important}.topo .tema{display:none}.topo{justify-content:space-between}.arquivo-nav{margin-left:auto;font-size:15px;font-weight:500;color:inherit;text-decoration:none}.arquivo-nav:hover{text-decoration:underline}</style></head><body><main>
+
+<header class="topo">
+  <h1>Dig Dig Dig!</h1>
+  <nav class="acoes"><a class="link-topo" href="../arquivo.html">← Arquivo</a><button type="button" class="dig" id="dig" data-gatilho="" hidden>Dig</button></nav>
+</header>
+<div id="progresso" class="progresso" role="progressbar" aria-label="Andamento do Dig" aria-valuemin="0" aria-valuemax="100" hidden><i></i></div>
+<p id="status-dig" class="status-dig" role="status" hidden></p>
+
+<div class="barra">
+  <div><b>127 novos</b><span class="mut">Atualizado em 11.11.2026 às 14:40</span></div>
+  <div class="lado"><span>3582 acompanhados</span>
+    <button type="button" class="tema" id="tema" aria-label="Alternar tema claro/escuro">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 2a8 8 0 0 1 0 16z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+
+<div class="controles"><div class="grupo"><label for="menu-site">Site</label><select class="menu" id="menu-site" data-chave="site"><option value="">Todos os sites</option><option value="Enjoei">Enjoei</option><option value="Estante Virtual">Estante Virtual</option><option value="Estação Cultural">Estação Cultural</option><option value="Made in Quebrada">Made in Quebrada</option></select></div><div class="grupo"><span>Preço</span><div class="teclas" data-chave="faixa"><button type="button" data-valor="" aria-pressed="true">Todos</button><button type="button" data-valor="ate50" aria-pressed="false">Até R$ 50</button><button type="button" data-valor="51a100" aria-pressed="false">R$ 51 a 100</button><button type="button" data-valor="mais100" aria-pressed="false">Mais de R$ 101</button></div></div><div class="grupo"><span>Ordem</span><div class="teclas" data-chave="ordem"><button type="button" data-valor="" aria-pressed="true">Por site</button><button type="button" data-valor="asc" aria-pressed="false">Menor preço</button><button type="button" data-valor="desc" aria-pressed="false">Maior preço</button></div></div></div><div id="lista" class="grade" hidden></div>
+<div id="secoes"><section class="tom-0" data-site="Enjoei"><h2>Enjoei <span>041</span></h2><div class="grade"><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-nazareth-it-s-naz-lp77-153323084" target="_blank" rel="noopener" data-site="Enjoei" data-preco="225"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNDI1NTIyNS83YzIzNTViMzAwNmYyYjk5M2VkNzMyZmJkYmU1NTQzNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil nazareth it&#x27;s naz/lp77</div><div class="preco">R$ 225</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-benito-di-paula-lp119-153403001" target="_blank" rel="noopener" data-site="Enjoei" data-preco="148"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNDI1NTIyNS8wNTA0MzRmZTI1NTQ5NTZkZDVkODAxMGU0Y2MzMGQ1YS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp benito di paula /lp119</div><div class="preco">R$ 148</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-ray-conniff-s-continental-lp118-153433836" target="_blank" rel="noopener" data-site="Enjoei" data-preco="126"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNDI1NTIyNS81ZmQ3MTM2NTVhYjUxYWQyMWUyNzNmYjFlNTNiOGFhZi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil ray conniff s continental/lp118</div><div class="preco">R$ 126</div><div class="extra">de R$ 145</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-caetano-veloso-outras-palavras-1981-104332812" target="_blank" rel="noopener" data-site="Enjoei" data-preco="85"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNzc0ODIvYTQ2OTlkYjRiODA2ZGY4YzJhODNjNmZlNmYxMDdjNGEuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp caetano veloso - outras palavras - 1981</div><div class="preco">R$ 85</div><div class="extra">de R$ 90</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-milton-nascimento-travessia-1978-104330299" target="_blank" rel="noopener" data-site="Enjoei" data-preco="120"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNzc0ODIvN2E3YzgzMjUyZDQ1NzE1ODY4MTBlZTI4YzNlOWEzYTguanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp milton nascimento - travessia - 1978</div><div class="preco">R$ 120</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-james-taylor-104303644" target="_blank" rel="noopener" data-site="Enjoei" data-preco="30"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTI3MTAvNWZjMDMwZWRlMDQ2ZjIzOTI3MDJkNjJlY2NiM2I2YzUuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil james taylor</div><div class="preco">R$ 30</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/mini-lps-variados-104297414" target="_blank" rel="noopener" data-site="Enjoei" data-preco="40"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTI3MTAvY2UzMjU0ZTAwZDEzNDNjMTdjNGMxNmMzODBhNzg3MjIuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">mini lps variados</div><div class="preco">R$ 40</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-stevie-wonder-104297403" target="_blank" rel="noopener" data-site="Enjoei" data-preco="60"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTI3MTAvNTY5MmRiNjZhNGQwYjZjNDQ2ZTNhYmZkNDIzZjBjZjkuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp stevie wonder</div><div class="preco">R$ 60</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-vinil-frank-sinatra-serie-grandes-momentos-original-145492298" target="_blank" rel="noopener" data-site="Enjoei" data-preco="50"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yNjg4NDQ0MC9iYTUzZWVhYjFlNjI0MGIwZTI4Yjc4MTFkMTM1MzgzNS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp/vinil: frank sinatra - série grandes momentos (original)</div><div class="preco">R$ 50</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-martinho-da-vila-maravilha-de-cenario-154673750" target="_blank" rel="noopener" data-site="Enjoei" data-preco="70"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMjE1MjE0MS9mOTVmY2M5OTNkMTg4N2Y3NzdjYTY4ZGM0ZTg4ZTIzYy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil martinho da vila maravilha de cenário</div><div class="preco">R$ 70</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-vinil-u2-the-unforgettable-fire-154657232" target="_blank" rel="noopener" data-site="Enjoei" data-preco="189"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTk4Mzc5My8xMmMxYjk5MGMzYzFmMzNmYTdjNjhlZDE2ODBmM2JjYy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp vinil u2 the unforgettable fire</div><div class="preco">R$ 189</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-nelson-goncalves-nelson-de-hoje-1979-152322319" target="_blank" rel="noopener" data-site="Enjoei" data-preco="44"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzI1OTE5Ny80MWM1NDMxZTNlMjBkOGRkMTc0NjBiZDQ4MzhiNzlkYi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp nelson gonçalves nelson de hoje 1979</div><div class="preco">R$ 44</div><div class="extra">de R$ 49</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-hit-parade-1994-som-livre-153280835" target="_blank" rel="noopener" data-site="Enjoei" data-preco="95"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMjYxNDkzNS9lY2VlYmE5NjBmMjFlNmU1YThjYThhYWY5NTkwZDcwMS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp hit parade 1994 som livre</div><div class="preco">R$ 95</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-schumann-carnaval-fantasie-claudio-arrau-149742555" target="_blank" rel="noopener" data-site="Enjoei" data-preco="72"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zODk0MjE0Ny9mY2JhNTVkOWQyYzFhNmM5MjRkZTc4YjVkOWZkZTg0Mi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp schumann carnaval fantasie claudio arrau</div><div class="preco">R$ 72</div><div class="extra">de R$ 150</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-gilberto-gil-1968-82-154075260" target="_blank" rel="noopener" data-site="Enjoei" data-preco="400"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy82NDM1OTc0L2NlZWM5NzY3NTJhOTdlODE5YWEwNzdjMzhkYjRlMWNkLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil gilberto gil 1968/82</div><div class="preco">R$ 400</div><div class="extra">de R$ 450</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-trem-da-alegria-152956403" target="_blank" rel="noopener" data-site="Enjoei" data-preco="56"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNDIzNjI0MC8yMmIyMTM4MGY1OGI0MTVlNzBmYjY4MTBhNTMxZjg1NC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp trem da alegria</div><div class="preco">R$ 56</div><div class="extra">de R$ 68</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-ray-conniff-30-anos-de-sucesso-153958053" target="_blank" rel="noopener" data-site="Enjoei" data-preco="23"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzI2NTI2Mi83MWJhNWIzYzgzMzQzZTZkNzRhNGE5MzMyNGRmNTUxZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil ray conniff 30 anos de sucesso</div><div class="preco">R$ 23</div><div class="extra">de R$ 25</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-lp-trilha-sonora-xanadu-olivia-newton-john-153758750" target="_blank" rel="noopener" data-site="Enjoei" data-preco="25"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMzc4OTUxNS9iMjZkYjllYjliOTU2ZGJmYmEwYmVhMTE2Mzc2NmQ3MC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil lp trilha sonora xanadu olivia newton-john</div><div class="preco">R$ 25</div><div class="extra">de R$ 30</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-michael-jackson-ben-149103257" target="_blank" rel="noopener" data-site="Enjoei" data-preco="180"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMDAyNTkyNi9jZDhiZTU1NWI1YmM1YmYzM2I2MTUzMjk3OWNlNzAxOC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil michael jackson ben</div><div class="preco">R$ 180</div><div class="extra">de R$ 250</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-titas-cabeca-dinossauro-154428423" target="_blank" rel="noopener" data-site="Enjoei" data-preco="150"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMDY4OTQyNC81NzJjMjYzMjdhMGFiMjU3YTgyMzFlMjk1YjJmMDBiMC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil titãs cabeça dinossauro</div><div class="preco">R$ 150</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-paul-mccartney-press-12-polegadas-153970520" target="_blank" rel="noopener" data-site="Enjoei" data-preco="89"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzUxOTYxMS85MDE4MzI0MTFiNjgyODA2ZTk1NGEzOTQ2OTU1NjIzNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil paul mccartney press 12 polegadas</div><div class="preco">R$ 89</div><div class="extra">de R$ 100</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-selecao-77-discos-rge-hl827-150375482" target="_blank" rel="noopener" data-site="Enjoei" data-preco="100"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNDI1NTIyNS9iYTRjMTNjM2YyMmQwYTI1NGVlNDgyOWExODZmNWRmZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp seleção 77 discos rge/hl827</div><div class="preco">R$ 100</div><div class="extra">de R$ 142</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-bliss-loveprayer-154289043" target="_blank" rel="noopener" data-site="Enjoei" data-preco="82"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNDU0MDQyOC83YjdjYmQwOTRhMzEzYWY0NjYwN2ZmYzI1NWJlNzI4NS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil bliss loveprayer</div><div class="preco">R$ 82</div><div class="extra">de R$ 85</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-tim-maia-sufocante-1984-154231656" target="_blank" rel="noopener" data-site="Enjoei" data-preco="120"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMzUxODc5OC80NjllYTcxYjljN2Y2MTQ5OTk1MWMxNTQyNDFkZTVkNC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil tim maia sufocante 1984</div><div class="preco">R$ 120</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-roberto-carlos-1990-153863105" target="_blank" rel="noopener" data-site="Enjoei" data-preco="51"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTQ4MTg2NS80MmJmMmUyOTk3YjlhZDQ5ZTkyNTlmMDUzNmMzMWM3OS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil roberto carlos 1990</div><div class="preco">R$ 51</div><div class="extra">de R$ 55</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-valsas-eternas-vol-2-orquestra-imperial-153524338" target="_blank" rel="noopener" data-site="Enjoei" data-preco="49"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTQ4MTg2NS9jNzA5ZmJlZDIzN2VkM2JmYmI1MjAxMjVjOTliNzRiZi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil valsas eternas vol 2 orquestra imperial</div><div class="preco">R$ 49</div><div class="extra">de R$ 55</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-sol-de-verao-internacional-som-livre-153130252" target="_blank" rel="noopener" data-site="Enjoei" data-preco="32"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTQ4MTg2NS81N2IwNDcxMGViN2FiYzIzMjQzMjQ2YmQzYTQxNGUxNi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil sol de verão internacional som livre</div><div class="preco">R$ 32</div><div class="extra">de R$ 39</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-rosa-maria-154031796" target="_blank" rel="noopener" data-site="Enjoei" data-preco="89"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTQ4MTg2NS82NGE5OTUxNTk4OWExOGNmMTk3ZTc5ZWMxZTFiNWFlOS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil rosa maria</div><div class="preco">R$ 89</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-mantovani-latin-rendezvous-153130694" target="_blank" rel="noopener" data-site="Enjoei" data-preco="58"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTQ4MTg2NS9lNzEzOTc0NjhjZjc2YjNiMjVhMWZhNzg1MmRhM2E1Yy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil mantovani latin rendezvous</div><div class="preco">R$ 58</div><div class="extra">de R$ 66</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-tchaikovsky-sinfonia-4-mravinski-151982043" target="_blank" rel="noopener" data-site="Enjoei" data-preco="62"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjY1MDAyMi8zZDE5N2ZiNDE4NDAxNTE0MzdkOWZmY2M1YzQzMDM5Mi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil tchaikovsky sinfonia 4 mravinski</div><div class="preco">R$ 62</div><div class="extra">de R$ 85</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-milton-nascimento-a-barca-dos-amantes-139834661" target="_blank" rel="noopener" data-site="Enjoei" data-preco="46"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMTM1Mzc5OC9mODA4ODllYzM3OThiOWExNmY2OThiNzk3NGVhN2E1OC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp milton nascimento a barca dos amantes</div><div class="preco">R$ 46</div><div class="extra">de R$ 100</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-roberto-carlos-1985-gatefold-147500035" target="_blank" rel="noopener" data-site="Enjoei" data-preco="31"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8yMzIwMTkyNi81ZDFkODU1ZTZkZjBjNWMwNTFkMTNjZjgwMDJkYzk2ZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp roberto carlos 1985 gatefold</div><div class="preco">R$ 31</div><div class="extra">de R$ 70</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-vinil-tania-maria-love-explosion-1984-151215575" target="_blank" rel="noopener" data-site="Enjoei" data-preco="139"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjM5NDg0MC80ZWE5MGY4MzQ5YzQxN2M0ZGE2ZDBhOWFmNjA4YjYwZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp vinil tania maria love explosion 1984</div><div class="preco">R$ 139</div><div class="extra">de R$ 170</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-fanfarras-em-parada-john-brendan-hl823-150374834" target="_blank" rel="noopener" data-site="Enjoei" data-preco="131"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNDI1NTIyNS80MWVkY2JiMDY3ODJiZGRjOWUxNjYwMGE5MzQ4ZTZiZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp fanfarras em parada john brendan/hl823</div><div class="preco">R$ 131</div><div class="extra">de R$ 185</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-encontro-com-os-violeiros-som-1976-hl837-150372425" target="_blank" rel="noopener" data-site="Enjoei" data-preco="88"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNDI1NTIyNS8xZmE1YmZjZjY4OTE4ZTgzYWY0YmE5ODdmM2YxMjQ3MS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp encontro com os violeiros som 1976/hl837</div><div class="preco">R$ 88</div><div class="extra">de R$ 125</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-almir-guineto-1986-105691546" target="_blank" rel="noopener" data-site="Enjoei" data-preco="47"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy84MDAwNjc5LzBlNGJjY2ZlYzMwN2NhMTFhM2VmMDk0MWMyNDUxMmFjLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp almir guinéto, 1986</div><div class="preco">R$ 47</div><div class="extra">de R$ 68</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-the-rolling-stones-their-satanic-majesties-request-lp96-153320790" target="_blank" rel="noopener" data-site="Enjoei" data-preco="198"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNDI1NTIyNS9jZjk3NjE3ODAxMGJlODMxZGVhZjdlZjIwZjA5NWJjNC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp / the rolling stones / their satanic majesties request/lp96</div><div class="preco">R$ 198</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-barbra-streisand-guilty-153804798" target="_blank" rel="noopener" data-site="Enjoei" data-preco="36"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTQ0MjI0Ny9jMTllOTNlOTE2NWU2M2M4MzcwMzkzMGZmMWY2ZjJiNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil barbra streisand guilty</div><div class="preco">R$ 36</div><div class="extra">de R$ 40</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-casamento-inesquecivel-152536363" target="_blank" rel="noopener" data-site="Enjoei" data-preco="24"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMDczMTExNy8zZTMzMmUxMTc4NTU5M2QyMmE0ZGZlZTdlZGY4Y2YwNy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil casamento inesquecível</div><div class="preco">R$ 24</div><div class="extra">de R$ 30</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-sepultura-arise-151604049" target="_blank" rel="noopener" data-site="Enjoei" data-preco="414"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMDY4OTQyNC8zZTdhMTg4M2YyODE3Y2RmZGY4NzNiOWU3ZjgwZmY1YS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil sepultura arise</div><div class="preco">R$ 414</div><div class="extra">de R$ 550</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-donna-summer-the-wanderer-153806561" target="_blank" rel="noopener" data-site="Enjoei" data-preco="130"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy83OTEyMTg4LzQyMzNjNWM5YjYxYjZjMTI4ZDE1ZjU0NDhiZjgzNGRkLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp donna summer the wanderer</div><div class="preco">R$ 130</div><div class="extra">de R$ 135</div></div></a></div></section><section class="tom-1" data-site="Estante Virtual"><h2>Estante Virtual <span>010</span></h2><div class="grade"><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-to-the-extreme-grp-TYY-9178-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="54.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYY-9178-000/TYY-9178-000_detail1.jpg?ts=1794413790771?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">Lp Vinil - to the Extreme</div><div class="preco">R$ 54,00</div><div class="extra">Vanilla Ice</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-earth-wind-fire-faces-importado-grp-TYY-8942-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="220.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYY-8942-000/TYY-8942-000_detail1.jpg?ts=1794413549843?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Earth Wind &amp; Fire - Faces | Importado</div><div class="preco">R$ 220,00</div><div class="extra">Earth Wind &amp; Fire · 1980</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-novos-baianos-acabou-chorare-grp-TYY-8642-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="350.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYY-8642-000/TYY-8642-000_detail1.jpg?ts=1794412998726?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Novos Baianos - Acabou Chorare</div><div class="preco">R$ 350,00</div><div class="extra">Novos Baianos · 2013</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-erasmo-carlos-erasmo-grp-TYY-8571-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="120.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYY-8571-000/TYY-8571-000_detail1.jpg?ts=1794412728309?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Erasmo Carlos - Erasmo</div><div class="preco">R$ 120,00</div><div class="extra">Erasmo Carlos · 1968</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-adalberto-tafuri-gente-humilde-grp-TYY-8566-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="25.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYY-8566-000/TYY-8566-000_detail1.jpg?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Adalberto Tafuri - Gente Humilde</div><div class="preco">R$ 25,00</div><div class="extra">Adalberto Tafuri – Gente Humilde</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-ed-maciel-e-sua-orquestra-ed-maciel-e-sua-orquestra-vol-grp-TYY-8565-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="70.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYY-8565-000/TYY-8565-000_detail1.jpg?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Ed Maciel e Sua Orquestra - Ed Maciel e Sua Orquestra Vol</div><div class="preco">R$ 70,00</div><div class="extra">Ed Maciel e Sua Orquestra · 1967</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-dizzy-gillespie-the-king-of-bop-grp-TYY-8411-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="50.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYY-8411-000/TYY-8411-000_detail1.jpg?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Dizzy Gillespie - The King Of Bop</div><div class="preco">R$ 50,00</div><div class="extra">Dizzy Gillespie · 1992</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-guilherme-arantes-crescente-grp-TYY-8409-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="50.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYY-8409-000/TYY-8409-000_detail1.jpg?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Guilherme Arantes - Crescente</div><div class="preco">R$ 50,00</div><div class="extra">Guilherme Arantes · 1992</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-wando-ilusao-grp-TYY-8245-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="40.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYY-8245-000/TYY-8245-000_detail1.jpg?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Wando - Ilusão</div><div class="preco">R$ 40,00</div><div class="extra">Wando · 1977</div></div></a><a class="card tom-1" href="https://www.estantevirtual.com.br/livro/lp-vinil-marinheiro-so-fui-no-tororo-tutu-maramba-grp-TYX-4150-000" target="_blank" rel="noopener" data-site="Estante Virtual" data-preco="25.00"><div class="capa"><img src="https://static.estantevirtual.com.br/book/00/TYX-4150-000/TYX-4150-000_detail1.jpg?ts=1794353442416?ims=fit-in/300x400/filters:fill(ffffff)" loading="lazy" alt=""></div><div class="info"><div class="site">Estante Virtual</div><div class="titulo">LP Vinil - Marinheiro Só Fui No Tororó Tutu Marambá</div><div class="preco">R$ 25,00</div><div class="extra">Compacto Festa Na Taba - Histórias e Músicas Brasi · 1982</div></div></a></div></section><section class="tom-2" data-site="Estação Cultural"><h2>Estação Cultural <span>028</span></h2><div class="grade"><a class="card tom-2" href="https://estacaocultural.com.br/produto/chitaozinho-xororo-60-dias-apaixonado-chitaozinho-e-xororo/34456405/2034077" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34456405.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">CHITÃOZINHO/XORORO = 60 DIAS APAIXONADO = — CHITÃOZINHO E XORORO</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/chitaozinho-xororo-o-som-da-estrada-chitaozinho-e-xororo/34456365/2034076" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34456365.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">CHITÃOZINHO/XORORO = O SOM DA ESTRADA = — CHITÃOZINHO E XORORO</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/chitaozinho-xororo-galopeira-chitaozinho-e-xororo/34456323/2034075" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34456323.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">CHITÃOZINHO/XORORO = GALOPEIRA = — CHITÃOZINHO E XORORO</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/chitaozinho-xororo-amante-amada-chitaozinho-e-xororo/34456121/2034042" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34456121.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">CHITÃOZINHO/XORORO = AMANTE AMADA= — CHITÃOZINHO E XORORO</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/chitaozinho-xororo-doce-amada-chitaozinho-e-xororo/34456093/2034012" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34456093.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">CHITÃOZINHO/XORORO = DOCE AMADA = — CHITÃOZINHO E XORORO</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/chitaozinho-xororo-a-forca-jovem-da-musica-sertaneja-ii-chitaozinho-e-xororo/34456061/2034011" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34456061.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">CHITÃOZINHO/XORORO=A FORÇA JOVEM DA MUSICA SERTANEJA II — CHITÃOZINHO E XORORO</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/chitaozinho-xororo-caminhos-de-minha-infancia-chitaozinho-e-xororo/34456033/2034010" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34456033.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">CHITÃOZINHO/XORORO = CAMINHOS DE MINHA INFANCIA = — CHITÃOZINHO E XORORO</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/somewhere-in-time-em-algum-lugar-do-passado-ost-john-barry/34455998/2033990" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="63.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34455998.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">SOMEWHERE IN TIME = EM ALGUM LUGAR DO PASSADO = OST — JOHN BARRY</div><div class="preco">R$ 63,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/salome-trilha-internacional-da-novela-varios/34455903/2033970" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="36.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34455903.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">salome - trilha internacional da novela = — varios</div><div class="preco">R$ 36,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/simon-and-garfunkel-greatest-hits-simon-and-garfunkel/34455861/2033969" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34455861.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">SIMON AND GARFUNKEL =GREATEST HITS= — SIMON AND GARFUNKEL</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/tripping-the-live-fantastic-highlights-c-encarte-paul-mccartney/34455202/2033789" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34455202.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">TRIPPING THE LIVE FANTASTIC - HIGHLIGHTS - C/ENCARTE — PAUL MCCARTNEY</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/paul-mccartney-flower-in-the-dirt-paul-mccartney/34455154/2033755" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34455154.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">PAUL MCCARTNEY = FLOWER IN THE DIRT = — PAUL MCCARTNEY</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/born-in-the-usa-buce-springsteen-bruce-springsteen/34455045/2033754" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34455045.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">BORN IN THE USA = BUCE SPRINGSTEEN = — BRUCE SPRINGSTEEN</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/ao-vivo-bruce-springsteen-bruce-springsteen/34454987/2033712" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454987.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">AO VIVO = BRUCE SPRINGSTEEN = — BRUCE SPRINGSTEEN</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/iron-maiden-live-after-death-duplo-iron-maiden/34454910/2033711" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="135.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454910.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">IRON MAIDEN = LIVE AFTER DEATH = DUPLO = — IRON MAIDEN</div><div class="preco">R$ 135,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/born-to-die-lana-del-rey-lana-del-rey/27572792/2033693" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="389.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/27572792.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Born to die Lana Del Rey — Lana Del Rey</div><div class="preco">R$ 389,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/cowboy-carter-grammy-awards-winner-album-of-the-year-beyonce/34454932/2033692" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="529.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454932.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Cowboy Carter Grammy Awards Winner Album Of The Year — Beyoncé</div><div class="preco">R$ 529,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/the-mountain-gorillaz/34454915/2033691" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="359.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454915.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">The Mountain — Gorillaz</div><div class="preco">R$ 359,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/melodrama-lorde/34454890/2033690" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="359.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454890.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Melodrama — Lorde</div><div class="preco">R$ 359,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/emails-i-cant-send-fwd-sabrina-carpenter/34454860/2033689" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="339.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454860.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">emails i cant send fwd — Sabrina Carpenter</div><div class="preco">R$ 339,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/petal-translucent-pearly-white-ariana-grande/34454841/2033688" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="379.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454841.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">petal Translucent Pearly White — Ariana Grande</div><div class="preco">R$ 379,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/thank-u-next-ariana-grande/34454827/2033687" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="384.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454827.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Thank U Next — Ariana Grande</div><div class="preco">R$ 384,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/lemonade-beyonce/34454814/2033686" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="359.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454814.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Lemonade — Beyoncé</div><div class="preco">R$ 359,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/back-to-black-amy-winehouse-amy-winehouse/28971695/2033644" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="329.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/28971695.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Back To Black - Amy Winehouse — Amy Winehouse</div><div class="preco">R$ 329,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/riot-paramore/34454773/2033643" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="349.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454773.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Riot — Paramore</div><div class="preco">R$ 349,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/paranoid-black-sabbath/34454728/2033642" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="349.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454728.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Paranoid — Black Sabbath</div><div class="preco">R$ 349,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/the-number-of-the-beast-iron-maiden/34454584/2033641" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="324.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454584.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">The Number of the Beast — Iron Maiden</div><div class="preco">R$ 324,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/whats-the-story-morning-glory-oasis/34454577/2033640" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="409.90"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34454577.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">Whats the Story Morning Glory — Oasis</div><div class="preco">R$ 409,90</div><div class="extra">Condição: Novo · Estação Cultural Jundiaí</div></div></a></div></section><section class="tom-3" data-site="Made in Quebrada"><h2>Made in Quebrada <span>048</span></h2><div class="grade"><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-bebel-gilberto-tanto-tempo-ooo98/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="130.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000740285-26b45cda8675d09e4717940067553888-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Bebel Gilberto Tanto Tempo</div><div class="preco">R$130,00</div><div class="extra">de R$260,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-edu-lobo-missa-breve-n5rcy/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="145.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000740287-1cdd1cfd046ee3a02f17940066497576-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Edu Lobo Missa Breve</div><div class="preco">R$145,00</div><div class="extra">de R$290,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-seu-jorge-the-other-side-1y0io/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="135.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000740289-5af31e40da9ec4c83d17940065684623-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Seu Jorge The Other Side</div><div class="preco">R$135,00</div><div class="extra">de R$270,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-adele-30-qij22/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="240.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000740264-328c058413e67ae35017940045981545-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Adele 30</div><div class="preco">R$240,00</div><div class="extra">de R$380,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-jorja-smith-falling-or-flying-168fl/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="249.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000740253-cea0343acae66f650d17940039655646-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Jorja Smith Falling or Flying</div><div class="preco">R$249,00</div><div class="extra">de R$329,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-alice-in-chains-4903a/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="460.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000730428-a2c08097c78a482d1d17932901075668-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Alice in Chains</div><div class="preco">R$460,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-doug-carn-infant-eyes-black-jazz-1e4wc/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="269.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000730397-322ecc6a2b0323c4d417932887933073-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Doug Carn Infant Eyes Black Jazz</div><div class="preco">R$269,00</div><div class="extra">de R$320,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-weezer-2019-1d7n3/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="249.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000730302-7116fda6ef16d0bbdd17932871795090-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Weezer 2019</div><div class="preco">R$249,00</div><div class="extra">de R$280,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-death-grips-the-money-store-146v8/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="190.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000717277-dbf0adfe2a061d375717926021878414-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Death Grips The Money Store</div><div class="preco">R$190,00</div><div class="extra">de R$250,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-tarcis-todo-mundo-ama-o-sol-z1rf8/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="189.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000717088-60b2b77dbb1a06f25b17925968014721-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil Tarcis Todo Mundo Ama o Sol</div><div class="preco">R$189,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/disco-de-vinil-lp-andrea-me-leva-pra-casa-15dwk/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297852-5fc7dff77397882d8417921857283482-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Disco De Vinil Lp Andréa Me Leva Pra Casa</div><div class="preco">R$20,00</div><div class="extra">de R$40,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/disco-de-vinil-lp-markinhos-moura-sabor-de-mim-1jnbh/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297857-c1fe3b4f61ef8fda1b17921857727606-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Disco De Vinil Lp Markinhos Moura Sabor De Mim</div><div class="preco">R$30,00</div><div class="extra">de R$60,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-thalias-mixtape-o056w/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297847-5526f60d9e1c49989417921846194976-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco De Vinil Thalia Mixtape</div><div class="preco">R$260,00</div><div class="extra">de R$309,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-elton-john-a-single-man/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="60.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297788-e2db9537003552f82717921823129869-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Elton John A Single Man</div><div class="preco">R$60,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-carpenters-a-song-for-you/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="39.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297793-b7aa1f87fdb9c927d617921823781123-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Carpenters A Song For You</div><div class="preco">R$39,00</div><div class="extra">de R$45,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-boy-george-sold/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="30.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297796-59fc3dff7fd4fef15917921824061279-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Boy George Sold</div><div class="preco">R$30,00</div><div class="extra">de R$60,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-barbra-streisand-evergreens/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="175.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297801-4f6c6af9cbd75f6c0817921824414709-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Barbra Streisand Evergreens</div><div class="preco">R$175,00</div><div class="extra">de R$350,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-my-name-is-barbra-two/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="47.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297804-ed1668de73e845e5a717921824769400-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil My Name Is Barbra, Two</div><div class="preco">R$47,50</div><div class="extra">de R$95,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-hits-5/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="60.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297808-12504b2b402514f32e17921825064450-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Hits 5</div><div class="preco">R$60,00</div><div class="extra">de R$120,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-ofra-haza-shaday/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="65.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297815-e1b828730088daad3e17921825508074-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Ofra Haza Shaday</div><div class="preco">R$65,00</div><div class="extra">de R$80,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-l-s-dunes-past-lives-6dpg0/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="239.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000708307-c7705bf5a8aedf8c1717921790341892-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco de Vinil L.S. Dunes Past Lives</div><div class="preco">R$239,00</div><div class="extra">de R$290,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-baiana-system-o-mundo-da-voltas-1ale1/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="190.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000297672-50d5d27f0fc4bdd2a617921653497269-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">Lp Disco De Vinil Baiana System O Mundo Dá Voltas</div><div class="preco">R$190,00</div><div class="extra">de R$240,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-de-la-soul-3-feet-high-and-rising-copia-1i7zy/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="369.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/1000688753-ead485f168e31f18fe17909607396192-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil De La Soul 3 Feet High And Rising (Rosa)</div><div class="preco">R$369,00</div><div class="extra">de R$390,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-13th-floor-elevators-bull-of-the-woods/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="259.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261002_122038-c79aeb46f5a2971a2a17909554056796-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil 13th Floor Elevators Bull Of The Woods</div><div class="preco">R$259,00</div><div class="extra">de R$295,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-the-offspring-ignition/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261002_122132-bb924755c389270c9617909554204713-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil The Offspring Ignition</div><div class="preco">R$260,00</div><div class="extra">de R$309,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-lady-gaga-born-this-way-the-tenth-anniversary/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="620.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261002_122353-f2990fbf3eaf083a2017909554790872-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Lady Gaga Born This Way (The Tenth Anniversary)</div><div class="preco">R$620,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-zizi-possi-amor-musica/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_153851-91b0d208f193a8a7ca17908862481714-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Zizi Possi Amor &amp; Música</div><div class="preco">R$25,00</div><div class="extra">de R$50,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-tete-espindola-gaiola/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154044-51e1ebd93e24020ac117908862717821-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Tetê Espíndola Gaiola</div><div class="preco">R$25,00</div><div class="extra">de R$50,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-simone-14-grandes-sucessos/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="45.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154159-764a6ad166816eedb217908862941454-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Simone 14 Grandes Sucessos</div><div class="preco">R$45,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-rita-lee-roberto-bombom/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="85.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154319-678fd97adaf520d9bc17908863196216-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Rita Lee &amp; Roberto Bombom</div><div class="preco">R$85,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-roberto-carlos-e-erasmo-carlos-sonia-mello-vol-2/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="25.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154523-5994cc55389323638217908863586244-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Sonia Mello Roberto Carlos e Erasmo Carlos Vol.2</div><div class="preco">R$25,00</div><div class="extra">de R$50,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-nara-leao-paulo-autran-tereza-rachel-oduvaldo-vianna-filho-liberdade-liberdade/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="130.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154632-979d5f68674259ff6b17908863952451-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Nara Leão, Paulo Autran, Tereza Rachel, Oduvaldo Vianna Filho - Liberdade, Liberdade</div><div class="preco">R$130,00</div><div class="extra">de R$260,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-marina-olhos-felizes/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="95.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_154823-1aab5da4194bb4b6fe17908864200919-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Marina Olhos Felizes</div><div class="preco">R$95,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-os-maiores-sucessos-de-marina/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="50.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155004-8ee14e948ce6ef760917908864451952-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Os Maiores Sucessos De Marina</div><div class="preco">R$50,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-marina-simples-como-fogo/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="160.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155053-5d0ea09b3d506eace317908864674098-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Marina Simples Como Fogo</div><div class="preco">R$160,00</div><div class="extra">de R$180,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-maria-bethania-alteza/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="65.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155153-b28860386e0e06fdc617908866683664-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Maria Bethânia Alteza</div><div class="preco">R$65,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-maria-bethania-ao-vivo/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="37.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155248-a9e311d9d8ba73ba7b17908867676781-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Maria Bethânia Ao Vivo</div><div class="preco">R$37,50</div><div class="extra">de R$75,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-maria-bethania-as-cancoes-que-voce-fez-pra-mim/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="190.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155352-f3ab572377c6c1aedd17908868546435-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Maria Bethânia As Canções Que Você Fez Pra Mim</div><div class="preco">R$190,00</div><div class="extra">de R$240,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-marisa-barroso-1962/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="185.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155545-d695ad1d22a7b6e22f17908869968441-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Marisa Barroso 1962</div><div class="preco">R$185,00</div><div class="extra">de R$370,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-marisa-barroso-astor-silva/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="375.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_155754-7026e4cbaf2570cf0817908871179509-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Marisa Barroso &amp; Astor Silva</div><div class="preco">R$375,00</div><div class="extra">de R$750,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-leila-pinheiro-bencao-bossa-nova/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="20.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_160138-0b64115f75b48cbc3617908872047634-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Leila Pinheiro Benção Bossa Nova</div><div class="preco">R$20,00</div><div class="extra">de R$40,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-wlm-company-double-split-vol-i/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="60.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_113142-84b2df4dfe4010555817908752899099-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil WLM Company Double Split Vol. I</div><div class="preco">R$60,00</div><div class="extra">de R$120,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-lady-pank-drop-everything/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="115.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_113335-a30419f761695dfa7a17908753097418-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Lady Pank Drop Everything</div><div class="preco">R$115,00</div><div class="extra">de R$230,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-die-toten-hosen-fiesta-y-ruido-die-toten-hosen-live-in-argentinien/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="197.50"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_115206-a3e2966288ce57707917908754227391-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Die Toten Hosen Fiesta Y Ruido - Die Toten Hosen Live In Argentinien</div><div class="preco">R$197,50</div><div class="extra">de R$395,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-rafa-ponde-brazillian-reggae-experience-vol-2/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="140.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/20261001_115534-226b20ecff0dcd8ea517908754787294-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Rafa Pondé Brazillian Reggae Experience Vol.2</div><div class="preco">R$140,00</div><div class="extra">de R$199,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-panic-at-the-disco-too-weird-to-live-too-rare-to-die/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/d_q_np_947183-mlc42907314894_072020-f-191fc98dce1e4b51fe17907832094641-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Panic! At The Disco Too Weird To Live, Too Rare To Die!</div><div class="preco">R$260,00</div><div class="extra">de R$295,00</div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-milo-j-la-vida-era-mas-corta/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="620.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/81q3wiqiqhl-_ac_sl1200_-bacaf73333aac064da17907832475930-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Milo J La Vida Era Más Corta</div><div class="preco">R$620,00</div><div class="extra"></div></div></a><a class="card tom-3" href="https://www.madeinquebradadiscos.com.br/produtos/lp-disco-de-vinil-mastodon-the-hunter/" target="_blank" rel="noopener" data-site="Made in Quebrada" data-preco="260.00"><div class="capa"><img src="https://acdn-us.mitiendanube.com/stores/946/116/products/71s2drhqngl-_ac_sl1273_-a78ac197c9624b6d5a17907832732949-640-0.webp" loading="lazy" alt=""></div><div class="info"><div class="site">Made in Quebrada</div><div class="titulo">LP Disco de Vinil Mastodon The Hunter</div><div class="preco">R$260,00</div><div class="extra">de R$295,00</div></div></a></div></section></div>
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.11</span></div><span>Enjoei · Estante Virtual · Estação Cultural · Made in Quebrada · Sebo Casa Laranja · Sebo do Messias · Sebo do Vinil</span></footer>
+</main>
+<script>
+// Filtros por site e faixa de preço, e ordem por preço. "Por site" mantém os
+// grupos; ordenar por preço junta tudo numa lista única.
+const estado = { site: '', faixa: '', ordem: '' };
+const secoes = document.getElementById('secoes'), lista = document.getElementById('lista');
+const cards = [...document.querySelectorAll('#secoes .card')];
+const preco = c => c.dataset.preco === '' ? null : parseFloat(c.dataset.preco);
+// Faixas sem buracos: centavos entre 50 e 51 caem em "51 a 100", e assim por diante.
+const FAIXAS = { ate50: p => p <= 50, '51a100': p => p > 50 && p <= 100, mais100: p => p > 100 };
+const passa = c => (!estado.site || c.dataset.site === estado.site)
+  && (!estado.faixa || (preco(c) !== null && FAIXAS[estado.faixa](preco(c))));
+
+function atualizar() {
+  const { ordem } = estado;
+  if (!ordem) {
+    lista.hidden = true; lista.replaceChildren(); secoes.hidden = false;
+    cards.forEach(c => c.hidden = !passa(c));
+    secoes.querySelectorAll('section').forEach(s => {
+      const visiveis = s.querySelectorAll('.card:not([hidden])').length;
+      s.hidden = visiveis === 0;
+      s.querySelector('h2 span').textContent = String(visiveis).padStart(3, '0');
+    });
+    if (!cards.some(passa)) { lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>'; lista.hidden = false; }
+    return;
+  }
+  const escolhidos = cards.filter(passa).sort((a, b) => {
+    const pa = preco(a), pb = preco(b);
+    if (pa === null) return 1; if (pb === null) return -1;  // sem preço vai pro fim
+    return ordem === 'asc' ? pa - pb : pb - pa;
+  });
+  lista.replaceChildren(...escolhidos.map(c => { const n = c.cloneNode(true); n.hidden = false; return n; }));
+  secoes.hidden = true; lista.hidden = false;
+  if (!escolhidos.length) lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>';
+}
+
+// Tema: alterna entre claro e escuro e lembra a escolha neste navegador.
+const raiz = document.documentElement, sistemaEscuro = matchMedia('(prefers-color-scheme: dark)');
+const temaAtual = () => raiz.dataset.theme || (sistemaEscuro.matches ? 'dark' : 'light');
+const marcarTema = () => {
+  raiz.dataset.temaEfetivo = temaAtual();
+  document.getElementById('tema').setAttribute('aria-pressed', temaAtual() === 'dark');
+};
+document.getElementById('tema').addEventListener('click', () => {
+  raiz.dataset.theme = temaAtual() === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('digdigdig.tema', raiz.dataset.theme); } catch (e) {}
+  marcarTema();
+});
+sistemaEscuro.addEventListener('change', marcarTema);
+marcarTema();
+
+document.querySelectorAll('.menu').forEach(m => m.addEventListener('change', () => {
+  estado[m.dataset.chave] = m.value;
+  atualizar();
+}));
+
+document.querySelectorAll('.teclas').forEach(grupo => {
+  grupo.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    grupo.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    estado[grupo.dataset.chave] = b.dataset.valor;
+    atualizar();
+  });
+});
+
+// Botão Dig. Na página do servidor local (servidor.py, que responde em "estado"),
+// fala direto com ele. Na página publicada, manda "dig" para o tópico do ntfy que
+// o Mac escuta e acompanha pelo mesmo tópico os avisos inicio / progresso / fim.
+const dig = document.getElementById('dig'), gatilho = dig.dataset.gatilho;
+const ntfy = 'https://ntfy.sh/' + encodeURIComponent(gatilho);
+const pausa = ms => new Promise(ok => setTimeout(ok, ms));
+function mostrarDig(texto, {ocupado = false, erro = false, dica = ''} = {}) {
+  dig.hidden = false;
+  dig.disabled = ocupado;
+  dig.classList.toggle('erro', erro);
+  dig.textContent = texto;
+  dig.title = dica;
+}
+
+// --- barra de andamento, logo abaixo do topo (como no DigAmazon) ---
+// O Mac avisa a cada busca (um site/termo); entre um aviso e outro a barra
+// anda sozinha, no ritmo medido até ali.
+const SEG_POR_BUSCA = 8;  // ritmo esperado antes da primeira busca terminar
+const barra = document.getElementById('progresso'), linha = document.getElementById('status-dig');
+let andamento = null, relogio = null;
+function mostrarStatus(texto) { linha.hidden = !texto; linha.textContent = texto || ''; }
+function progresso(p) {
+  andamento = p;
+  barra.hidden = false;
+  if (!relogio) relogio = setInterval(desenharProgresso, 1000);
+  desenharProgresso();
+}
+function fimProgresso() {
+  clearInterval(relogio); relogio = null; andamento = null;
+  barra.hidden = true; mostrarStatus('');
+}
+function desenharProgresso() {
+  const p = andamento;
+  if (!p) return;
+  let pct, texto;
+  if (p.etapa === 'publicando') {
+    pct = 96; texto = p.texto || 'Pronto. Publicando o resultado…';
+  } else if (!p.total) {
+    pct = 2; texto = 'Abrindo o navegador…';
+  } else {
+    const ritmo = p.feitas > 0 ? Math.max(3, (p.quando - p.inicio) / 1000 / p.feitas) : SEG_POR_BUSCA;
+    const atual = Math.min(p.feitas + (Date.now() - p.quando) / 1000 / ritmo, p.feitas + .95);
+    const faltam = Math.max(5, Math.round((p.total - atual) * ritmo + 10));
+    pct = Math.max(2, atual / p.total * 92);
+    texto = `Cavando em ${p.site} · busca ${p.feitas + 1} de ${p.total} · faltam uns `
+      + (faltam < 60 ? `${faltam} s` : `${Math.round(faltam / 60)} min`);
+  }
+  barra.style.setProperty('--pct', pct.toFixed(1) + '%');
+  barra.setAttribute('aria-valuenow', Math.round(pct));
+  mostrarStatus(texto);
+}
+
+// --- página local ---
+async function lerEstado() {
+  const r = await fetch('estado', {cache: 'no-store'});
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function mostrarEstado(e) {
+  if (e.rodando) {
+    mostrarDig('Cavando…', {ocupado: true});
+    const p = e.progresso || {etapa: 'buscando', feitas: 0, total: 0, site: ''};
+    progresso({...p, inicio: Date.parse(e.inicio), quando: Date.parse(p.quando || e.inicio)});
+    return;
+  }
+  fimProgresso();
+  if (e.ok === false) mostrarDig('Falhou', {erro: true, dica: 'A última busca falhou — veja logs/buscador.log'});
+  else mostrarDig('Dig');
+}
+async function acompanharLocal() {
+  let e = await lerEstado();
+  mostrarEstado(e);
+  while (e.rodando) { await pausa(2000); e = await lerEstado(); mostrarEstado(e); }
+  if (e.ok) location.reload();
+}
+
+// --- página publicada ---
+async function avisosDesde(desde) {
+  const r = await fetch(`${ntfy}/json?poll=1&since=${desde}`, {cache: 'no-store'});
+  const texto = await r.text();
+  return texto.split('\n').filter(Boolean).map(l => JSON.parse(l)).filter(m => m.event === 'message');
+}
+const emAndamento = m => m === 'inicio' || m.startsWith('progresso:');
+function lerProgresso(aviso, inicio) {
+  // "progresso:3/10:buscando:Estante Virtual"
+  const [, conta = '0/0', etapa = 'buscando', ...site] = aviso.message.split(':');
+  const [feitas, total] = conta.split('/').map(Number);
+  return {etapa, feitas, total, site: site.join(':'), quando: aviso.time * 1000, inicio};
+}
+async function esperarPublicacao() {
+  // o GitHub leva cerca de 1 minuto para pôr no ar a página nova
+  mostrarDig('Publicando…', {ocupado: true});
+  progresso({etapa: 'publicando', texto: 'Pronto. O GitHub leva cerca de 1 minuto para pôr a página nova no ar…'});
+  const atual = document.querySelector('.barra').textContent;
+  for (let i = 0; i < 40; i++) {
+    await pausa(6000);
+    try {
+      const html = await (await fetch(location.pathname + '?t=' + Date.now(), {cache: 'no-store'})).text();
+      const nova = new DOMParser().parseFromString(html, 'text/html').querySelector('.barra');
+      if (nova && nova.textContent !== atual) return location.reload();
+    } catch (err) {}
+  }
+  location.reload();
+}
+async function acompanharOnline(desde) {
+  const limite = Date.now() + 15 * 60 * 1000;
+  let comecou = false;
+  while (Date.now() < limite) {
+    let avisos = [];
+    try { avisos = await avisosDesde(desde); } catch (err) {}
+    const ultimo = avisos.filter(m => m.message !== 'dig').pop();
+    const msg = ultimo?.message || '';
+    if (msg === 'fim:ok') return esperarPublicacao();
+    if (msg === 'fim:falha') {
+      fimProgresso();
+      return mostrarDig('Falhou', {erro: true, dica: 'A busca falhou no Mac — veja logs/buscador.log'});
+    }
+    if (msg === 'recente') {
+      mostrarDig('Já cavou', {ocupado: true, dica: 'Teve busca há menos de 10 minutos'});
+      mostrarStatus('Teve um Dig há menos de 10 minutos. Tente de novo daqui a pouco.');
+      await pausa(5000);
+      mostrarStatus('');
+      return mostrarDig('Dig');
+    }
+    if (emAndamento(msg)) {
+      comecou = true;
+      mostrarDig('Cavando…', {ocupado: true});
+      const inicio = (avisos.filter(m => m.message === 'inicio').pop() || ultimo).time * 1000;
+      progresso(lerProgresso(ultimo, inicio));
+    } else if (!comecou && Date.now() - desde * 1000 > 60000) {
+      mostrarDig('Na fila', {ocupado: true});
+      mostrarStatus('O Mac parece desligado ou dormindo. O pedido fica guardado e a busca roda quando ele acordar.');
+    }
+    await pausa(4000);
+  }
+  fimProgresso();
+  mostrarDig('Dig');
+}
+async function cavarOnline() {
+  const desde = Math.floor(Date.now() / 1000) - 2;
+  mostrarDig('Chamando…', {ocupado: true});
+  mostrarStatus('Chamando o Mac…');
+  try {
+    await fetch(ntfy, {method: 'POST', body: 'dig'});
+  } catch (err) {
+    mostrarStatus('');
+    return mostrarDig('Falhou', {erro: true, dica: 'Não consegui falar com o ntfy'});
+  }
+  acompanharOnline(desde);
+}
+
+let local = false;
+lerEstado().then(e => {
+  local = true;
+  mostrarEstado(e);
+  if (e.rodando) acompanharLocal();
+}).catch(async () => {
+  if (!gatilho) return;
+  mostrarDig('Dig');
+  // se já houver uma busca em andamento (pedida de outro aparelho), acompanha
+  try {
+    const desde = Math.floor(Date.now() / 1000) - 15 * 60;
+    const ultimo = (await avisosDesde(desde)).map(m => m.message).filter(m => emAndamento(m) || m.startsWith('fim:')).pop();
+    if (ultimo && emAndamento(ultimo)) acompanharOnline(desde);
+  } catch (err) {}
+});
+dig.addEventListener('click', async () => {
+  if (!local) return cavarOnline();
+  mostrarDig('Cavando…', {ocupado: true});
+  try {
+    await fetch('dig', {method: 'POST', headers: {'X-Dig': '1'}});
+    await acompanharLocal();
+  } catch (err) { fimProgresso(); mostrarDig('Falhou', {erro: true}); }
+});
+</script>
+</body></html>
