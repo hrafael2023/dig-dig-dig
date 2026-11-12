@@ -169,6 +169,26 @@ JS_NOVA_FLORESTA = """() => [...document.querySelectorAll('.produto_box_01')].ma
   };
 })"""
 
+# Marcondes Discos (WooCommerce): em vez da página, que só mostra 18 discos,
+# lê a API pública da loja (Store API), que devolve os mais novos em JSON.
+JS_MARCONDES = """() => {
+  const sem_html = t => new DOMParser().parseFromString(t || '', 'text/html').body.textContent.trim();
+  const reais = (v, casas) => 'R$ ' + (Number(v) / 10 ** casas).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+  return JSON.parse(document.body.innerText).filter(p => p.is_in_stock).map(p => {
+    const pr = p.prices, casas = pr.currency_minor_unit;
+    const attr = nome => p.attributes.find(a => a.name === nome)?.terms.map(t => t.name).join(', ') || '';
+    return {
+      titulo: sem_html(p.name),
+      preco: reais(pr.price, casas),
+      link: p.permalink,
+      foto: p.images[0]?.thumbnail || p.images[0]?.src || '',
+      // ex.: "forró · Guriatã · Usado"
+      extra: [p.tags.map(t => sem_html(t.name)).join(', '), attr('Gravadora'), attr('Condição'),
+              p.on_sale ? 'de ' + reais(pr.regular_price, casas) : ''].filter(Boolean).join(' · '),
+    };
+  });
+}"""
+
 # Leitor genérico para sites novos: qualquer link com foto e texto.
 JS_GENERICO = """() => [...document.querySelectorAll('a[href]')].filter(a => a.querySelector('img')).map(a => {
   const box = a.closest('li, article, [class*="card"], [class*="product"], [class*="item"]') || a;
@@ -191,6 +211,7 @@ SITES = {
     "estantevirtual.com.br": ("Estante Virtual", JS_ESTANTE),
     "sebodovinil.com.br": ("Sebo do Vinil", JS_SEBO_VINIL),
     "sebonovafloresta.com.br": ("Sebo Nova Floresta", JS_NOVA_FLORESTA),
+    "marcondesdiscos.com.br": ("Marcondes Discos", JS_MARCONDES),
 }
 
 
