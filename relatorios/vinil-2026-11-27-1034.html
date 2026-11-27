@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dig Dig Dig!</title>
+<script>
+  // aplica o tema escolhido antes de pintar a página, para não piscar
+  try { const t = localStorage.getItem("digdigdig.tema"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%2317312f'/%3E%3Ccircle cx='24' cy='24' r='14' fill='%23fff'/%3E%3Ccircle cx='24' cy='24' r='4' fill='%2317312f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..800&display=swap" rel="stylesheet">
+<style>
+/* Dig Dig Dig! — no design system do FootyLogos: DM Sans, verde-escuro sobre
+   cinza-esverdeado, painéis brancos com borda fina, cantos retos e rótulos
+   pequenos em maiúsculas. */
+:root {
+  --bg: #f4f6f5;
+  --panel: #ffffff;
+  --ink: #17312f;
+  --mut: #53605c;
+  --eyebrow: #6e817a;
+  --line: #d9dfdc;
+  --bar: #eef1ef;
+  /* um tom por site, para separar as seções no scroll */
+  --tom-0: #eaf2ed; --tom-1: #f3efe4; --tom-2: #e9eef5;
+  --tom-3: #f4ebe8; --tom-4: #f0f1e2; --tom-5: #e7edee;
+  --tag-bg: #e8eeeb;
+  --tag-ink: #17312f;
+  --accent: #17312f;
+  --on-accent: #ffffff;
+  --dig: rgb(22, 19, 15);
+  --on-dig: #ffffff;
+  --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+/* Escuro: segue o sistema, a menos que o botão de tema tenha escolhido outro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1413;
+    --panel: #131d1c;
+    --ink: #e3ebe8;
+    --mut: #9aaba5;
+    --eyebrow: #7f938c;
+    --line: #253330;
+    --bar: #1a2725;
+    --tom-0: #14211c; --tom-1: #201d15; --tom-2: #151c25;
+    --tom-3: #221816; --tom-4: #1c1e14; --tom-5: #161d1f;
+    --tag-bg: #1d2b28;
+    --tag-ink: #d4e2dd;
+    --accent: #d4e2dd;
+    --on-accent: #0d1413;
+    --dig: #e3ebe8;
+    --on-dig: rgb(22, 19, 15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1413;
+  --panel: #131d1c;
+  --ink: #e3ebe8;
+  --mut: #9aaba5;
+  --eyebrow: #7f938c;
+  --line: #253330;
+  --bar: #1a2725;
+  --tom-0: #14211c; --tom-1: #201d15; --tom-2: #151c25;
+  --tom-3: #221816; --tom-4: #1c1e14; --tom-5: #161d1f;
+  --tag-bg: #1d2b28;
+  --tag-ink: #d4e2dd;
+  --accent: #d4e2dd;
+  --on-accent: #0d1413;
+  --dig: #e3ebe8;
+  --on-dig: rgb(22, 19, 15);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+/* garante que o atributo hidden vença os display: flex/grid de .card e .grade */
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased;
+}
+main { max-width: 1240px; margin: 0 auto; padding: 0 24px 72px; }
+/* rótulo pequeno em maiúsculas, como "FOOTBALL IDENTITY DATABASE" */
+.grupo > span, .grupo > label, .busca label, h2 span, .site {
+  font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--eyebrow);
+}
+
+/* Cabeçalho: faixa branca de ponta a ponta, logo à esquerda, ações à direita */
+.topo {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0;
+  background: var(--panel);
+  /* fundo e linha de baixo vazam até as bordas da janela sem criar rolagem lateral */
+  box-shadow: 0 0 0 100vmax var(--panel), 0 1px 0 100vmax var(--line); clip-path: inset(0 -100vmax -1px);
+}
+.topo h1 {
+  display: flex; align-items: center; gap: 10px; margin: 0;
+  font-size: 22px; line-height: 1; font-weight: 700; letter-spacing: -.04em;
+}
+/* marca: disco branco num quadrado verde, como o "FL" do FootyLogos */
+.topo h1::before {
+  content: ""; flex: none; width: 34px; height: 34px; border-radius: 8px;
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='17' cy='17' r='10' fill='%23fff'/%3E%3Ccircle cx='17' cy='17' r='3' fill='%2317312f'/%3E%3C/svg%3E") center / 100% no-repeat;
+}
+:root[data-tema-efetivo="dark"] .topo h1::before { background-color: #2c4a46; }
+/* Ações à direita do logo: link do Arquivo e botão Dig */
+.acoes { display: flex; align-items: center; gap: 8px; flex: none; }
+.link-topo {
+  display: inline-flex; align-items: center; height: 38px; padding: 0 10px;
+  color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 650;
+}
+.link-topo:hover { text-decoration: underline; text-underline-offset: 3px; }
+.topo .logo { color: inherit; text-decoration: none; }
+/* Botão Dig: o botão principal, cheio e reto */
+.dig {
+  flex: none; min-width: 76px; height: 38px; padding: 0 18px; border: 0; border-radius: 0; cursor: pointer;
+  background: var(--dig); color: var(--on-dig);
+  font: 750 13px/1 var(--sans); letter-spacing: .01em;
+}
+.dig:hover { opacity: .88; }
+.dig:focus-visible { outline: 2px solid var(--dig); outline-offset: 3px; }
+.dig:disabled { cursor: progress; opacity: 1; background: var(--tag-bg); color: var(--tag-ink); }
+.dig.erro { background: #b3261e; color: #fff; }
+
+/* Arquivo: os Digs numa tabela de linhas dentro de um painel */
+.lista-arquivo { list-style: none; margin: 16px 0 0; padding: 0; background: var(--panel); border: 1px solid var(--line); }
+.lista-arquivo li + li { border-top: 1px solid var(--line); }
+.lista-arquivo a {
+  display: grid; grid-template-columns: 200px 110px 1fr 16px; align-items: center; gap: 4px 24px;
+  padding: 18px 24px; color: var(--ink); text-decoration: none;
+}
+.lista-arquivo a::after { content: "→"; color: var(--eyebrow); }
+.lista-arquivo a:hover { background: var(--bar); }
+.lista-arquivo a:hover::after { color: var(--ink); }
+.lista-arquivo .quando { font-size: 22px; line-height: 1.1; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.lista-arquivo .quando small { margin-left: 8px; font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--mut); }
+.lista-arquivo .quantos { font-weight: 700; font-size: 14px; }
+.lista-arquivo .onde { color: var(--mut); font-size: 14px; }
+
+/* Busca no Arquivo: caixa branca com lupa, como a busca do FootyLogos */
+.busca { margin-top: 16px; padding: 28px 32px; background: var(--panel); border: 1px solid var(--line); }
+.busca label { display: block; margin-bottom: 12px; }
+.busca input {
+  width: 100%; height: 58px; padding: 0 16px 0 50px; border: 1px solid var(--ink); border-radius: 0;
+  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236e817a' stroke-width='1.8'%3E%3Ccircle cx='8.5' cy='8.5' r='6'/%3E%3Cpath d='M13 13l5 5' stroke-linecap='round'/%3E%3C/svg%3E") 18px center / 18px no-repeat;
+  color: var(--ink); outline: none; -webkit-appearance: none; appearance: none;
+  font: 400 16px/1.2 var(--sans);
+}
+.busca input::placeholder { color: var(--eyebrow); }
+.busca input:focus { box-shadow: 0 0 0 1px var(--ink); }
+#resultados .contagem { margin: 24px 0 16px; font-size: 13px; font-weight: 650; color: var(--mut); }
+
+/* Barra de andamento do Dig, logo abaixo do topo (como no DigAmazon) */
+.progresso { height: 4px; margin-top: 16px; background: var(--line); overflow: hidden; }
+.progresso i { display: block; height: 100%; width: var(--pct, 2%); background: var(--ink); transition: width 1s linear; }
+.status-dig { margin: 8px 0 0; font-size: 13px; font-weight: 500; color: var(--mut); }
+@media (prefers-reduced-motion: reduce) { .progresso i { transition: none; } }
+
+/* Barra de status: o painel de abertura, com o número em destaque */
+.barra {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px;
+  margin-top: 24px; padding: 28px 32px; background: var(--panel); border: 1px solid var(--line);
+  font-size: 14px; color: var(--mut);
+}
+.barra > div:first-child { display: flex; flex-direction: column; gap: 6px; }
+.barra b { font-size: 40px; line-height: 1; font-weight: 700; letter-spacing: -.05em; color: var(--ink); }
+.barra .mut { color: var(--mut); }
+.barra .lado { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-weight: 500; }
+/* Botão de tema, dentro do painel */
+.tema {
+  width: 34px; height: 34px; border: 1px solid var(--line); padding: 0; border-radius: 0; cursor: pointer;
+  background: var(--panel); color: var(--ink); display: grid; place-items: center;
+}
+.tema:hover { border-color: var(--ink); }
+.tema:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tema svg { width: 16px; height: 16px; transition: transform .3s; }
+:root[data-tema-efetivo="dark"] .tema svg { transform: rotate(180deg); }
+
+/* Avisos */
+.avisos { list-style: none; margin: 0; padding: 12px 32px; background: var(--panel); border: 1px solid var(--line); border-top: 0; font-size: 13px; color: var(--mut); }
+.avisos li { padding: 3px 0; }
+.avisos li::before { content: "→ "; color: var(--ink); }
+
+/* Filtros: painel colado ao de cima, botões retos com borda; o ativo fica cheio */
+.controles {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px 36px; margin: 0;
+  padding: 18px 32px; background: var(--panel); border: 1px solid var(--line); border-top: 0;
+}
+.grupo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.menu {
+  font: 650 12px/1 var(--sans); color: var(--ink); background-color: var(--panel);
+  border: 1px solid var(--line); border-radius: 0; height: 34px; padding: 0 34px 0 12px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 16px center, right 12px center; background-size: 4px 4px; background-repeat: no-repeat;
+}
+.menu:hover { border-color: var(--ink); }
+.menu:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.menu option { color: var(--ink); background: var(--panel); }
+.teclas { display: flex; flex-wrap: wrap; }
+.teclas button {
+  font: 650 12px/1 var(--sans); color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 0; height: 34px; padding: 0 12px; margin-left: -1px; cursor: pointer;
+}
+.teclas button:first-child { margin-left: 0; }
+.teclas button:hover { position: relative; border-color: var(--ink); }
+.teclas button[aria-pressed="true"] { position: relative; background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.teclas button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Seções: cada site é um painel com o seu tom, e o nome do site fica preso no
+   topo enquanto se rola — fica claro quando o site muda. */
+.tom-0 { --sec: var(--tom-0); } .tom-1 { --sec: var(--tom-1); } .tom-2 { --sec: var(--tom-2); }
+.tom-3 { --sec: var(--tom-3); } .tom-4 { --sec: var(--tom-4); } .tom-5 { --sec: var(--tom-5); }
+#secoes { margin-top: 24px; display: flex; flex-direction: column; gap: 24px; }
+#secoes section { background: var(--sec); border: 1px solid var(--line); padding: 0 24px 24px; }
+h2 {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 -24px 0; padding: 22px 24px 18px; background: var(--sec);
+  font-size: 29px; line-height: 1.1; font-weight: 700; letter-spacing: -.034em;
+}
+h2 span { letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+#lista { margin-top: 24px; }
+
+.card { color: inherit; text-decoration: none; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); }
+.card:hover { border-color: var(--ink); }
+.capa { position: relative; aspect-ratio: 1; background: var(--bar); overflow: hidden; border-bottom: 1px solid var(--line); }
+.capa img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.card:hover .capa img { transform: scale(1.03); }
+.sem-foto { position: absolute; inset: 0; display: grid; place-items: center; }
+.sem-foto::before { content: ""; width: 44%; aspect-ratio: 1; border-radius: 50%; background: var(--ink); opacity: .85; }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.info { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
+.titulo {
+  order: 1; font-size: 15px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.card:hover .titulo { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.preco { order: 2; margin-top: auto; padding-top: 12px; font-size: 18px; font-weight: 750; letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.extra { order: 3; font-size: 13px; color: var(--mut); }
+.site { display: none; order: 0; margin-bottom: 8px; }
+#lista .site, #resultados .site { display: block; }
+
+.vazio { grid-column: 1 / -1; margin: 0; padding: 72px 24px; font-size: 22px; font-weight: 700; letter-spacing: -.03em; text-align: center; background: var(--panel); border: 1px solid var(--line); }
+#secoes .vazio, #lista .vazio { margin-top: 0; }
+footer {
+  margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;
+  font-size: 13px; color: var(--mut);
+}
+footer strong { color: var(--ink); font-weight: 700; font-size: 16px; letter-spacing: -.03em; }
+footer .versao { margin-left: 8px; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 700px) {
+  main { padding: 0 16px 56px; }
+  .topo { padding: 10px 0; }
+  .topo h1 { font-size: 19px; gap: 8px; }
+  .topo h1::before { width: 30px; height: 30px; }
+  .acoes { gap: 6px; }
+  .link-topo { height: 34px; padding: 0 6px; }
+  .dig { min-width: 60px; height: 34px; padding: 0 12px; }
+  .barra { margin-top: 16px; padding: 20px; }
+  .barra b { font-size: 32px; }
+  .barra .lado { justify-content: space-between; }
+  .avisos { padding: 10px 20px; }
+  .controles { padding: 16px 20px; gap: 14px; }
+  .grupo { gap: 10px; }
+  .lista-arquivo a { grid-template-columns: 1fr auto; padding: 16px 20px; }
+  .lista-arquivo a::after { display: none; }
+  .lista-arquivo .quando { font-size: 20px; }
+  .lista-arquivo .onde { grid-column: 1 / -1; font-size: 13px; }
+  .busca { padding: 20px; }
+  .busca input { height: 52px; }
+  #secoes { margin-top: 16px; gap: 16px; }
+  #secoes section { padding: 0 12px 12px; }
+  h2 { font-size: 24px; margin: 0 -12px; padding: 16px 12px 14px; }
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .info { padding: 10px 10px 12px; }
+  .titulo { font-size: 14px; }
+  .preco { font-size: 16px; padding-top: 8px; }
+  .extra { font-size: 12px; }
+}
+</style><style>.dig{display:none!important}.topo .tema{display:none}.topo{justify-content:space-between}.arquivo-nav{margin-left:auto;font-size:15px;font-weight:500;color:inherit;text-decoration:none}.arquivo-nav:hover{text-decoration:underline}</style></head><body><main>
+
+<header class="topo">
+  <h1>Dig Dig Dig!</h1>
+  <nav class="acoes"><a class="link-topo" href="../arquivo.html">← Arquivo</a><button type="button" class="dig" id="dig" data-gatilho="" hidden>Dig</button></nav>
+</header>
+<div id="progresso" class="progresso" role="progressbar" aria-label="Andamento do Dig" aria-valuemin="0" aria-valuemax="100" hidden><i></i></div>
+<p id="status-dig" class="status-dig" role="status" hidden></p>
+
+<div class="barra">
+  <div><b>109 novos</b><span class="mut">Atualizado em 27.11.2026 às 10:34</span></div>
+  <div class="lado"><span>7317 acompanhados</span>
+    <button type="button" class="tema" id="tema" aria-label="Alternar tema claro/escuro">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 2a8 8 0 0 1 0 16z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+
+<div class="controles"><div class="grupo"><label for="menu-site">Site</label><select class="menu" id="menu-site" data-chave="site"><option value="">Todos os sites</option><option value="Enjoei">Enjoei</option><option value="Estação Cultural">Estação Cultural</option><option value="Marcondes Discos">Marcondes Discos</option></select></div><div class="grupo"><span>Preço</span><div class="teclas" data-chave="faixa"><button type="button" data-valor="" aria-pressed="true">Todos</button><button type="button" data-valor="ate50" aria-pressed="false">Até R$ 50</button><button type="button" data-valor="51a100" aria-pressed="false">R$ 51 a 100</button><button type="button" data-valor="mais100" aria-pressed="false">Mais de R$ 101</button></div></div><div class="grupo"><span>Ordem</span><div class="teclas" data-chave="ordem"><button type="button" data-valor="" aria-pressed="true">Por site</button><button type="button" data-valor="asc" aria-pressed="false">Menor preço</button><button type="button" data-valor="desc" aria-pressed="false">Maior preço</button></div></div></div><div id="lista" class="grade" hidden></div>
+<div id="secoes"><section class="tom-0" data-site="Enjoei"><h2>Enjoei <span>054</span></h2><div class="grade"><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-novela-bambole-nacional-vinil-1987-116861582" target="_blank" rel="noopener" data-site="Enjoei" data-preco="109"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS8zMWRkOWZkYzNkZmQ5ZjE2NjE5NTAyODM0OGY4YzI3NC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - novela bambolê nacional - vinil - 1987</div><div class="preco">R$ 109</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-jorginho-do-imperio-viagem-encantada-vinil-1975-116861407" target="_blank" rel="noopener" data-site="Enjoei" data-preco="89"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS9hMjAyMWEzNzM3ZTU3ZGNiMzkwZGRkOTQ2MWNlMjU2My5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - jorginho do império - viagem encantada - vinil - 1975</div><div class="preco">R$ 89</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-negritude-junior-deixa-acontecer-vinil-autografado-116861332" target="_blank" rel="noopener" data-site="Enjoei" data-preco="119"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS9mNGJlZjBlMTFlMDQ3MzUwZGM1NTIwM2EyZTE0M2FlOC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - negritude junior - deixa acontecer - vinil autografado</div><div class="preco">R$ 119</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-mariah-carey-daydream-30th-anniversary-iridescent-gold-vinyl-3-lp-lacrado-tk0m-154993096" target="_blank" rel="noopener" data-site="Enjoei" data-preco="1149"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjkxMDY1OC9kNWY0MmQyZWRiMGU4NzBjYTBlZWU2Y2I4YWFhYzg1YS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp mariah carey - daydream 30th anniversary iridescent gold vinyl 3-lp lacrado tk0m</div><div class="preco">R$ 1.149</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-melanie-martinez-cry-baby-10th-anniversary-deluxe-colored-vinyl-3-lp-lacrado-tk0m-154998133" target="_blank" rel="noopener" data-site="Enjoei" data-preco="1079"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjkxMDY1OC8xNzZhM2FlZTc3MTEzYTcyNmQ2MzU4MjE0YjExZjY0Yi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp melanie martinez - cry baby 10th anniversary deluxe colored vinyl 3-lp lacrado tk0m</div><div class="preco">R$ 1.079</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-lady-gaga-chromatica-deluxe-edition-trifold-lacrado-tk0m-155689321" target="_blank" rel="noopener" data-site="Enjoei" data-preco="839"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjkxMDY1OC85MzFjZmVhMDc2YTM3NTEwNGU1ZDJkYzI1NDZiZDg3Yy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp lady gaga - chromatica deluxe edition trifold lacrado tk0m</div><div class="preco">R$ 839</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-dua-lipa-radical-optimism-special-edition-blue-galaxy-vinyl-lacrado-tk0m-155675596" target="_blank" rel="noopener" data-site="Enjoei" data-preco="559"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjkxMDY1OC9kZGFkNjk3MTRlYTExMThiMDUwMTliNjQwZDU1OTlkZi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp dua lipa - radical optimism special edition blue galaxy vinyl lacrado tk0m</div><div class="preco">R$ 559</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-adela-prima-pink-vinyl-importado-lacrado-tk0m-155674867" target="_blank" rel="noopener" data-site="Enjoei" data-preco="499"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjkxMDY1OC83M2ZhM2Q2M2Q4ZjI1NWEwNTE0YzQ0MmMyMjk3OWU0Ni5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp adela prima pink vinyl importado lacrado tk0m</div><div class="preco">R$ 499</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-paul-mauriat-brazilian-landscape-vinil-1974-116861118" target="_blank" rel="noopener" data-site="Enjoei" data-preco="99"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS9mNjExZmU5OWRkZGEyYWMyOTYwMjRjYTYxZjgxNDQxMi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp paul mauriat - brazilian landscape - vinil - 1974</div><div class="preco">R$ 99</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-paul-mauriat-the-greatest-movies-themes-vinil-1974-116860941" target="_blank" rel="noopener" data-site="Enjoei" data-preco="99"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS9mOGE0NmRlZWIwY2ZkM2E4MTExNDk4ODAyZGRjYmQ1Ni5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp paul mauriat - the greatest movies themes - vinil - 1974</div><div class="preco">R$ 99</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-mpb-especial-selecao-musicas-nacional-vinil-1974-116860796" target="_blank" rel="noopener" data-site="Enjoei" data-preco="89"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS83MDJkMTFmZGRmYzY3ZTg2YTI2NDA4Y2IzYmIwOTc1NC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp mpb especial - seleção músicas nacional - vinil - 1974</div><div class="preco">R$ 89</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-nelson-goncalves-a-volta-do-boemio-vinil-1967-116860707" target="_blank" rel="noopener" data-site="Enjoei" data-preco="99"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS9hN2EwZDJhOGYxNjNlODAzY2RiOGE0OWM4MjgxMDM5ZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp nelson gonçalves - a volta do boêmio - vinil - 1967</div><div class="preco">R$ 99</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-joao-penca-e-seus-miquinhos-amestrados-vinil-1989-116860457" target="_blank" rel="noopener" data-site="Enjoei" data-preco="99"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS80MWE3YTg1Nzc5YTc3YzI2NTBhNjhhNWRlZWQ0M2UzZi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - joão penca e seus miquinhos amestrados - vinil - 1989</div><div class="preco">R$ 99</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-guilherme-arantes-ouro-vinil-mpb-1987-116860283" target="_blank" rel="noopener" data-site="Enjoei" data-preco="89"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS84NTUwZmFiMDk3YjIwMjA2ZDgxNmQ1ZjkxZDUzY2MzZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - guilherme arantes - ouro - vinil - mpb - 1987</div><div class="preco">R$ 89</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-jair-rodrigues-10-anos-depois-vinil-mpb-1974-116860010" target="_blank" rel="noopener" data-site="Enjoei" data-preco="129"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS9kMWUxYmY3MDQ1NDQzM2EzMDI3ZmViOTFmNDg1ZmM1Zi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - jair rodrigues - 10 anos depois - vinil - mpb - 1974</div><div class="preco">R$ 129</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-fagner-vinil-mpb-1986-116859933" target="_blank" rel="noopener" data-site="Enjoei" data-preco="99"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS8yNDkzZDIwMTE0Njc1Y2Y5YjYzNGIzM2JiYzI1NmJjOS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - fagner - vinil - mpb - 1986</div><div class="preco">R$ 99</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-fagner-palavra-de-amor-vinil-mpb-1983-116859836" target="_blank" rel="noopener" data-site="Enjoei" data-preco="99"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS80NzE1MjZjZTIzZjUwNTJhMzY1YWMwOTRmOTFlNDViMS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - fagner - palavra de amor - vinil - mpb - 1983</div><div class="preco">R$ 99</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-fagner-a-mesma-pessoa-vinil-mpb-1984-116859663" target="_blank" rel="noopener" data-site="Enjoei" data-preco="99"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS8wZmI3NzYzYzM5OTlhMzQ1M2MyOWE2MDI5OGViYTUzZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - fagner - a mesma pessoa - vinil - mpb - 1984</div><div class="preco">R$ 99</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-daniela-mercury-musica-de-rua-axe-vinil-1994-116823561" target="_blank" rel="noopener" data-site="Enjoei" data-preco="89"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS85YWY1NWIxN2M5OWQ4ZDhlZDc2NjZiMTVhZWQ2ZDZlMC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - daniela mercury - música de rua - axé - vinil - 1994</div><div class="preco">R$ 89</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-new-kids-on-the-block-step-by-step-vinil-1990-116823460" target="_blank" rel="noopener" data-site="Enjoei" data-preco="99"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS82MGFjMDhlNTkwNmI0ZGUwOWMwMjBmMDhkY2E5NDE5Ny5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp new kids on the block - step by step - vinil - 1990</div><div class="preco">R$ 99</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-a-turma-do-balao-magico-roda-roda-piao-vinil-1986-116823310" target="_blank" rel="noopener" data-site="Enjoei" data-preco="99"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS9hNjhkZTNmYTE4N2NjOGZmZGZjODI3OWRhN2M3NjAwNC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - a turma do balão mágico - roda, roda pião - vinil 1986</div><div class="preco">R$ 99</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-carnaval-do-rio-1969-selecao-vinil-116823208" target="_blank" rel="noopener" data-site="Enjoei" data-preco="89"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS84YzdiODk0OTAzNTYyNzYyZjgxZGNkNzk5YmMzYzNhZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp - carnaval do rio - 1969 - seleção - vinil</div><div class="preco">R$ 89</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-grandes-temas-de-filmes-selecao-musicas-vinil-1972-116793287" target="_blank" rel="noopener" data-site="Enjoei" data-preco="89"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjA3MDQzMS9kY2FjMDg2NTU4YWU0NWIxYjE3NzcyMzk3OTdkOWY0NC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp grandes temas de filmes - seleção músicas - vinil - 1972</div><div class="preco">R$ 89</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-vinil-cartola-cartola-1976-original-de-epoca-155335544" target="_blank" rel="noopener" data-site="Enjoei" data-preco="400"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80Mzg0MTQ1NC80MTgxNTU0NGUwMDM0ZWJiYjAxMDAxM2I1NTE2NDI3My5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp vinil cartola - cartola (1976) original de época</div><div class="preco">R$ 400</div><div class="extra">de R$ 600</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-leandro-amp-leonardo-vol-9-155462415" target="_blank" rel="noopener" data-site="Enjoei" data-preco="30"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzMzODY3Ny8xOTgzODNhN2FkZTAyMjk5NDQ4OWYwY2FlODRhZWZlYy5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil leandro &amp; leonardo vol 9</div><div class="preco">R$ 30</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-samba-do-coracao-mel-na-boca-150995308" target="_blank" rel="noopener" data-site="Enjoei" data-preco="50"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xNjQ2NDYxNy82MjdhODI1MmM2Yzc3Mjc1ZDMwNGM2YTYyZWZiMGIyMi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil samba do coração mel na boca</div><div class="preco">R$ 50</div><div class="extra">de R$ 85</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-il-lazio-vol-2-i-canti-e-le-zampogne-153703628" target="_blank" rel="noopener" data-site="Enjoei" data-preco="122"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTk2MzI1My82YmRmOWFjNjIxMDkyMDU4MGQzOWEzMWVmOGFjOTY0Ni5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil il lazio vol 2 i canti e le zampogne</div><div class="preco">R$ 122</div><div class="extra">de R$ 140</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-giuseppe-valdengo-world-of-song-153682091" target="_blank" rel="noopener" data-site="Enjoei" data-preco="74"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTk2MzI1My8xY2M0MDhhZWE2ZjEzODQ4YTVhMmQxMjQwYmNlNmVmYS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil giuseppe valdengo world of song</div><div class="preco">R$ 74</div><div class="extra">de R$ 100</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-fagner-beleza-1979-149829043" target="_blank" rel="noopener" data-site="Enjoei" data-preco="40"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMTQ2NzIzMC80Y2M3OWVmNzRhZjU5NzA3MzVhMzE2YjFjM2I4MmE0Ny5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil fagner beleza 1979</div><div class="preco">R$ 40</div><div class="extra">de R$ 80</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-louis-armstrong-gigantes-do-jazz-152717159" target="_blank" rel="noopener" data-site="Enjoei" data-preco="25"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xODAxMjYxMy9jZGVlMTJjYjE1MDlmZTdmZmI3MDBhYTc0ZmE5NTM2MC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil louis armstrong gigantes do jazz</div><div class="preco">R$ 25</div><div class="extra">de R$ 37</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-the-love-unlimited-orchestra-rise-142525625" target="_blank" rel="noopener" data-site="Enjoei" data-preco="29"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy81MjY3OTAyLzViY2I0MmM3ZTA3NzY1YTE4NWY0NzIwNWRiMTk5MGZkLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil the love unlimited orchestra rise</div><div class="preco">R$ 29</div><div class="extra">de R$ 45</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-luiz-gonzaga-quadrilhas-e-marchinhas-151556569" target="_blank" rel="noopener" data-site="Enjoei" data-preco="72"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjY5MTA4MS82YzZlY2E1NGQzMDg0NzhlMDZkYzNiNzM5NDc2M2UzOC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil luiz gonzaga quadrilhas e marchinhas</div><div class="preco">R$ 72</div><div class="extra">de R$ 150</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-os-tincoas-7-polegadas-150081338" target="_blank" rel="noopener" data-site="Enjoei" data-preco="263"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjY5MTA4MS9mYWE3NWI2MjBiNjk4YWYxMzBkODE1MWNlYTI0NTMwYS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil os tincoas 7 polegadas</div><div class="preco">R$ 263</div><div class="extra">de R$ 700</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-jacare-de-bobeira-vira-bolsa-150143128" target="_blank" rel="noopener" data-site="Enjoei" data-preco="51"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjY5MTA4MS9mZDZlNmJlYzYxYmViOGEyMjUyYWFmNmI1YWZmN2VmNS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil jacaré de bobeira vira bolsa</div><div class="preco">R$ 51</div><div class="extra">de R$ 150</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-maria-bethania-passaro-da-manha-149622826" target="_blank" rel="noopener" data-site="Enjoei" data-preco="30"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjY5MTA4MS9lOWFiY2U0ZDg3M2QyYTIyZTQzYzg3ZThkODAzZDViNC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil maria bethânia pássaro da manhã</div><div class="preco">R$ 30</div><div class="extra">de R$ 99</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-rick-wakeman-the-myths-and-legends-of-king-arthur-1975-155068594" target="_blank" rel="noopener" data-site="Enjoei" data-preco="209"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMzU1NzEvMjUxYThjOWExZmVkZTE3NjI3NDM3Njk1NzcyNmQxNzYuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp rick wakeman the myths and legends of king arthur 1975</div><div class="preco">R$ 209</div><div class="extra">de R$ 220</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-poeira-amp-country-154815920" target="_blank" rel="noopener" data-site="Enjoei" data-preco="31"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzMzODY3Ny9lZGY3YzBkZmYxYzIzMWQyNjQyOTY1YzQ4ZjZjYjc0OC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil poeira &amp; country</div><div class="preco">R$ 31</div><div class="extra">de R$ 33</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-country-and-western-154815858" target="_blank" rel="noopener" data-site="Enjoei" data-preco="31"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzMzODY3Ny9jZjgyMWU0ODgwMDc3ZTFhZWI1OTE4ZjVhN2YzNWM0ZS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil country and western</div><div class="preco">R$ 31</div><div class="extra">de R$ 33</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-madonna-true-blue-155526104" target="_blank" rel="noopener" data-site="Enjoei" data-preco="169"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzMzODY3Ny81OWZiOGU1MjU1NzYwMDI5MWVhMzUxNzJjYmZjMzg2Yi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil madonna true blue</div><div class="preco">R$ 169</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-tiao-carreiro-e-isto-que-o-povo-quer-154815673" target="_blank" rel="noopener" data-site="Enjoei" data-preco="20"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzMzODY3Ny9hNDZkNWZmNmYzNzQ5M2Y4MzM2NTYwNjhhMjE1NzYyNC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil tião carreiro é isto que o povo quer</div><div class="preco">R$ 20</div><div class="extra">de R$ 22</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-luiz-gonzaga-danado-de-bom-151555886" target="_blank" rel="noopener" data-site="Enjoei" data-preco="48"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjY5MTA4MS9lN2UzNGRkM2UzZTIxMjEyYTI1YTRmMjA0ODljMzRjNS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil luiz gonzaga danado de bom</div><div class="preco">R$ 48</div><div class="extra">de R$ 99</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-vinil-andre-do-villar-se-ligue-doutor-150081647" target="_blank" rel="noopener" data-site="Enjoei" data-preco="181"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MjY5MTA4MS9iZDJhYzNmYjFlYjQ2OWM3MzE1MGJjYjEzMWM3Mjc2My5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco vinil andré do villar se ligue doutor</div><div class="preco">R$ 181</div><div class="extra">de R$ 499</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/vinil-funk-como-le-gusta-edicao-especial-limitada-154294409" target="_blank" rel="noopener" data-site="Enjoei" data-preco="544"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNTgyNTk2Ny8wMWI0NmE2MGM2ODlkMGRlYTRiOTgxZDAzMjI4YWMwYi5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">vinil funk como le gusta edição especial limitada</div><div class="preco">R$ 544</div><div class="extra">de R$ 629</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-the-mission-children-1988-150085613" target="_blank" rel="noopener" data-site="Enjoei" data-preco="122"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MTg3NTgxMy9hZDFmNjE2MDlkM2RlZTdhNjgwYmVmNmFhNDBmMjM5ZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp the mission- children 1988</div><div class="preco">R$ 122</div><div class="extra">de R$ 130</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-vinil-charlie-brown-jr-charlie-brown-jr-100-abalando-sua-fabrica-lacrado-novo-155392045" target="_blank" rel="noopener" data-site="Enjoei" data-preco="350"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zOTQyNTY4Ny8zYWVjNzgzNmVmYmQxZDA4YWQ3M2RmYzNlM2EyNDE1My5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp vinil charlie brown jr - charlie brown jr 100% abalando sua fábrica lacrado novo</div><div class="preco">R$ 350</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-tiao-carreiro-e-pardinho-no-som-da-viola-155237604" target="_blank" rel="noopener" data-site="Enjoei" data-preco="52"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zNjY1MDAyMi81MDRkZTRmZTdiM2JhYTE0NDU3ZTkxOThiZTNjMjEyNS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp tião carreiro e pardinho no som da viola</div><div class="preco">R$ 52</div><div class="extra">de R$ 54</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-lp-gilberto-amp-gilmar-155236505" target="_blank" rel="noopener" data-site="Enjoei" data-preco="24"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy81OTc2NjgvM2Q5YTYyN2RiZjY2MzJmNWJiZGQxYjVhNGRhN2FmOTUuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil lp gilberto &amp; gilmar</div><div class="preco">R$ 24</div><div class="extra">de R$ 25</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-arrasta-pe-quente-sanfoneiro-guido-155551426" target="_blank" rel="noopener" data-site="Enjoei" data-preco="200"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy82OTc4NjkwLzA2MWI5ZjQxOWY0NTRmNzQ4OWE0MTc3ZDNmMTlkMmM3LmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil arrasta-pé quente sanfoneiro guidô</div><div class="preco">R$ 200</div><div class="extra"></div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-the-byrds-play-dylan-152992509" target="_blank" rel="noopener" data-site="Enjoei" data-preco="164"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8zMTg1MzQ1Mi84MzliZWU2ZDFiYmMyMWI3NDhmOWMxY2UyYjg5N2FkZC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil the byrds play dylan</div><div class="preco">R$ 164</div><div class="extra">de R$ 215</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-frankie-valli-4-seasons-reunited-live-153072440" target="_blank" rel="noopener" data-site="Enjoei" data-preco="45"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy83MDM4Mjc3L2MwNGYzM2NjZGQxOGRmYmUwMWUxNzhmMGRlYTRjODVhLmpwZw" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil frankie valli 4 seasons reunited live</div><div class="preco">R$ 45</div><div class="extra">de R$ 60</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-trilha-sonora-o-salvador-da-patria-152274389" target="_blank" rel="noopener" data-site="Enjoei" data-preco="44"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMjQxMjM3MS80NzBiYTg1NjZiMjg1OGQ4Njc4YTAzODM3OGFkNzUzOC5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil trilha sonora o salvador da pátria</div><div class="preco">R$ 44</div><div class="extra">de R$ 65</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-trilha-sonora-bebe-a-bordo-nacional-1988-152273934" target="_blank" rel="noopener" data-site="Enjoei" data-preco="26"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy80MzAwNTg4MS9mYmE5NTA2YTk0NmFhYjM5MjQyYTM1NTBkOWVhY2RhNS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil trilha sonora bebê a bordo nacional 1988</div><div class="preco">R$ 26</div><div class="extra">de R$ 39</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/disco-de-vinil-trilha-sonora-renascer-2-154890088" target="_blank" rel="noopener" data-site="Enjoei" data-preco="34"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy82NTAyMjIvNDM2YjhhZTUwYzg4MTllNmM4OWVmNWIzMDI5NGM1M2QuanBn" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">disco de vinil trilha sonora renascer 2</div><div class="preco">R$ 34</div><div class="extra">de R$ 38</div></div></a><a class="card tom-0" href="https://www.enjoei.com.br/p/lp-vinil-rodolfo-ortiz-harpa-internacional-vintage-e-colecionavel-154969336" target="_blank" rel="noopener" data-site="Enjoei" data-preco="199"><div class="capa"><img src="https://photos.enjoei.com.br/public/300x300/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMzM2NjU1OS9mOTY4NjRkODVjZmRkM2MyYTVkZmUwMmExMGVmODQxOS5qcGc" loading="lazy" alt=""></div><div class="info"><div class="site">Enjoei</div><div class="titulo">lp vinil rodolfo ortiz harpa internacional - vintage e colecionável</div><div class="preco">R$ 199</div><div class="extra"></div></div></a></div></section><section class="tom-2" data-site="Estação Cultural"><h2>Estação Cultural <span>019</span></h2><div class="grade"><a class="card tom-2" href="https://estacaocultural.com.br/produto/ligacoes-perigosas-ost-george-fenton/34524428/2048927" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524428.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">LIGAÇÕES PERIGOSAS = OST — GEORGE FENTON</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/os-gritos-do-silencio-ost-mike-oldfield/34524388/2048926" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524388.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">OS GRITOS DO SILÊNCIO - OST - — MIKE OLDFIELD</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/star-trek-the-final-frontier-ost-jerry-goldsmith/34524359/2048925" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524359.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">STAR TREK = THE FINAL FRONTIER = OST — JERRY GOLDSMITH</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/o-poderoso-chefao-part-iii-ost-carmine-coppola/34524317/2048924" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524317.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">O PODEROSO CHEFÃO = PART III = OST — CARMINE COPPOLA</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/as-aventuras-do-barao-de-munchalsen-ost-miochael-kamen/34524274/2048923" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524274.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">AS AVENTURAS DO BARÃO DE MUNCHALSEN = OST — MIOCHAEL KAMEN</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/imperio-do-sol-ost-john-williams/34524239/2048879" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524239.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">IMPERIO DO SOL = OST = — JOHN WILLIAMS</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/music-from-e-t-star-wars-john-williams-symphonic-suites-london-national-orchestras-frank-barber/34524208/2048878" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524208.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">MUSIC FROM = E.T. / STAR WARS - JOHN WILLIAMS SYMPHONIC SUITES — LONDON+NATIONAL ORCHESTRAS/FRANK BARBER</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/james-bond-007-octopussy-ost-jhn-barry-rita-coolidge/34524148/2048877" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524148.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">JAMES BOND 007 = OCTOPUSSY = OST = — JHN BARRY = RITA COOLIDGE</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/uma-cilada-para-roger-rabbit-ost-alan-silvestre/34524103/2048863" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524103.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">UMA CILADA PARA ROGER RABBIT = OST — ALAN SILVESTRE</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/walker-ost-joe-strummer-the-clash-/34524060/2048862" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524060.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">WALKER = OST = — JOE STRUMMER (THE CLASH)</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/the-fury-ost-john-williams/34524036/2048861" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524036.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">THE FURY = OST = — JOHN WILLIAMS</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/powaqqatsi-ost-philip-glass/34524012/2048860" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34524012.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">POWAQQATSI = OST = — PHILIP GLASS</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/em-busca-do-vale-encantado-0st-james-hirnes-diana-ross/34523951/2048826" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34523951.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">EM BUSCA DO VALE ENCANTADO = 0ST = — JAMES HIRNES = DIANA ROSS</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/eric-clapton-jorneyman-c-encarte-eric-clapton/34523873/2048813" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="180.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34523873.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">ERIC CLAPTON = JORNEYMAN = C/ENCARTE — ERIC CLAPTON</div><div class="preco">R$ 180,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/r-e-m-out-of-time-c-encarte-r-e-m/34523853/2048812" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="135.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34523853.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">R E M = OUT OF TIME = C/ ENCARTE — R E M</div><div class="preco">R$ 135,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/engenheiros-do-hawaii-longe-demais-das-capitais-engenheiros-do-hawaii/34523832/2048811" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="90.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34523832.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">ENGENHEIROS DO HAWAII = LONGE DEMAIS DAS CAPITAIS = — ENGENHEIROS DO HAWAII</div><div class="preco">R$ 90,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/raul-seixas-metro-linha-743-raulseixas/34523820/2048806" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="135.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34523820.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">RAUL SEIXAS = METRO LINHA 743 = — RAULSEIXAS</div><div class="preco">R$ 135,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/the-turn-of-a-friendly-card-alan-parsons-project/34523806/2048805" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="72.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34523806.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">THE TURN OF A FRIENDLY CARD = — ALAN PARSONS PROJECT</div><div class="preco">R$ 72,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a><a class="card tom-2" href="https://estacaocultural.com.br/produto/hot-space-queen-c-encarte-queen/34523798/2048804" target="_blank" rel="noopener" data-site="Estação Cultural" data-preco="162.00"><div class="capa"><img src="https://estacaocultural.com.br/controle/arquivo/34523798.jpg" loading="lazy" alt=""></div><div class="info"><div class="site">Estação Cultural</div><div class="titulo">HOT SPACE = QUEEN = C/ENCARTE — QUEEN</div><div class="preco">R$ 162,00</div><div class="extra">Condição: Usado · Estação Cultural I - São José do Rio Preto</div></div></a></div></section><section class="tom-4" data-site="Marcondes Discos"><h2>Marcondes Discos <span>036</span></h2><div class="grade"><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-lady-gaga-harlequin-vermelho-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="350.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/lady-gaga-1-e1795781021482-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Lady Gaga – Harlequin – Vermelho Importado</div><div class="preco">R$ 350,00</div><div class="extra">jazz contemporâneo, Lady Gaga, pop, trilha sonora · Interscope Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-vince-guaraldi-trio-a-charlie-brown-christmas-verde-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="320.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/charlie-brown-3-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Vince Guaraldi Trio – A Charlie Brown Christmas – Verde Importado</div><div class="preco">R$ 320,00</div><div class="extra">jazz contemporâneo, trilha sonora, Vince Guaraldi Trio · Fantasy Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-lady-gaga-dawn-of-chromatica-translucido-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="295.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Lady-gag-5-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Lady Gaga – Dawn Of Chromatica – Translúcido Importado</div><div class="preco">R$ 295,00</div><div class="extra">dance pop, electro, house, Lady Gaga, pop · Interscope Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-melanie-martinez-after-school-ep-azul-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="220.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Melanie-Martinez-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Melanie Martinez – After School EP – Azul Importado</div><div class="preco">R$ 220,00</div><div class="extra">Melanie Martinez, pop · Atlantic · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-rent-trilha-sonora-duplo-colorido-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="345.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/RENT-3-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Rent (Trilha Sonora) – Duplo Colorido Importado</div><div class="preco">R$ 345,00</div><div class="extra">pop, trilha sonora · Warner Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-rihanna-loud-duplo-rosa-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="395.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/RAHANNA-LOAD-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Rihanna – Loud – Duplo Rosa Importado</div><div class="preco">R$ 395,00</div><div class="extra">contemporary R&amp;B, pop, Rihanna · Def Jam Recordings · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-shakira-el-dorado-duplo-dourado-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="450.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Shakira-1-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Shakira – El Dorado – Duplo Dourado Importado</div><div class="preco">R$ 450,00</div><div class="extra">pop, reggaeton, Shakira · Sony Music Latin · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-rihanna-rated-r-duplo-translucido-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="395.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/rihanna-2-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Rihanna – Rated R – Duplo Translúcido Importado</div><div class="preco">R$ 395,00</div><div class="extra">pop, R&amp;B, Rihanna · Def Jam Recordings · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-shakira-sale-el-sol-duplo-rosa-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="450.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Shakira-sale-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Shakira – Sale El Sol – Duplo Rosa Importado</div><div class="preco">R$ 450,00</div><div class="extra">pop, Shakira · Epic · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-sam-smith-bbc-proms-at-the-royal-albert-hall-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="345.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Sam-Smith-4-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Sam Smith – BBC Proms At The Royal Albert Hall – Duplo Importado</div><div class="preco">R$ 345,00</div><div class="extra">pop, Sam Smith · Capitol</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-madonna-rebel-heart-tour-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="390.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Madonna-4-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Madonna – Rebel Heart Tour – Duplo Importado</div><div class="preco">R$ 390,00</div><div class="extra">dance pop, house, Madonna, pop · Mercury Studios · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-taylor-swift-fearless-taylors-version-triplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="395.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Taylor-swift-3-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Taylor Swift – Fearless (Taylor’s Version) – Triplo Importado</div><div class="preco">R$ 395,00</div><div class="extra">country, folk, pop, Taylor Swift · Republic Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-sza-sos-deluxe-lana-quadruplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="480.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Sza-2-e1795779608390-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP SZA – SOS Deluxe: Lana – Quadruplo Importado</div><div class="preco">R$ 480,00</div><div class="extra">neo soul, pop, R&amp;B, SZA · Top Dawg Entertainment · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-duplo-importado-3/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="345.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Miley-Cyrus-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Miley Cyrus – Bangerz – Duplo Importado</div><div class="preco">R$ 345,00</div><div class="extra">Miley Cyrus, pop · RCA · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-britney-spears-oops-i-did-it-again-duplo-importado-25th-anniversary-edition/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="450.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Britney-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Britney Spears – Oops!…I Did It Again – Duplo Importado (25th Anniversary Edition)</div><div class="preco">R$ 450,00</div><div class="extra">Britney Spears, europop, pop · Jive · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-katseye-wild-azul-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="320.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/katseye-8-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Katseye – Wild (Azul) – Importado</div><div class="preco">R$ 320,00</div><div class="extra">k-pop, Katseye, pop · HYBE · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-love-forever-changes-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="265.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Love-3-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Love – Forever Changes –  Importado</div><div class="preco">R$ 265,00</div><div class="extra">folk, Love, rock psicodélico · Elektra · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-the-doors-waiting-for-the-sun-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="265.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/The-doors-3-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP The Doors – Waiting For The Sun – Importado</div><div class="preco">R$ 265,00</div><div class="extra">blues rock, rock clássico, rock psicodélico · Elektra · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-brandi-carlile-in-these-silent-days-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="250.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Brandi-Charlie-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Brandi Carlile – In These Silent Days – Importado</div><div class="preco">R$ 250,00</div><div class="extra">Brandi Carlile, country, folk · Low Country Sound · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-red-hot-chili-peppers-blood-sugar-sex-magik-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="395.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/RHCP-2-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Red Hot Chili Peppers – Blood Sugar Sex Magik – Duplo Importado</div><div class="preco">R$ 395,00</div><div class="extra">indie, Red Hot Chili Peppers · Warner Bros. Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-radiohead-pablo-honey-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="320.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/RADIOHEAD-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Radiohead – Pablo Honey – Importado</div><div class="preco">R$ 320,00</div><div class="extra">indie, Radiohead · XL Recordings · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-the-beatles-a-hard-days-night-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="250.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/The-Beatles-1-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP The Beatles – A Hard Day’s Night – Importado</div><div class="preco">R$ 250,00</div><div class="extra">60s, rock clássico, The Beatles · Parlophone · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-mott-the-hoople-the-golden-age-of-rock-n-roll-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="380.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Mott-The-Hoople-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Mott The Hoople – The Golden Age Of Rock ‘N’ Roll – Duplo Importado</div><div class="preco">R$ 380,00</div><div class="extra">GLAM, Mott The Hoople, rock clássico · Madfish · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-duplo-importado-4/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="285.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Elton-John-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Elton John – Captain Fantastic And The Brown Dirt Cowboy – Lacrado</div><div class="preco">R$ 285,00</div><div class="extra">Elton John, lacrado, rock clássico · Mercury · Novo</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-pearl-jam-vs-lacrado-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="330.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Pearl-Jam-1-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Pearl Jam – Vs. – Lacrado Importado</div><div class="preco">R$ 330,00</div><div class="extra">grunge, lacrado, Pearl Jam · Epic · Novo</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-motorhead-everything-louder-forever-lacrado-duplo/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="380.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Motorhead-1-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Motörhead – Everything Louder Forever – Lacrado Duplo</div><div class="preco">R$ 380,00</div><div class="extra">hard rock, lacrado, Motörhead · BMG · Novo</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-lacrado-duplo/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="395.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/queen-e1795777285950-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Queen – Greatest Hits II – Duplo Importado</div><div class="preco">R$ 395,00</div><div class="extra">arena rock, hard rock, Queen · Virgin EMI Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-pretenders-the-isle-of-view-duplo-importado-raro/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="590.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Pretenders-3-e1795777043765-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Pretenders – The Isle Of View – Duplo Importado (RARO)</div><div class="preco">R$ 590,00</div><div class="extra">acústico, pop-rock, Pretenders, soft rock · Demon Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-the-mamas-the-papas-collected-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="320.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/The-mamas-and-the-papas-1-e1795776897799-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP The Mamas &amp; The Papas – Collected – Duplo Importado</div><div class="preco">R$ 320,00</div><div class="extra">folk rock, pop-rock · Music On Vinyl · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-aphrodites-child-666-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="490.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/aphrodites-child-1-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Aphrodite’s Child – 666 – Duplo Importado</div><div class="preco">R$ 490,00</div><div class="extra">Aphrodite&#x27;s Child, rock progressivo, rock psicodélico · Music On Vinyl · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-cat-stevens-harold-and-maude-soundtrack-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="240.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Cat-Stevens-3-e1795776591159-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Cat Stevens – Harold And Maude Soundtrack – Importado</div><div class="preco">R$ 240,00</div><div class="extra">Cat Stevens, country, folk · Island · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-the-white-stripes-greatest-hits-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="350.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/white-stripes-3-1-e1795776475690-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP The White Stripes – Greatest Hits – Duplo Importado</div><div class="preco">R$ 350,00</div><div class="extra">garage rock, indie, The White Stripes · Third Man Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-eagles-hell-freezes-over-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="380.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/Eagles-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Eagles – Hell Freezes Over – Duplo Importado</div><div class="preco">R$ 380,00</div><div class="extra">country rock, Eagles, pop-rock, soft rock · Geffen Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-the-cranberries-stars-the-best-of-1992-2002-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="395.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/cranberries-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP The Cranberries – Stars (The Best Of 1992-2002) – Duplo Importado</div><div class="preco">R$ 395,00</div><div class="extra">indie, pop-rock, The Cranberries · Island Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-u2-the-best-of-1990-2000-duplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="450.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/u2-2-1-e1795776166612-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP U2 – The Best Of 1990-2000 – Duplo Importado</div><div class="preco">R$ 450,00</div><div class="extra">pop-rock, U2 · Island Records · Usado</div></div></a><a class="card tom-4" href="https://www.marcondesdiscos.com.br/p/lp-etta-james-the-platinum-collection-triplo-importado/" target="_blank" rel="noopener" data-site="Marcondes Discos" data-preco="390.00"><div class="capa"><img src="https://www.marcondesdiscos.com.br/wp-content/uploads/2026/11/etta-james-2-300x300.jpeg" loading="lazy" alt=""></div><div class="info"><div class="site">Marcondes Discos</div><div class="titulo">LP Etta James – The Platinum Collection – Triplo Importado</div><div class="preco">R$ 390,00</div><div class="extra">cantoras jazz, etta james, soul · Not Now Music · Usado</div></div></a></div></section></div>
+<footer><div><strong>Dig Dig Dig!</strong><span class="versao">v1.13</span></div><span>Enjoei · Estante Virtual · Estação Cultural · Made in Quebrada · Marcondes Discos · Sebo Casa Laranja · Sebo Nova Floresta · Sebo do Messias · Sebo do Vinil</span></footer>
+</main>
+<script>
+// Filtros por site e faixa de preço, e ordem por preço. "Por site" mantém os
+// grupos; ordenar por preço junta tudo numa lista única.
+const estado = { site: '', faixa: '', ordem: '' };
+const secoes = document.getElementById('secoes'), lista = document.getElementById('lista');
+const cards = [...document.querySelectorAll('#secoes .card')];
+const preco = c => c.dataset.preco === '' ? null : parseFloat(c.dataset.preco);
+// Faixas sem buracos: centavos entre 50 e 51 caem em "51 a 100", e assim por diante.
+const FAIXAS = { ate50: p => p <= 50, '51a100': p => p > 50 && p <= 100, mais100: p => p > 100 };
+const passa = c => (!estado.site || c.dataset.site === estado.site)
+  && (!estado.faixa || (preco(c) !== null && FAIXAS[estado.faixa](preco(c))));
+
+function atualizar() {
+  const { ordem } = estado;
+  if (!ordem) {
+    lista.hidden = true; lista.replaceChildren(); secoes.hidden = false;
+    cards.forEach(c => c.hidden = !passa(c));
+    secoes.querySelectorAll('section').forEach(s => {
+      const visiveis = s.querySelectorAll('.card:not([hidden])').length;
+      s.hidden = visiveis === 0;
+      s.querySelector('h2 span').textContent = String(visiveis).padStart(3, '0');
+    });
+    if (!cards.some(passa)) { lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>'; lista.hidden = false; }
+    return;
+  }
+  const escolhidos = cards.filter(passa).sort((a, b) => {
+    const pa = preco(a), pb = preco(b);
+    if (pa === null) return 1; if (pb === null) return -1;  // sem preço vai pro fim
+    return ordem === 'asc' ? pa - pb : pb - pa;
+  });
+  lista.replaceChildren(...escolhidos.map(c => { const n = c.cloneNode(true); n.hidden = false; return n; }));
+  secoes.hidden = true; lista.hidden = false;
+  if (!escolhidos.length) lista.innerHTML = '<p class="vazio">Nenhum disco nesse filtro.</p>';
+}
+
+// Tema: alterna entre claro e escuro e lembra a escolha neste navegador.
+const raiz = document.documentElement, sistemaEscuro = matchMedia('(prefers-color-scheme: dark)');
+const temaAtual = () => raiz.dataset.theme || (sistemaEscuro.matches ? 'dark' : 'light');
+const marcarTema = () => {
+  raiz.dataset.temaEfetivo = temaAtual();
+  document.getElementById('tema').setAttribute('aria-pressed', temaAtual() === 'dark');
+};
+document.getElementById('tema').addEventListener('click', () => {
+  raiz.dataset.theme = temaAtual() === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('digdigdig.tema', raiz.dataset.theme); } catch (e) {}
+  marcarTema();
+});
+sistemaEscuro.addEventListener('change', marcarTema);
+marcarTema();
+
+document.querySelectorAll('.menu').forEach(m => m.addEventListener('change', () => {
+  estado[m.dataset.chave] = m.value;
+  atualizar();
+}));
+
+document.querySelectorAll('.teclas').forEach(grupo => {
+  grupo.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    grupo.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    estado[grupo.dataset.chave] = b.dataset.valor;
+    atualizar();
+  });
+});
+
+// Botão Dig. Na página do servidor local (servidor.py, que responde em "estado"),
+// fala direto com ele. Na página publicada, manda "dig" para o tópico do ntfy que
+// o Mac escuta e acompanha pelo mesmo tópico os avisos inicio / progresso / fim.
+const dig = document.getElementById('dig'), gatilho = dig.dataset.gatilho;
+const ntfy = 'https://ntfy.sh/' + encodeURIComponent(gatilho);
+const pausa = ms => new Promise(ok => setTimeout(ok, ms));
+function mostrarDig(texto, {ocupado = false, erro = false, dica = ''} = {}) {
+  dig.hidden = false;
+  dig.disabled = ocupado;
+  dig.classList.toggle('erro', erro);
+  dig.textContent = texto;
+  dig.title = dica;
+}
+
+// --- barra de andamento, logo abaixo do topo (como no DigAmazon) ---
+// O Mac avisa a cada busca (um site/termo); entre um aviso e outro a barra
+// anda sozinha, no ritmo medido até ali.
+const SEG_POR_BUSCA = 8;  // ritmo esperado antes da primeira busca terminar
+const barra = document.getElementById('progresso'), linha = document.getElementById('status-dig');
+let andamento = null, relogio = null;
+function mostrarStatus(texto) { linha.hidden = !texto; linha.textContent = texto || ''; }
+function progresso(p) {
+  andamento = p;
+  barra.hidden = false;
+  if (!relogio) relogio = setInterval(desenharProgresso, 1000);
+  desenharProgresso();
+}
+function fimProgresso() {
+  clearInterval(relogio); relogio = null; andamento = null;
+  barra.hidden = true; mostrarStatus('');
+}
+function desenharProgresso() {
+  const p = andamento;
+  if (!p) return;
+  let pct, texto;
+  if (p.etapa === 'publicando') {
+    pct = 96; texto = p.texto || 'Pronto. Publicando o resultado…';
+  } else if (!p.total) {
+    pct = 2; texto = 'Abrindo o navegador…';
+  } else {
+    const ritmo = p.feitas > 0 ? Math.max(3, (p.quando - p.inicio) / 1000 / p.feitas) : SEG_POR_BUSCA;
+    const atual = Math.min(p.feitas + (Date.now() - p.quando) / 1000 / ritmo, p.feitas + .95);
+    const faltam = Math.max(5, Math.round((p.total - atual) * ritmo + 10));
+    pct = Math.max(2, atual / p.total * 92);
+    texto = `Cavando em ${p.site} · busca ${p.feitas + 1} de ${p.total} · faltam uns `
+      + (faltam < 60 ? `${faltam} s` : `${Math.round(faltam / 60)} min`);
+  }
+  barra.style.setProperty('--pct', pct.toFixed(1) + '%');
+  barra.setAttribute('aria-valuenow', Math.round(pct));
+  mostrarStatus(texto);
+}
+
+// --- página local ---
+async function lerEstado() {
+  const r = await fetch('estado', {cache: 'no-store'});
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function mostrarEstado(e) {
+  if (e.rodando) {
+    mostrarDig('Cavando…', {ocupado: true});
+    const p = e.progresso || {etapa: 'buscando', feitas: 0, total: 0, site: ''};
+    progresso({...p, inicio: Date.parse(e.inicio), quando: Date.parse(p.quando || e.inicio)});
+    return;
+  }
+  fimProgresso();
+  if (e.ok === false) mostrarDig('Falhou', {erro: true, dica: 'A última busca falhou — veja logs/buscador.log'});
+  else mostrarDig('Dig');
+}
+async function acompanharLocal() {
+  let e = await lerEstado();
+  mostrarEstado(e);
+  while (e.rodando) { await pausa(2000); e = await lerEstado(); mostrarEstado(e); }
+  if (e.ok) location.reload();
+}
+
+// --- página publicada ---
+async function avisosDesde(desde) {
+  const r = await fetch(`${ntfy}/json?poll=1&since=${desde}`, {cache: 'no-store'});
+  const texto = await r.text();
+  return texto.split('\n').filter(Boolean).map(l => JSON.parse(l)).filter(m => m.event === 'message');
+}
+const emAndamento = m => m === 'inicio' || m.startsWith('progresso:');
+function lerProgresso(aviso, inicio) {
+  // "progresso:3/10:buscando:Estante Virtual"
+  const [, conta = '0/0', etapa = 'buscando', ...site] = aviso.message.split(':');
+  const [feitas, total] = conta.split('/').map(Number);
+  return {etapa, feitas, total, site: site.join(':'), quando: aviso.time * 1000, inicio};
+}
+async function esperarPublicacao() {
+  // o GitHub leva cerca de 1 minuto para pôr no ar a página nova
+  mostrarDig('Publicando…', {ocupado: true});
+  progresso({etapa: 'publicando', texto: 'Pronto. O GitHub leva cerca de 1 minuto para pôr a página nova no ar…'});
+  const atual = document.querySelector('.barra').textContent;
+  for (let i = 0; i < 40; i++) {
+    await pausa(6000);
+    try {
+      const html = await (await fetch(location.pathname + '?t=' + Date.now(), {cache: 'no-store'})).text();
+      const nova = new DOMParser().parseFromString(html, 'text/html').querySelector('.barra');
+      if (nova && nova.textContent !== atual) return location.reload();
+    } catch (err) {}
+  }
+  location.reload();
+}
+async function acompanharOnline(desde) {
+  const limite = Date.now() + 15 * 60 * 1000;
+  let comecou = false;
+  while (Date.now() < limite) {
+    let avisos = [];
+    try { avisos = await avisosDesde(desde); } catch (err) {}
+    const ultimo = avisos.filter(m => m.message !== 'dig').pop();
+    const msg = ultimo?.message || '';
+    if (msg === 'fim:ok') return esperarPublicacao();
+    if (msg === 'fim:falha') {
+      fimProgresso();
+      return mostrarDig('Falhou', {erro: true, dica: 'A busca falhou no Mac — veja logs/buscador.log'});
+    }
+    if (msg === 'recente') {
+      mostrarDig('Já cavou', {ocupado: true, dica: 'Teve busca há menos de 10 minutos'});
+      mostrarStatus('Teve um Dig há menos de 10 minutos. Tente de novo daqui a pouco.');
+      await pausa(5000);
+      mostrarStatus('');
+      return mostrarDig('Dig');
+    }
+    if (emAndamento(msg)) {
+      comecou = true;
+      mostrarDig('Cavando…', {ocupado: true});
+      const inicio = (avisos.filter(m => m.message === 'inicio').pop() || ultimo).time * 1000;
+      progresso(lerProgresso(ultimo, inicio));
+    } else if (!comecou && Date.now() - desde * 1000 > 60000) {
+      mostrarDig('Na fila', {ocupado: true});
+      mostrarStatus('O Mac parece desligado ou dormindo. O pedido fica guardado e a busca roda quando ele acordar.');
+    }
+    await pausa(4000);
+  }
+  fimProgresso();
+  mostrarDig('Dig');
+}
+async function cavarOnline() {
+  const desde = Math.floor(Date.now() / 1000) - 2;
+  mostrarDig('Chamando…', {ocupado: true});
+  mostrarStatus('Chamando o Mac…');
+  try {
+    await fetch(ntfy, {method: 'POST', body: 'dig'});
+  } catch (err) {
+    mostrarStatus('');
+    return mostrarDig('Falhou', {erro: true, dica: 'Não consegui falar com o ntfy'});
+  }
+  acompanharOnline(desde);
+}
+
+let local = false;
+lerEstado().then(e => {
+  local = true;
+  mostrarEstado(e);
+  if (e.rodando) acompanharLocal();
+}).catch(async () => {
+  if (!gatilho) return;
+  mostrarDig('Dig');
+  // se já houver uma busca em andamento (pedida de outro aparelho), acompanha
+  try {
+    const desde = Math.floor(Date.now() / 1000) - 15 * 60;
+    const ultimo = (await avisosDesde(desde)).map(m => m.message).filter(m => emAndamento(m) || m.startsWith('fim:')).pop();
+    if (ultimo && emAndamento(ultimo)) acompanharOnline(desde);
+  } catch (err) {}
+});
+dig.addEventListener('click', async () => {
+  if (!local) return cavarOnline();
+  mostrarDig('Cavando…', {ocupado: true});
+  try {
+    await fetch('dig', {method: 'POST', headers: {'X-Dig': '1'}});
+    await acompanharLocal();
+  } catch (err) { fimProgresso(); mostrarDig('Falhou', {erro: true}); }
+});
+</script>
+</body></html>
